@@ -67,13 +67,27 @@ def log_calls(logger):
         result = target(*args, **kwargs)
 
         logger.info("%s result: %r" % (target.__name__, result))
-
         return result
 
 
     decorator = Decorator(log_function)
-
     return decorator.generic_decorator
+
+
+def pass_args(target):
+    """
+    Decorator that passes arguments to the function as a dict as an additional
+    argument named `kwargs`
+
+    No arguments
+    """
+
+    def passer_function(target, *args, **kwargs):
+        result = target(*args, kwargs=kwargs, **kwargs)
+        return result
+
+    decorator = Decorator(passer_function)
+    return decorator.generic_decorator(target)
 
     
 def obsolete(logger):
@@ -86,10 +100,8 @@ def obsolete(logger):
                     (target.__name__, target.__module__))
 
         result = target(*args, **kwargs)
-        
         return result
 
     
     decorator = Decorator(log_function)
-
     return decorator.generic_decorator
