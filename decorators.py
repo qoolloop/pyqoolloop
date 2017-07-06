@@ -1,8 +1,7 @@
 
 class Decorator:
 
-    def __init__(self, logger, called_function):
-        self.logger = logger
+    def __init__(self, called_function):
         self.called_function = called_function
 
     
@@ -44,7 +43,7 @@ class Decorator:
             return called_function
 
         elif isinstance(target, staticmethod):
-            assert False, "Put @log_calls() after @staticmethod"
+            assert False, "Put decorator after @staticmethod"
 
         else:
             assert False, "Unsupported target of type: %r" % type(target)
@@ -72,7 +71,7 @@ def log_calls(logger):
         return result
 
 
-    decorator = Decorator(logger, log_function)
+    decorator = Decorator(log_function)
 
     return decorator.generic_decorator
 
@@ -91,6 +90,6 @@ def obsolete(logger):
         return result
 
     
-    decorator = Decorator(logger, log_function)
+    decorator = Decorator(log_function)
 
     return decorator.generic_decorator
