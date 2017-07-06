@@ -1,3 +1,6 @@
+import copy
+import inspect
+
 
 class Decorator:
 
@@ -83,7 +86,12 @@ def pass_args(target):
     """
 
     def passer_function(target, *args, **kwargs):
-        result = target(*args, kwargs=kwargs, **kwargs)
+        composed_kwargs = copy.copy(kwargs)
+        
+        arg_names = inspect.signature(target).parameters
+        composed_kwargs.update(zip(arg_names, args))
+        
+        result = target(*args, kwargs=composed_kwargs, **kwargs)
         return result
 
     decorator = Decorator(passer_function)

@@ -20,7 +20,8 @@ def pass_args_function(arg0=0, arg1=1, arg2=2, kwargs=None):
 def test_pass_args_to_function():
     
     pass_args_function()
-    pass_args_function(arg0="a")
+    pass_args_function("a")
+    pass_args_function("a", "b")
     pass_args_function(arg1="b")
     pass_args_function(arg2="c")
     pass_args_function(arg0="a", arg1="b")
@@ -35,7 +36,7 @@ class PassArgsClass:
         pass
 
 
-    def func(self, arg0=0, kwargs=None):
+    def func(self, arg0=" ", kwargs=None):
         _pass_args_function(arg0, kwargs=kwargs)
         
 
@@ -44,3 +45,4 @@ def test_pass_args_to_class():
     instance = PassArgsClass()
 
     instance.func(arg0="A")
+    instance.func("A")
