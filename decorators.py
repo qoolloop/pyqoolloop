@@ -98,7 +98,7 @@ def pass_args(target):
     return decorator.generic_decorator(target)
 
     
-def obsolete(logger, message=None):
+def obsolete(logger, message=None):  #TODO: Rename deprecated. obsolete can throw exception c.f. https://pypi.python.org/pypi/funcsigs
     """
     Used to decorate obsolete functions and classes
 
