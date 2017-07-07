@@ -98,14 +98,23 @@ def pass_args(target):
     return decorator.generic_decorator(target)
 
     
-def obsolete(logger):
+def obsolete(logger, message=None):
     """
     Used to decorate obsolete functions and classes
+
+    Arguments:
+    logger -- (Logger) where to log message
+    message -- (str) additional message to log
     """
 
     def log_function(target, *args, **kwargs):
-        logger.warn("obsolete function called: %r (%r)" %
-                    (target.__name__, target.__module__))
+        message_str = "obsolete function called: %r (%r)" % \
+            (target.__name__, target.__module__)
+
+        if message is not None:
+            message_str += "\n" + message
+        
+        logger.warn(message_str)
 
         result = target(*args, **kwargs)
         return result
