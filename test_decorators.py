@@ -1,5 +1,7 @@
 from .decorators import pass_args
 
+import pytest
+
 
 def _pass_args_function(arg0=0, arg1=1, arg2=2, kwargs=None):
 
@@ -29,7 +31,7 @@ def test_pass_args_to_function():
 
 
 @pass_args
-class PassArgsClass:
+class PassArgsClass(object):
 
     def __init__(self):
         # args won't be passed to __init__()
@@ -43,6 +45,29 @@ class PassArgsClass:
 def test_pass_args_to_class():
 
     instance = PassArgsClass()
+
+    instance.func(arg0="A")
+    instance.func("A")
+
+
+def test_old_style_class():
+
+    with pytest.raises(AssertionError):
+        @pass_args
+        class OldStyleClass:
+            pass
+
+
+class OldStyleClass:
+
+    @pass_args
+    def func(self, arg0=" ", kwargs=None):
+        _pass_args_function(arg0, kwargs=kwargs)
+    
+    
+def test_func_in_old_style_class():
+
+    instance = OldStyleClass()
 
     instance.func(arg0="A")
     instance.func("A")
