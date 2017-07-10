@@ -1,5 +1,6 @@
 # Byte-compiled / optimized / DLL files
-__pycache__/
+# remove trailing backslash from __pycache__ to allow symbolic links
+__pycache__
 *.py[cod]
 *$py.class
 

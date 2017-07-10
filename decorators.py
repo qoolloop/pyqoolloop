@@ -1,5 +1,11 @@
+import types
 import copy
-import inspect
+import funcsigs
+
+"""
+Doesn't support decorating classes not inheriting from object (old-style
+classes) in Python 2.
+"""
 
 
 class Decorator:
@@ -38,6 +44,9 @@ class Decorator:
 
 
         parent = self
+
+        assert isinstance(target, types.ClassType), \
+            "Decorator doesn't support old-style classes in Python 2"
 
         if isinstance(target, type):
             return NewClass
@@ -88,7 +97,7 @@ def pass_args(target):
     def passer_function(target, *args, **kwargs):
         composed_kwargs = copy.copy(kwargs)
         
-        arg_names = inspect.signature(target).parameters
+        arg_names = funcsigs.signature(target).parameters
         composed_kwargs.update(zip(arg_names, args))
         
         result = target(*args, kwargs=composed_kwargs, **kwargs)
