@@ -45,8 +45,12 @@ class Decorator:
 
         parent = self
 
-        assert not isinstance(target, types.ClassType), \
-            "Decorator doesn't support old-style classes in Python 2"
+        try:
+            assert not isinstance(target, types.ClassType), \
+                "Decorator doesn't support old-style classes in Python 2"
+
+        except AttributeError:
+            pass  # types.ClassType doesn't exist in Python 3
 
         if isinstance(target, type):
             return NewClass

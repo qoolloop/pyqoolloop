@@ -1,5 +1,6 @@
 from .decorators import pass_args
 
+import sys
 import pytest
 
 
@@ -52,10 +53,12 @@ def test_pass_args_to_class():
 
 def test_old_style_class():
 
-    with pytest.raises(AssertionError):
-        @pass_args
-        class OldStyleClass:
-            pass
+    if sys.version_info[0] < 3:
+        with pytest.raises(AssertionError):
+            @pass_args
+            class OldStyleClass:
+                pass
+        # endwith
 
 
 class OldStyleClass:
