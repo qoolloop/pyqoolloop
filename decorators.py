@@ -140,3 +140,6 @@ def obsolete(logger, message=None, raise_exception=False):  #TODO: Rename deprec
     
     decorator = Decorator(log_function)
     return decorator.generic_decorator
+
+
+deprecated = obsolete  #TODO: Make raise-exception global each for @obsolete and @deprecated
