@@ -62,7 +62,9 @@ class Decorator:
             assert False, "Put decorator after @staticmethod"
 
         else:
-            assert False, "Unsupported target of type: %r" % type(target)
+            assert False, \
+                "Unsupported target of type: %r\n" % type(target) + \
+                "(You could have forgotten argument to decorator.)"
         # endif
 
 
