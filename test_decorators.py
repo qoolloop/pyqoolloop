@@ -76,19 +76,20 @@ def test_func_in_old_style_class():
     instance.func("A")
 
 
-@pytest.mark.parametrize('retries', (
-    1,
-    2,
-    3,
+class AnException(Exception):
+    pass
+
+
+@pytest.mark.parametrize('retries, exceptions', (
+    (1, AnException),
+    (2, (AnException, RuntimeError)),
+    (3, (TypeError, AnException)),
 ))
-def test_retries(retries):
+def test_retries(retries, exceptions):
 
     result = {'count': 0}
 
-    class AnException(Exception):
-        pass
-
-    @retry(retries, AnException)
+    @retry(retries, exceptions)
     def func(arg1, arg2, kwarg1=None, kwarg2=None):
         assert arg1 == 'arg1'
         assert arg2 == 'arg2'
