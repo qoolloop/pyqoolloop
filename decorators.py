@@ -1,3 +1,4 @@
+import time
 from builtins import range
 import types
 import copy
@@ -151,7 +152,7 @@ def obsolete(logger, message=None, raise_exception=False):  #TODO: Rename deprec
 deprecated = obsolete  #TODO: Make raise-exception global each for @obsolete and @deprecated
 
 
-def retry(retries, exceptions, extra_argument=False):
+def retry(retries, exceptions, interval_secs=0, extra_argument=False):
     """
     Used to decorate functions that should be retried if certain exceptions are
     raised
@@ -179,7 +180,9 @@ def retry(retries, exceptions, extra_argument=False):
                 return target(*args, **kwargs)
 
             except exceptions as e:
-                pass
+                if iteration < actual_retries - 1:
+                    time.sleep(interval_secs)
+                # endif
             # endtry
 
         raise e
