@@ -149,6 +149,18 @@ deprecated = obsolete  #TODO: Make raise-exception global each for @obsolete and
 
 
 def retry(retries, exceptions, extra_argument=False):
+    """
+    Used to decorate functions that should be retried if certain exceptions are
+    raised
+
+    Arguments:
+    retries -- (int) maximum number of times the function should be run
+    exceptions -- ((list of) Exception) rerun the function if these
+      exceptions are raised
+    extra_argument -- (bool) if True, an argument named `retries` is added to
+      the function, which overrides the `retries` value specified by the
+      decorator
+    """
 
     def retry_function(target, *args, **kwargs):
 
