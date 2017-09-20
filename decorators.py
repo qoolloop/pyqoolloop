@@ -62,6 +62,9 @@ class Decorator:
         elif isinstance(target, staticmethod):
             assert False, "Put decorator after @staticmethod"
 
+        elif isinstance(target, classmethod):
+            assert False, "Put decorator after @classmethod"
+
         else:
             assert False, \
                 "Unsupported target of type: %r\n" % type(target) + \
