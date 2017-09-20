@@ -1,4 +1,4 @@
-from .decorators import pass_args
+from .decorators import pass_args, retry
 
 import sys
 import pytest
@@ -74,3 +74,95 @@ def test_func_in_old_style_class():
 
     instance.func(arg0="A")
     instance.func("A")
+
+
+@pytest.mark.parametrize('retries', (
+    1,
+    2,
+    3,
+))
+def test_retries(retries):
+
+    result = {'count': 0}
+
+    class AnException(Exception):
+        pass
+
+    @retry(retries, AnException)
+    def func(arg1, arg2, kwarg1=None, kwarg2=None):
+        assert arg1 == 'arg1'
+        assert arg2 == 'arg2'
+        assert kwarg1 == 'kwarg1'
+        assert kwarg2 == 'kwarg2'
+
+        result['count'] += 1
+
+        raise AnException("an exception")
+
+
+    with pytest.raises(AnException):
+        func('arg1', 'arg2', 'kwarg1', 'kwarg2')
+
+    assert result['count'] == retries
+
+
+@pytest.mark.parametrize('retries', (
+    1,
+    2,
+    3,
+))
+def test_retries_with_extra_argument(retries):
+
+    result = {'count': 0}
+
+    class AnException(Exception):
+        pass
+
+    @retry(1, AnException, extra_argument=True)
+    def func(arg1, arg2, kwarg1=None, kwarg2=None):
+        assert arg1 == 'arg1'
+        assert arg2 == 'arg2'
+        assert kwarg1 == 'kwarg1'
+        assert kwarg2 == 'kwarg2'
+
+        result['count'] += 1
+
+        raise AnException("an exception")
+
+
+    with pytest.raises(AnException):
+        func('arg1', 'arg2', kwarg2='kwarg2', kwarg1='kwarg1', retries=retries)
+
+    assert result['count'] == retries
+
+
+@pytest.mark.parametrize('retries_value', (
+    1,
+    2,
+    3,
+))
+def test_retries_without_extra_argument(retries_value):
+
+    result = {'count': 0}
+
+    class AnException(Exception):
+        pass
+
+    @retry(1, AnException, extra_argument=False)
+    def func(arg1, arg2, kwarg1=None, kwarg2=None, retries=None):
+        assert arg1 == 'arg1'
+        assert arg2 == 'arg2'
+        assert kwarg1 == 'kwarg1'
+        assert kwarg2 == 'kwarg2'
+        assert retries == retries_value
+
+        result['count'] += 1
+
+        raise AnException("an exception")
+
+
+    with pytest.raises(AnException):
+        func('arg1', 'arg2', kwarg2='kwarg2', kwarg1='kwarg1',
+             retries=retries_value)
+
+    assert result['count'] == 1

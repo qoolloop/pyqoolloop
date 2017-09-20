@@ -1,3 +1,4 @@
+from builtins import range
 import types
 import copy
 import funcsigs
@@ -145,3 +146,29 @@ def obsolete(logger, message=None, raise_exception=False):  #TODO: Rename deprec
 
 
 deprecated = obsolete  #TODO: Make raise-exception global each for @obsolete and @deprecated
+
+
+def retry(retries, exceptions, extra_argument=False):
+
+    def retry_function(target, *args, **kwargs):
+
+        if extra_argument and ('retries' in kwargs):
+            actual_retries = kwargs['retries']
+            del kwargs['retries']
+
+        else:
+            actual_retries = retries
+        
+        for iteration in range(actual_retries):
+            try:
+                return target(*args, **kwargs)
+
+            except exceptions as e:
+                pass
+            # endtry
+
+        raise e
+
+    
+    decorator = Decorator(retry_function)
+    return decorator.generic_decorator
