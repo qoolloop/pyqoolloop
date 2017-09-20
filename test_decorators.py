@@ -85,7 +85,7 @@ class AnException(Exception):
     (2, (AnException, RuntimeError)),
     (3, (TypeError, AnException)),
 ))
-def test_retries(retries, exceptions):
+def test_retries_with_exceptions(retries, exceptions):
 
     result = {'count': 0}
 
@@ -107,6 +107,33 @@ def test_retries(retries, exceptions):
     assert result['count'] == retries
 
 
+@pytest.mark.parametrize('retries, exceptions', (
+    (1, AnException),
+    (2, (AnException, RuntimeError)),
+    (3, (TypeError, AnException)),
+))
+def test_retries_with_no_exceptions(retries, exceptions):
+
+    result = {'count': 0}
+
+    @retry(retries, exceptions)
+    def func(arg1, arg2, kwarg1=None, kwarg2=None):
+        assert arg1 == 'arg1'
+        assert arg2 == 'arg2'
+        assert kwarg1 == 'kwarg1'
+        assert kwarg2 == 'kwarg2'
+
+        result['count'] += 1
+
+        return 0
+
+
+    value = func('arg1', 'arg2', 'kwarg1', 'kwarg2')
+    assert 0 == value
+
+    assert result['count'] == 1
+
+    
 @pytest.mark.parametrize('retries', (
     1,
     2,
