@@ -102,6 +102,8 @@ def pass_args(target):
     Decorator that passes arguments to the function as a dict as an additional
     argument named `kwargs`
 
+    Useful for logging during debugging.
+
     No arguments
     """
 
