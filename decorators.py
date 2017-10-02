@@ -7,6 +7,10 @@ import funcsigs
 """
 Doesn't support decorating classes not inheriting from object (old-style
 classes) in Python 2.
+
+Cannot decorate fixtures or test functions directly in py.test.
+Arguments(=fixtures) don't get passed in. Please define another function to
+be called from the function of interest.
 """
 
 
