@@ -1,3 +1,4 @@
+from functools import wraps
 import time
 from builtins import range
 import types
@@ -21,7 +22,8 @@ class Decorator:
 
     
     def generic_decorator(self, target):
-        
+
+        @wraps(target)
         def called_function(*args, **kwargs):
             return parent.called_function(target, *args, **kwargs)
 

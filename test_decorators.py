@@ -4,6 +4,17 @@ import sys
 import pytest
 
 
+### Decorator ###
+
+@pass_args
+def name_of_function():
+    pass
+
+
+def test_Decorator__wraps():
+    assert 'name_of_function' == name_of_function.__name__
+    
+
 ### pass_args ###
 
 def _pass_args_function(arg0=0, arg1=1, arg2=2, kwargs=None):
