@@ -4,6 +4,8 @@ import sys
 import pytest
 
 
+### pass_args ###
+
 def _pass_args_function(arg0=0, arg1=1, arg2=2, kwargs=None):
 
     def _check_argument(name, value, default_value, kwargs):
@@ -76,6 +78,8 @@ def test_func_in_old_style_class():
     instance.func("A")
 
 
+### retry ###
+
 class AnException(Exception):
     pass
 
@@ -85,7 +89,7 @@ class AnException(Exception):
     (2, (AnException, RuntimeError)),
     (3, (TypeError, AnException)),
 ))
-def test_retries_with_exceptions(retries, exceptions):
+def test_retry__with_exceptions(retries, exceptions):
 
     result = {'count': 0}
 
@@ -112,7 +116,7 @@ def test_retries_with_exceptions(retries, exceptions):
     (2, (AnException, RuntimeError)),
     (3, (TypeError, AnException)),
 ))
-def test_retries_with_no_exceptions(retries, exceptions):
+def test_retry__with_no_exceptions(retries, exceptions):
 
     result = {'count': 0}
 
@@ -139,7 +143,7 @@ def test_retries_with_no_exceptions(retries, exceptions):
     2,
     3,
 ))
-def test_retries_with_extra_argument(retries):
+def test_retry__with_extra_argument(retries):
 
     result = {'count': 0}
 
@@ -169,7 +173,7 @@ def test_retries_with_extra_argument(retries):
     2,
     3,
 ))
-def test_retries_without_extra_argument(retries_value):
+def test_retry__without_extra_argument(retries_value):
 
     result = {'count': 0}
 
