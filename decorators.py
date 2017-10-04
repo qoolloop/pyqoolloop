@@ -5,6 +5,8 @@ import types
 import copy
 import funcsigs
 
+#TODO: optional decorator arguments c.f. https://stackoverflow.com/a/14412901
+
 """
 Doesn't support decorating classes not inheriting from object (old-style
 classes) in Python 2.
