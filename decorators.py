@@ -105,6 +105,38 @@ def log_calls(logger):
     return decorator.generic_decorator
 
 
+def log_calls_on_exception(logger, log_exception=True):
+    """
+    Decorator to log calls to functions, when exceptions are raised
+
+    Can be used on classes to log calls to all its methods.
+
+    Argument:
+    logger -- (logging.Logger) object to log to
+    log_exception -- (bool) True, to log stacktrace and exception
+    disable -- (bool) True, to disable logging. To be used in test cases.
+    """
+
+    def log_function(target, *args, **kwargs):
+        try:
+            result = target(*args, **kwargs)
+
+        except Exception as e:
+            logger.info("%s args: %r %r" %
+                        (target.__name__, args, kwargs))
+
+            if log_exception:
+                logger.exception("Exception")
+
+            raise
+
+        return result
+
+
+    decorator = Decorator(log_function)
+    return decorator.generic_decorator
+
+
 def pass_args(target):
     """
     Decorator that passes arguments to the function as a dict as an additional
