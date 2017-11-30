@@ -4,6 +4,8 @@ from builtins import range
 import types
 import copy
 import funcsigs
+import threading
+
 
 #TODO: optional decorator arguments c.f. https://stackoverflow.com/a/14412901
 
@@ -231,4 +233,33 @@ def retry(retries, exceptions, interval_secs=0, extra_argument=False):
 
     
     decorator = Decorator(retry_function)
+    return decorator.generic_decorator
+
+
+def synchronized(lock_field='__lock'):
+    """
+    Used to decorate instance methods and classes that need thread locking
+    for access
+
+    When called for the first time for an instance, this decorator creates
+    a field on self named by `lock_field`, which hold the lock instance for
+    synchronization.
+    """
+    def call_function(target, *args, **kwargs):
+        self = getattr(target, '__self__', None)
+        if self is None:
+            self = args[0]
+
+        lock = getattr(self, lock_field, None)
+        if lock is None:
+            lock = threading.RLock()
+            setattr(self, lock_field, lock)
+
+        with lock:
+            result = target(*args, **kwargs)
+
+        return result
+
+    
+    decorator = Decorator(call_function)
     return decorator.generic_decorator

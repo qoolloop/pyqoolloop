@@ -1,7 +1,12 @@
-from .decorators import pass_args, retry
+from .decorators import (
+    pass_args,
+    retry,
+    synchronized,
+)
 
-import sys
 import pytest
+import sys
+import threading
 
 
 ### Decorator ###
@@ -209,3 +214,33 @@ def test_retry__without_extra_argument(retries_value):
              retries=retries_value)
 
     assert result['count'] == 1
+
+
+### synchronized ###
+
+def test_synchronized_method():
+
+    class A(object):
+
+        @synchronized(lock_field='lock')
+        def method(self):
+            lock = threading.RLock()
+            assert isinstance(self.lock, type(lock))
+
+
+    a = A()
+    a.method()
+
+
+def test_synchronized_class():
+
+    @synchronized(lock_field='lock')
+    class A(object):
+
+        def method(self):
+            lock = threading.RLock()
+            assert isinstance(self.lock, type(lock))
+
+
+    a = A()
+    a.method()
