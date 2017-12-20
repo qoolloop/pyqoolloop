@@ -22,3 +22,15 @@ def dump_pickle(file_path, filename, value):
     with open(os.path.join(file_path, filename), 'wb') as f:
         pickle.dump(value, f)
     # endwith
+
+
+def load_text(file_path, filename):
+    with open(os.path.join(file_path, filename), 'rb') as f:
+        return f.read()
+    # endwith
+
+
+def dump_text(file_path, filename, value):
+    with open(os.path.join(file_path, filename), 'wb') as f:
+        f.write(value)
+    # endwith
