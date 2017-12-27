@@ -229,7 +229,7 @@ def retry(retries, exceptions, interval_secs=0, extra_argument=False):
                 # endif
             # endtry
 
-        raise e
+        raise e  # noqa: F821
 
     
     decorator = Decorator(retry_function)
