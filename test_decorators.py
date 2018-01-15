@@ -2,6 +2,7 @@ from .decorators import (
     pass_args,
     retry,
     synchronized,
+    deprecated,
 )
 
 import pytest
@@ -92,6 +93,68 @@ def test_func_in_old_style_class():
 
     instance.func(arg0="A")
     instance.func("A")
+
+
+### deprecated ###
+
+def test_deprecated__log():
+
+    class _Logger(object):
+
+        def warn(self, message):
+            self.warn_called = True
+
+            assert message.find("deprecated_function") >= 0
+
+
+    _logger = _Logger()
+
+
+    @deprecated(_logger)
+    def deprecated_function(arg1, arg2, kwarg1=None, kwarg2=None):
+        assert arg1 == 1
+        assert arg2 == 2
+        assert kwarg1 == 3
+        assert kwarg2 == 4
+        
+        _logger.function_called = True
+
+        return 5
+
+
+    result = deprecated_function(1, 2, kwarg1=3, kwarg2=4)
+    assert result == 5
+
+    assert _logger.warn_called
+    assert _logger.function_called
+
+
+def test_deprecated__raise_exception():
+
+    class _Logger(object):
+
+        function_called = False
+
+        def warn(self, message):
+            self.warn_called = True
+
+
+    _logger = _Logger()
+
+
+    @deprecated(_logger, raise_exception=True)
+    def deprecated_function():
+        _logger.function_called = True
+
+        return 5
+
+
+    with pytest.raises(DeprecationWarning):
+        result = deprecated_function()
+        assert result is None
+
+    assert _logger.warn_called
+    assert not _logger.function_called
 
 
 ### retry ###

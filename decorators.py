@@ -161,10 +161,14 @@ def pass_args(target):
     decorator = Decorator(passer_function)
     return decorator.generic_decorator(target)
 
-    
-def obsolete(logger, message=None, raise_exception=False):  #TODO: Rename deprecated.
+
+#TODO: Make raise-exception global @deprecated
+raise_exception_for_deprecated = False
+
+
+def deprecated(logger, message=None, raise_exception=False):
     """
-    Used to decorate obsolete functions and classes
+    Used to decorate deprecated functions and classes
 
     Arguments:
     logger -- (Logger) where to log message
@@ -174,7 +178,7 @@ def obsolete(logger, message=None, raise_exception=False):  #TODO: Rename deprec
     """
 
     def log_function(target, *args, **kwargs):
-        message_str = "obsolete function called: %r (%r)" % \
+        message_str = "deprecated function called: %r (%r)" % \
             (target.__name__, target.__module__)
 
         if message is not None:
@@ -191,9 +195,6 @@ def obsolete(logger, message=None, raise_exception=False):  #TODO: Rename deprec
     
     decorator = Decorator(log_function)
     return decorator.generic_decorator
-
-
-deprecated = obsolete  #TODO: Make raise-exception global each for @obsolete and @deprecated
 
 
 def retry(retries, exceptions, interval_secs=0, extra_argument=False):
