@@ -166,7 +166,7 @@ def pass_args(target):
 raise_exception_for_deprecated = False
 
 
-def deprecated(logger, message=None, raise_exception=False):
+def deprecated(logger, message=None, raise_exception=None):
     """
     Used to decorate deprecated functions and classes
 
@@ -186,7 +186,8 @@ def deprecated(logger, message=None, raise_exception=False):
         
         logger.warn(message_str)
 
-        if raise_exception:
+        if raise_exception or \
+           ((raise_exception is None) and raise_exception_for_deprecated):
             raise DeprecationWarning(message_str)
 
         result = target(*args, **kwargs)

@@ -1,3 +1,4 @@
+from . import decorators
 from .decorators import (
     pass_args,
     retry,
@@ -129,7 +130,11 @@ def test_deprecated__log():
     assert _logger.function_called
 
 
-def test_deprecated__raise_exception():
+@pytest.mark.parametrize('global_setting', (
+    True,
+    False,
+))
+def test_deprecated__raise_exception_true(global_setting):
 
     class _Logger(object):
 
@@ -149,12 +154,126 @@ def test_deprecated__raise_exception():
         return 5
 
 
-    with pytest.raises(DeprecationWarning):
-        result = deprecated_function()
-        assert result is None
+    decorators.raise_exception_for_deprecated = global_setting
 
-    assert _logger.warn_called
-    assert not _logger.function_called
+    try:
+        with pytest.raises(DeprecationWarning):
+            result = deprecated_function()
+            assert result is None
+
+        assert _logger.warn_called
+        assert not _logger.function_called
+
+    finally:
+        decorators.raise_exception_for_deprecated = False
+    # endtry
+
+
+@pytest.mark.parametrize('global_setting', (
+    True,
+    False,
+))
+def test_deprecated__raise_exception_false(global_setting):
+
+    class _Logger(object):
+
+        function_called = False
+
+        def warn(self, message):
+            self.warn_called = True
+
+
+    _logger = _Logger()
+
+
+    @deprecated(_logger, raise_exception=False)
+    def deprecated_function():
+        _logger.function_called = True
+
+        return 5
+
+
+    decorators.raise_exception_for_deprecated = global_setting
+
+    try:
+        result = deprecated_function()
+        assert result == 5
+
+        assert _logger.warn_called
+        assert _logger.function_called
+
+    finally:
+        decorators.raise_exception_for_deprecated = False
+    # endtry
+
+
+def test_deprecated__raise_exception_for_deprecated_true():
+
+    class _Logger(object):
+
+        function_called = False
+
+        def warn(self, message):
+            self.warn_called = True
+
+
+    _logger = _Logger()
+
+
+    @deprecated(_logger)
+    def deprecated_function():
+        _logger.function_called = True
+
+        return 5
+
+
+    decorators.raise_exception_for_deprecated = True
+
+    try:
+        with pytest.raises(DeprecationWarning):
+            result = deprecated_function()
+            assert result is None
+
+        assert _logger.warn_called
+        assert not _logger.function_called
+
+    finally:
+        decorators.raise_exception_for_deprecated = False
+    # endtry
+
+
+def test_deprecated__raise_exception_for_deprecated_false():
+
+    class _Logger(object):
+
+        function_called = False
+
+        def warn(self, message):
+            self.warn_called = True
+
+
+    _logger = _Logger()
+
+
+    @deprecated(_logger)
+    def deprecated_function():
+        _logger.function_called = True
+
+        return 5
+
+
+    decorators.raise_exception_for_deprecated = False
+
+    try:
+        result = deprecated_function()
+        assert result == 5
+
+        assert _logger.warn_called
+        assert _logger.function_called
+
+    finally:
+        decorators.raise_exception_for_deprecated = False
+    # endtry
 
 
 ### retry ###
