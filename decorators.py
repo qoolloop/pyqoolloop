@@ -313,10 +313,4 @@ def synchronized(__target=None, *, lock_field='__lock'):
 
 
     decorator = Decorator(call_function)
-    
-    if __target is None:
-        # https://stackoverflow.com/q/653368/2400328
-        # @synchronized(...) with parentheses
-        return decorator.generic_decorator
-
     return decorator.generic_decorator(__target)
