@@ -3,15 +3,12 @@ import copy
 import funcsigs
 from functools import (
     wraps,
-    partial,
 )
 import inspect
 import threading
 import time
 import types
 
-
-#TODO: optional decorator arguments c.f. https://stackoverflow.com/a/14412901
 
 """
 Doesn't support decorating classes not inheriting from object (old-style
@@ -315,11 +312,6 @@ def synchronized(__target=None, *, lock_field='__lock'):
         return result
 
 
-    #TODO: somehow functools.partial didn't work
-    def _partial_function(*args, **kwargs):
-        return call_function(__target, *args, **kwargs)
-
-
     decorator = Decorator(call_function)
     
     if __target is None:
@@ -327,10 +319,4 @@ def synchronized(__target=None, *, lock_field='__lock'):
         # @synchronized(...) with parentheses
         return decorator.generic_decorator
 
-    if isinstance(__target, type):
-        return decorator.generic_decorator(__target)
-
-    if callable(__target):
-        return _partial_function
-
-    assert False, "%r" % type(__target)  #TODO:
+    return decorator.generic_decorator(__target)
