@@ -272,9 +272,9 @@ def retry(retries, exceptions, interval_secs=0, extra_argument=False):
     return decorator.generic_decorator
 
 
-def synchronized(__target_function=None, *, lock_field='__lock'):
+def synchronized(__target=None, *, lock_field='__lock'):
     """
-    Used to decorate instance methods and classes that need thread locking
+    Used to decorate instance methods that need thread locking
     for access
 
     When called for the first time for an instance, this decorator creates
@@ -284,19 +284,11 @@ def synchronized(__target_function=None, *, lock_field='__lock'):
     def call_function(target, *args, **kwargs):  #TODO: prefix _
 
         def _get_self():  #TODO: test with @staticmethod, @classmethod
-            print("target: %r" % target)  #TODO: remove
-            if inspect.ismethod(target) or inspect.isfunction(target):
-                print("What: %r %r" % (inspect.ismethod(target), inspect.isfunction(target)))  #TODO: remove
-
-                self = getattr(target, '__self__', None)
-                if self is None:
-                    # assert False, "returning args[0]"  #TODO: remove
-                    return args[0]
-
-                return self
-
-            print("returning None")  #TODO: remove
-            return None
+            print("%r %r" % (inspect.ismethod(target), inspect.isfunction(target))) #TODO: remove
+            if inspect.ismethod(target):
+                return target.__self__
+                
+            return args[0]
         
 
         print("arguments: %d, %d" % (len(args), len(kwargs)))  #TODO: remove
@@ -318,14 +310,17 @@ def synchronized(__target_function=None, *, lock_field='__lock'):
 
     #TODO: somehow functools.partial didn't work
     def _partial_function(*args, **kwargs):
-        return call_function(__target_function, *args, **kwargs)
+        return call_function(__target, *args, **kwargs)
 
 
     decorator = Decorator(call_function)
     
-    if __target_function is None:
+    if __target is None:
         # https://stackoverflow.com/q/653368/2400328
         # @synchronized(...) with parentheses
         return decorator.generic_decorator
 
-    return _partial_function
+    if callable(__target):
+        return _partial_function
+
+    assert False, "%r" % type(__target)  #TODO:

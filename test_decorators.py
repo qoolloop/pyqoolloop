@@ -63,7 +63,7 @@ class PassArgsClass(object):
         _pass_args_function(arg0, kwargs=kwargs)
         
 
-def test_pass_args_to_class():
+def test_pass_args_to_class():  #TODO: there are no assertions!
 
     instance = PassArgsClass()
 
@@ -71,7 +71,7 @@ def test_pass_args_to_class():
     instance.func("A")
 
 
-def test_old_style_class():
+def test_old_style_class():  #TODO: remove for python 3
 
     if sys.version_info[0] < 3:
         with pytest.raises(AssertionError):
