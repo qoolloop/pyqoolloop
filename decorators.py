@@ -1,10 +1,14 @@
-from functools import wraps
-import time
 from builtins import range
-import types
 import copy
 import funcsigs
+from functools import (
+    wraps,
+    partial,
+)
+import inspect
 import threading
+import time
+import types
 
 
 #TODO: optional decorator arguments c.f. https://stackoverflow.com/a/14412901
@@ -81,6 +85,32 @@ class Decorator:
                 "Unsupported target of type: %r\n" % type(target) + \
                 "(You could have forgotten argument to decorator.)"
         # endif
+
+
+#TODO: remove
+def parentheses_omittable(f):
+    # https://stackoverflow.com/a/14412901/2400328
+    '''
+    a decorator decorator, allowing the decorator to be used as:
+    @decorator(with, arguments, and=kwargs)
+    or
+    @decorator
+
+    Attention:
+      The first argument cannot be a callable or a type.
+    '''
+    @wraps(f)
+    def new_dec(*args, **kwargs):
+        if len(args) == 1 and len(kwargs) == 0 and \
+           (callable(args[0]) or isinstance(args[0], type)):
+            # actual decorated function
+            return f(args[0])
+        else:
+            # decorator arguments
+            return lambda realf: f(realf, *args, **kwargs)
+        # endif
+
+    return new_dec
 
 
 def log_calls(logger):
@@ -162,7 +192,6 @@ def pass_args(target):
     return decorator.generic_decorator(target)
 
 
-#TODO: Make raise-exception global @deprecated
 raise_exception_for_deprecated = False
 
 
@@ -243,19 +272,38 @@ def retry(retries, exceptions, interval_secs=0, extra_argument=False):
     return decorator.generic_decorator
 
 
-def synchronized(lock_field='__lock'):
+def synchronized(__target_function=None, *, lock_field='__lock'):
     """
     Used to decorate instance methods and classes that need thread locking
     for access
 
     When called for the first time for an instance, this decorator creates
-    a field on self named by `lock_field`, which hold the lock instance for
+    a field on self named by `lock_field`, which holds the lock instance for
     synchronization.
     """
-    def call_function(target, *args, **kwargs):
-        self = getattr(target, '__self__', None)
+    def call_function(target, *args, **kwargs):  #TODO: prefix _
+
+        def _get_self():  #TODO: test with @staticmethod, @classmethod
+            print("target: %r" % target)  #TODO: remove
+            if inspect.ismethod(target) or inspect.isfunction(target):
+                print("What: %r %r" % (inspect.ismethod(target), inspect.isfunction(target)))  #TODO: remove
+
+                self = getattr(target, '__self__', None)
+                if self is None:
+                    # assert False, "returning args[0]"  #TODO: remove
+                    return args[0]
+
+                return self
+
+            print("returning None")  #TODO: remove
+            return None
+        
+
+        print("arguments: %d, %d" % (len(args), len(kwargs)))  #TODO: remove
+        self = _get_self()
+        print("self type: %r" % type(self))  #TODO: remove
         if self is None:
-            self = args[0]
+            self = target
 
         lock = getattr(self, lock_field, None)
         if lock is None:
@@ -267,6 +315,17 @@ def synchronized(lock_field='__lock'):
 
         return result
 
-    
+
+    #TODO: somehow functools.partial didn't work
+    def _partial_function(*args, **kwargs):
+        return call_function(__target_function, *args, **kwargs)
+
+
     decorator = Decorator(call_function)
-    return decorator.generic_decorator
+    
+    if __target_function is None:
+        # https://stackoverflow.com/q/653368/2400328
+        # @synchronized(...) with parentheses
+        return decorator.generic_decorator
+
+    return _partial_function

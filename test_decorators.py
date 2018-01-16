@@ -438,11 +438,32 @@ def test_synchronized_method():
         @synchronized(lock_field='lock')
         def method(self):
             lock = threading.RLock()
-            assert isinstance(self.lock, type(lock))
+            assert isinstance(self.lock, type(lock))  #TODO: no need to use type()
+            return "result"
 
 
     a = A()
-    a.method()
+    result = a.method()
+    assert result == "result"
+
+
+def test_synchronized_method__no_parentheses():
+
+    class A(object):
+
+        @synchronized
+        def method(self):
+            lock = threading.RLock()
+            import inspect  #TODO: remove
+            print("self: %r" % self)  #TODO: remove
+            print("self: %r" % inspect.getmembers(self))  #TODO: remove
+            assert isinstance(getattr(self, '__lock'), type(lock))  #TODO: no need to use type()
+            return "result"
+
+
+    a = A()
+    result = a.method()
+    assert result == "result"
 
 
 def test_synchronized_class():
@@ -452,8 +473,10 @@ def test_synchronized_class():
 
         def method(self):
             lock = threading.RLock()
-            assert isinstance(self.lock, type(lock))
+            assert isinstance(self.lock, type(lock))  #TODO: no need to use type()
+            return "result"
 
 
     a = A()
-    a.method()
+    result = a.method()
+    assert result == "result"
