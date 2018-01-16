@@ -59,6 +59,11 @@ class Decorator:
                 return attr
 
 
+        if target is None:
+            # https://stackoverflow.com/q/653368/2400328
+            # @synchronized(...) with parentheses
+            return self.generic_decorator
+
         parent = self
 
         try:
@@ -287,7 +292,9 @@ def synchronized(__target=None, *, lock_field='__lock'):
             print("%r %r" % (inspect.ismethod(target), inspect.isfunction(target))) #TODO: remove
             if inspect.ismethod(target):
                 return target.__self__
-                
+
+            print("target: %r" % target)  #TODO: remove
+            
             return args[0]
         
 
@@ -319,6 +326,9 @@ def synchronized(__target=None, *, lock_field='__lock'):
         # https://stackoverflow.com/q/653368/2400328
         # @synchronized(...) with parentheses
         return decorator.generic_decorator
+
+    if isinstance(__target, type):
+        return decorator.generic_decorator(__target)
 
     if callable(__target):
         return _partial_function

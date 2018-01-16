@@ -6,6 +6,7 @@ from .decorators import (
     deprecated,
 )
 
+import inspect
 import pytest
 import sys
 import threading
@@ -454,7 +455,6 @@ def test_synchronized_method__no_parentheses():
         @synchronized
         def method(self):
             lock = threading.RLock()
-            import inspect  #TODO: remove
             print("self: %r" % self)  #TODO: remove
             print("self: %r" % inspect.getmembers(self))  #TODO: remove
             assert isinstance(getattr(self, '__lock'), type(lock))  #TODO: no need to use type()
@@ -468,7 +468,7 @@ def test_synchronized_method__no_parentheses():
 
 def test_synchronized_class():
 
-    @synchronized(lock_field='lock')
+    @synchronized(lock_field='lock')  #TODO: Is this really necessary for class?
     class A(object):
 
         def method(self):
@@ -480,3 +480,24 @@ def test_synchronized_class():
     a = A()
     result = a.method()
     assert result == "result"
+
+
+def test_synchronized_class__no_parentheses():
+
+    @synchronized  #TODO: Is this really necessary for class?
+    class A(object):
+
+        def method(self):
+            lock = threading.RLock()
+            assert isinstance(getattr(self, '__lock'), type(lock))  #TODO: no need to use type()
+            return "result"
+
+
+    print("__init__: %r %r" % (inspect.ismethod(A.__init__), inspect.isfunction(A.__init__)))  #TODO: remove
+
+    a = A()
+    result = a.method()
+    assert result == "result"
+
+
+#TODO: test with wait()
