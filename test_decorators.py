@@ -438,8 +438,8 @@ def test_synchronized_method():
 
         @synchronized(lock_field='lock')
         def method(self):
-            lock = threading.RLock()
-            assert isinstance(self.lock, type(lock))  #TODO: no need to use type()
+            lock = threading.RLock() # RLock() is a function
+            assert isinstance(self.lock, type(lock))
             return "result"
 
 
@@ -454,15 +454,33 @@ def test_synchronized_method__no_parentheses():
 
         @synchronized
         def method(self):
-            lock = threading.RLock()
+            lock = threading.RLock() # RLock() is a function
             print("self: %r" % self)  #TODO: remove
             print("self: %r" % inspect.getmembers(self))  #TODO: remove
-            assert isinstance(getattr(self, '__lock'), type(lock))  #TODO: no need to use type()
+            assert isinstance(getattr(self, '__lock'), type(lock))
             return "result"
 
 
     a = A()
     result = a.method()
+    assert result == "result"
+
+
+def test_synchronized_staticmethod():
+
+    @synchronized(lock_field='lock')
+    class A(object):
+
+        #TODO: __init__(self)
+
+        @staticmethod
+        def method():
+            assert getattr(A, "lock", None) is None
+
+            return "result"
+
+
+    result = A.method()
     assert result == "result"
 
 
@@ -472,8 +490,8 @@ def test_synchronized_class():
     class A(object):
 
         def method(self):
-            lock = threading.RLock()
-            assert isinstance(self.lock, type(lock))  #TODO: no need to use type()
+            lock = threading.RLock() # RLock() is a function
+            assert isinstance(self.lock, type(lock))
             return "result"
 
 
@@ -488,8 +506,8 @@ def test_synchronized_class__no_parentheses():
     class A(object):
 
         def method(self):
-            lock = threading.RLock()
-            assert isinstance(getattr(self, '__lock'), type(lock))  #TODO: no need to use type()
+            lock = threading.RLock() # RLock() is a function
+            assert isinstance(getattr(self, '__lock'), type(lock))
             return "result"
 
 

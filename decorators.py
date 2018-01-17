@@ -25,6 +25,10 @@ class Decorator:
     def __init__(self, called_function):
         self.called_function = called_function
 
+
+    def generic_decorator_for_class(self, target):
+        return self.generic_decorator(target)
+
     
     def generic_decorator(self, target):
 
@@ -33,13 +37,46 @@ class Decorator:
             return parent.called_function(target, *args, **kwargs)
 
 
-        class NewClass(object):
+        class NewMetaClass(type):
+
+            def __getattribute__(self, attr_name):  # self = cls
+                print("@attr_name: %r" % attr_name)  #TODO: remove
+                
+                try:  #TODO: Might want to rethink order with next __getattribute__() call
+                    class_attr = super(NewMetaClass, self).__getattribute__(
+                        attr_name)
+                    print("@@class_attr: %r" % class_attr)
+                    return class_attr
+
+                except AttributeError:
+                    pass
+
+                print("@target: %r" % target)  #TODO: remove
+                class_attr = type(target).__getattribute__(target, attr_name)
+                print("@class_attr: %r" % class_attr)  #TODO: remove
+                return class_attr
+
+
+        class NewClass(object, metaclass=NewMetaClass):
 
             def __init__(self, *args, **kwargs):
-                self.instance = target(*args, **kwargs)
+                self.instance = target(*args, **kwargs)  #TODO: need to hide `instance` so that it doesn't collide with other names
 
 
             def __getattribute__(self, attr_name):
+
+                def _is_class_attr(attr):
+                    cls = self.instance.__class__
+                    #TODO: Should be? class_attr = type(cls).__getattribute__(cls, attr_name)
+                    class_attr = cls.__getattribute__(cls, attr_name)
+                    print("class_attr: %r" % class_attr)  #TODO: remove
+                    return attr == class_attr
+                
+
+                print("attr_name: %r" % attr_name)  #TODO: remove
+
+                #TODO: Is this going to work for user-overrided functions? searching super before self.instance
+
                 try:
                     attr = super(NewClass, self).__getattribute__(attr_name)
                     return attr
@@ -50,7 +87,14 @@ class Decorator:
                 attr = self.instance.__getattribute__(attr_name)
 
                 if callable(attr):
+                    print("callable attr: %r" % attr)  #TODO: remove
+                    members = inspect.getmembers(attr)
+                    print("getmembers: %r" % [each[0] for each in members])  #TODO: remove
+                    print("call: %r" % attr.__call__)  #TODO: remove
                     assert not isinstance(attr, type)
+                    if _is_class_attr(attr):
+                        return parent.generic_decorator_for_class(attr)
+                    
                     return parent.generic_decorator(attr)
 
                 return attr
@@ -74,9 +118,11 @@ class Decorator:
             return NewClass
 
         elif callable(target):
+            print("callable: %r" % target)  #TODO: remove
             return called_function
 
         elif isinstance(target, staticmethod):
+            # https://stackoverflow.com/a/5345526/2400328
             assert False, "Put decorator after @staticmethod"
 
         elif isinstance(target, classmethod):
@@ -87,32 +133,6 @@ class Decorator:
                 "Unsupported target of type: %r\n" % type(target) + \
                 "(You could have forgotten argument to decorator.)"
         # endif
-
-
-#TODO: remove
-def parentheses_omittable(f):
-    # https://stackoverflow.com/a/14412901/2400328
-    '''
-    a decorator decorator, allowing the decorator to be used as:
-    @decorator(with, arguments, and=kwargs)
-    or
-    @decorator
-
-    Attention:
-      The first argument cannot be a callable or a type.
-    '''
-    @wraps(f)
-    def new_dec(*args, **kwargs):
-        if len(args) == 1 and len(kwargs) == 0 and \
-           (callable(args[0]) or isinstance(args[0], type)):
-            # actual decorated function
-            return f(args[0])
-        else:
-            # decorator arguments
-            return lambda realf: f(realf, *args, **kwargs)
-        # endif
-
-    return new_dec
 
 
 def log_calls(logger):
@@ -276,14 +296,17 @@ def retry(retries, exceptions, interval_secs=0, extra_argument=False):
 
 def synchronized(__target=None, *, lock_field='__lock'):
     """
-    Used to decorate instance methods that need thread locking
+    Used to decorate instance methods and classes that need thread locking
     for access
 
     When called for the first time for an instance, this decorator creates
     a field on self named by `lock_field`, which holds the lock instance for
     synchronization.
+
+    @staticmethod and @classmethod not supported. If put on classes,
+    @staticmethod and @classmethod will be ignored.
     """
-    def call_function(target, *args, **kwargs):  #TODO: prefix _
+    def call_function(target, *args, **kwargs):
 
         def _get_self():  #TODO: test with @staticmethod, @classmethod
             print("%r %r" % (inspect.ismethod(target), inspect.isfunction(target))) #TODO: remove
@@ -312,5 +335,9 @@ def synchronized(__target=None, *, lock_field='__lock'):
         return result
 
 
-    decorator = Decorator(call_function)
+    decorator = Decorator(call_function)  #TODO: Don't need to use Decorator
     return decorator.generic_decorator(__target)
+
+
+def synchronized_on_class(__target=None, *, lock_field='__lock'):
+    TODO
