@@ -430,6 +430,9 @@ def test_retry__without_extra_argument(retries_value):
     assert result['count'] == 1
 
 
+#TODO: test @staticmethod
+#TODO: test @classmethod
+
 ### synchronized ###
 
 def test_synchronized_method():
@@ -476,6 +479,26 @@ def test_synchronized_staticmethod():
         @staticmethod
         def method():
             assert getattr(A, "lock", None) is None
+
+            return "result"
+
+
+    result = A.method()
+    assert result == "result"
+
+
+def test_synchronized_classmethod():
+
+    @synchronized(lock_field='lock')
+    class A(object):
+
+        #TODO: __init__(self)
+
+        @classmethod
+        def method(cls):
+            #TODO: assert cls is A
+
+            assert getattr(cls, "lock", None) is None
 
             return "result"
 

@@ -57,7 +57,7 @@ class Decorator:
                 return class_attr
 
 
-        class NewClass(object, metaclass=NewMetaClass):
+        class NewClass(object, metaclass=NewMetaClass):  #TODO: subclass target
 
             def __init__(self, *args, **kwargs):
                 self.instance = target(*args, **kwargs)  #TODO: need to hide `instance` so that it doesn't collide with other names
@@ -65,7 +65,7 @@ class Decorator:
 
             def __getattribute__(self, attr_name):
 
-                def _is_class_attr(attr):
+                def _is_class_attr(attr):  #TODO: remove?
                     cls = self.instance.__class__
                     #TODO: Should be? class_attr = type(cls).__getattribute__(cls, attr_name)
                     class_attr = cls.__getattribute__(cls, attr_name)
