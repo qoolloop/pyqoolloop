@@ -496,12 +496,14 @@ def test_synchronized_classmethod():
 
         @classmethod
         def method(cls):
-            #TODO: assert cls is A
+            assert cls is A
 
             assert getattr(cls, "lock", None) is None
 
             return "result"
 
+
+    print("A: %r" % A)  #TODO: remove
 
     result = A.method()
     assert result == "result"

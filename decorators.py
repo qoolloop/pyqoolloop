@@ -26,6 +26,8 @@ class Decorator:
         self.called_function = called_function
 
 
+
+
     def generic_decorator_for_class(self, target):
         return self.generic_decorator(target)
 
@@ -37,67 +39,50 @@ class Decorator:
             return parent.called_function(target, *args, **kwargs)
 
 
-        class NewMetaClass(type):
+        def _make_class_decorator(target):
 
-            def __getattribute__(self, attr_name):  # self = cls
-                print("@attr_name: %r" % attr_name)  #TODO: remove
-                
-                try:  #TODO: Might want to rethink order with next __getattribute__() call
-                    class_attr = super(NewMetaClass, self).__getattribute__(
-                        attr_name)
-                    print("@@class_attr: %r" % class_attr)
+            class NewMetaClass(type(target)):
+
+                def __getattribute__(self, attr_name):  # self = cls
+                    print("@attr_name: %r" % attr_name)  #TODO: remove
+
+                    try:  #TODO: Might want to rethink order with next __getattribute__() call
+                        class_attr = super(NewMetaClass, self).__getattribute__(
+                            attr_name)
+                        print("@@class_attr: %r" % class_attr)
+                        return class_attr
+
+                    except AttributeError:
+                        pass
+
+                    print("@target: %r" % target)  #TODO: remove
+                    class_attr = type(target).__getattribute__(target, attr_name)
+                    print("@class_attr: %r" % class_attr)  #TODO: remove
                     return class_attr
 
-                except AttributeError:
-                    pass
 
-                print("@target: %r" % target)  #TODO: remove
-                class_attr = type(target).__getattribute__(target, attr_name)
-                print("@class_attr: %r" % class_attr)  #TODO: remove
-                return class_attr
+            class NewClass(target, metaclass=NewMetaClass):
 
+                def __getattribute__(self, attr_name):
 
-        class NewClass(object, metaclass=NewMetaClass):  #TODO: subclass target
+                    print("attr_name: %r" % attr_name)  #TODO: remove
 
-            def __init__(self, *args, **kwargs):
-                self.instance = target(*args, **kwargs)  #TODO: need to hide `instance` so that it doesn't collide with other names
+                    #TODO: Is this going to work for user-overrided functions? searching super before self.instance
 
-
-            def __getattribute__(self, attr_name):
-
-                def _is_class_attr(attr):  #TODO: remove?
-                    cls = self.instance.__class__
-                    #TODO: Should be? class_attr = type(cls).__getattribute__(cls, attr_name)
-                    class_attr = cls.__getattribute__(cls, attr_name)
-                    print("class_attr: %r" % class_attr)  #TODO: remove
-                    return attr == class_attr
-                
-
-                print("attr_name: %r" % attr_name)  #TODO: remove
-
-                #TODO: Is this going to work for user-overrided functions? searching super before self.instance
-
-                try:
                     attr = super(NewClass, self).__getattribute__(attr_name)
+
+                    if callable(attr):
+                        print("callable attr: %r" % attr)  #TODO: remove
+                        members = inspect.getmembers(attr)
+                        print("getmembers: %r" % [each[0] for each in members])  #TODO: remove
+                        print("call: %r" % attr.__call__)  #TODO: remove
+                        assert not isinstance(attr, type)
+
+                        return parent.generic_decorator(attr)
+
                     return attr
 
-                except AttributeError:
-                    pass
-
-                attr = self.instance.__getattribute__(attr_name)
-
-                if callable(attr):
-                    print("callable attr: %r" % attr)  #TODO: remove
-                    members = inspect.getmembers(attr)
-                    print("getmembers: %r" % [each[0] for each in members])  #TODO: remove
-                    print("call: %r" % attr.__call__)  #TODO: remove
-                    assert not isinstance(attr, type)
-                    if _is_class_attr(attr):
-                        return parent.generic_decorator_for_class(attr)
-                    
-                    return parent.generic_decorator(attr)
-
-                return attr
+            return NewClass
 
 
         if target is None:
@@ -115,7 +100,7 @@ class Decorator:
             pass  # types.ClassType doesn't exist in Python 3
 
         if isinstance(target, type):
-            return NewClass
+            return _make_class_decorator(target)
 
         elif callable(target):
             print("callable: %r" % target)  #TODO: remove
