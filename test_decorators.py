@@ -549,11 +549,13 @@ def test_retry__staticmethod(retries, exceptions):
     with pytest.raises(AnException):
         A.func('arg1', 'arg2', 'kwarg1', 'kwarg2')
 
+    assert result['count'] == retries
+
     a = A()
     with pytest.raises(AnException):
         a.func('arg1', 'arg2', 'kwarg1', 'kwarg2')
 
-    assert result['count'] == retries
+    assert result['count'] == retries * 2
     
 
 #TODO: test @classmethod
