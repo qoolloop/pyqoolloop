@@ -55,10 +55,15 @@ def test_pass_args_to_function():
 @pass_args
 class PassArgsClass(object):
 
+    static_func_call_count = 0
+
+    class_func_call_count = 0
+
     def __init__(self, arg0=0, kwargs=None):
         _pass_args_function(arg0, kwargs=kwargs)
 
-        self.init_called = True
+        self.init_call_count = 1
+        self.func_call_count = 0
 
 
     #TODO: test with special methods like __eq__() (slot wrapper) or __dir__() (method) (They are not in class.__dict__, but they can be obtained with inspect.getmembers()
@@ -67,21 +72,21 @@ class PassArgsClass(object):
     def func(self, arg0=0, kwargs=None):
         _pass_args_function(arg0, kwargs=kwargs)
 
-        self.func_called = True
+        self.func_call_count += 1
         
 
     @staticmethod
     def static_func(arg0=0, kwargs=None):
         _pass_args_function(arg0, kwargs=kwargs)
 
-        PassArgsClass.static_func_called = True
+        PassArgsClass.static_func_call_count += 1
 
 
     @classmethod
     def class_func(cls, arg0=0, kwargs=None):
         _pass_args_function(arg0, kwargs=kwargs)
 
-        cls.class_func_called = True
+        cls.class_func_call_count += 1
         
 
 def test_pass_args_to_class():
@@ -89,29 +94,40 @@ def test_pass_args_to_class():
     instance = PassArgsClass()
 
     instance = PassArgsClass("a")
-    assert instance.init_called
+    assert instance.init_call_count == 1
 
     instance.func(arg0="A")
-    assert instance.func_called
+    assert instance.func_call_count == 1
     
     instance.func("A")
+    assert instance.func_call_count == 2
+
     instance.func()
+    assert instance.func_call_count == 3
 
     PassArgsClass.static_func()
-    assert PassArgsClass.static_func_called
+    assert PassArgsClass.static_func_call_count == 1
 
     PassArgsClass.static_func(arg0="O")
-    PassArgsClass.static_func("")
+    assert PassArgsClass.static_func_call_count == 2
 
-    #TODO: call with instance
+    PassArgsClass.static_func("")
+    assert PassArgsClass.static_func_call_count == 3
+
+    instance.static_func("oo")
+    assert instance.static_func_call_count == 4
     
     PassArgsClass.class_func()
-    assert PassArgsClass.class_func_called
+    assert PassArgsClass.class_func_call_count == 1
 
     PassArgsClass.class_func(arg0="O")
-    PassArgsClass.class_func("")
+    assert PassArgsClass.class_func_call_count == 2
 
-    #TODO: call with instance
+    PassArgsClass.class_func("")
+    assert PassArgsClass.class_func_call_count == 3
+
+    instance.class_func("")
+    assert instance.class_func_call_count == 4
 
     
 def test_old_style_class():  #TODO: remove for python 3
