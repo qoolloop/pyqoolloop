@@ -75,6 +75,13 @@ class PassArgsClass(object):
         _pass_args_function(arg0, kwargs=kwargs)
 
         PassArgsClass.static_func_called = True
+
+
+    @classmethod
+    def class_func(cls, arg0=0, kwargs=None):
+        _pass_args_function(arg0, kwargs=kwargs)
+
+        cls.class_func_called = True
         
 
 def test_pass_args_to_class():
@@ -95,8 +102,18 @@ def test_pass_args_to_class():
 
     PassArgsClass.static_func(arg0="O")
     PassArgsClass.static_func("")
-    
 
+    #TODO: call with instance
+    
+    PassArgsClass.class_func()
+    assert PassArgsClass.class_func_called
+
+    PassArgsClass.class_func(arg0="O")
+    PassArgsClass.class_func("")
+
+    #TODO: call with instance
+
+    
 def test_old_style_class():  #TODO: remove for python 3
 
     if sys.version_info[0] < 3:

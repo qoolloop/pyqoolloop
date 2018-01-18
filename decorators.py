@@ -30,8 +30,7 @@ class Decorator:  #TODO: rename FunctionDecorator
         Arguments:
           called_function -- (callable(target, *args, **kwargs))
             target -- callable(*args, **kwargs)
-          function_for_staticmethod --
-            (callable(target, cls, *args, **kwargs))
+          function_for_staticmethod -- (callable(target, cls, *args, **kwargs))
             target -- callable(*args, **kwargs)
           function_for_classmethod -- (callable(target, cls, *args, **kwargs))
             target -- callable(*args, **kwargs)
@@ -40,15 +39,15 @@ class Decorator:  #TODO: rename FunctionDecorator
         used for class decorators
         """
 
-        def default_function_for_staticmethod(target, cls, *args, **kwargs):
+        def default_function(target, cls, *args, **kwargs):
             return called_function(target, *args, **kwargs)
 
         
         self.called_function = called_function
         self.function_for_staticmethod = function_for_staticmethod or \
-            default_function_for_staticmethod
+            default_function
         self.function_for_classmethod = function_for_classmethod or \
-            called_function
+            default_function
 
 
     def generic_decorator(self, target):
@@ -62,15 +61,31 @@ class Decorator:  #TODO: rename FunctionDecorator
 
             class DescriptorForStaticmethod(object):
 
-                def __init__(self, static_method):
-                    self.static_method = static_method
+                def __init__(self, method):
+                    self.method = method
 
 
                 def __get__(self, instance, owner):
 
                     def called_function(*args, **kwargs):
-                        function = self.static_method.__get__(instance, owner)
+                        function = self.method.__get__(instance, owner)
                         return decorator_self.function_for_staticmethod(
+                            function, owner, *args, **kwargs)
+
+                    return called_function
+
+
+            class DescriptorForClassmethod(object):
+
+                def __init__(self, method):
+                    self.method = method
+
+
+                def __get__(self, instance, owner):
+
+                    def called_function(*args, **kwargs):
+                        function = self.method.__get__(instance, owner)
+                        return decorator_self.function_for_classmethod(
                             function, owner, *args, **kwargs)
 
                     return called_function
@@ -85,6 +100,10 @@ class Decorator:  #TODO: rename FunctionDecorator
 
                 elif isinstance(value, staticmethod):
                     descriptor = DescriptorForStaticmethod(value)
+                    setattr(target_class, name, descriptor)
+
+                elif isinstance(value, classmethod):
+                    descriptor = DescriptorForClassmethod(value)
                     setattr(target_class, name, descriptor)
                 # endif
 
