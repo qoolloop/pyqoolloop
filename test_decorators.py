@@ -55,21 +55,33 @@ def test_pass_args_to_function():
 @pass_args
 class PassArgsClass(object):
 
-    def __init__(self):
-        # args won't be passed to __init__()
-        pass
-
-
-    def func(self, arg0=" ", kwargs=None):
+    def __init__(self, arg0=0, kwargs=None):
         _pass_args_function(arg0, kwargs=kwargs)
+
+        self.init_called = True
+
+
+    #TODO: test with special methods like __eq__() (slot wrapper) or __dir__() (method) (They are not in class.__dict__, but they can be obtained with inspect.getmembers()
+
+
+    def func(self, arg0=0, kwargs=None):
+        _pass_args_function(arg0, kwargs=kwargs)
+
+        self.func_called = True
         
 
-def test_pass_args_to_class():  #TODO: there are no assertions!
+def test_pass_args_to_class():
 
     instance = PassArgsClass()
 
+    instance = PassArgsClass("a")
+    assert instance.init_called
+
     instance.func(arg0="A")
+    assert instance.func_called
+    
     instance.func("A")
+    instance.func()
 
 
 def test_old_style_class():  #TODO: remove for python 3
@@ -430,7 +442,70 @@ def test_retry__without_extra_argument(retries_value):
     assert result['count'] == 1
 
 
-#TODO: test @staticmethod
+@pytest.mark.parametrize('retries, exceptions', (
+    (1, AnException),
+    (2, (AnException, RuntimeError)),
+    (3, (TypeError, AnException)),
+))
+def test_retry__method(retries, exceptions):
+
+    result = {'count': 0}
+
+    class A:
+
+        @retry(retries, exceptions)
+        def func(self, arg1, arg2, kwarg1=None, kwarg2=None):
+            assert arg1 == 'arg1'
+            assert arg2 == 'arg2'
+            assert kwarg1 == 'kwarg1'
+            assert kwarg2 == 'kwarg2'
+
+            result['count'] += 1
+
+            raise AnException("an exception")
+
+
+    a = A()
+    with pytest.raises(AnException):
+        a.func('arg1', 'arg2', 'kwarg1', 'kwarg2')
+
+    assert result['count'] == retries
+    
+
+@pytest.mark.parametrize('retries, exceptions', (
+    (1, AnException),
+    (2, (AnException, RuntimeError)),
+    (3, (TypeError, AnException)),
+))
+def test_retry__staticmethod(retries, exceptions):
+
+    result = {'count': 0}
+
+    class A:
+
+        @staticmethod
+        @retry(retries, exceptions)
+        def func(arg1, arg2, kwarg1=None, kwarg2=None):
+            assert arg1 == 'arg1'
+            assert arg2 == 'arg2'
+            assert kwarg1 == 'kwarg1'
+            assert kwarg2 == 'kwarg2'
+
+            result['count'] += 1
+
+            raise AnException("an exception")
+
+
+    with pytest.raises(AnException):
+        A.func('arg1', 'arg2', 'kwarg1', 'kwarg2')
+
+    a = A()
+    with pytest.raises(AnException):
+        a.func('arg1', 'arg2', 'kwarg1', 'kwarg2')
+
+    assert result['count'] == retries
+    
+
 #TODO: test @classmethod
 
 ### synchronized ###
@@ -486,6 +561,10 @@ def test_synchronized_staticmethod():
     result = A.method()
     assert result == "result"
 
+    a = A()
+    result = a.method()
+    assert result == "result"
+
 
 def test_synchronized_classmethod():
 
@@ -511,7 +590,7 @@ def test_synchronized_classmethod():
 
 def test_synchronized_class():
 
-    @synchronized(lock_field='lock')  #TODO: Is this really necessary for class?
+    @synchronized(lock_field='lock')
     class A(object):
 
         def method(self):
@@ -527,7 +606,7 @@ def test_synchronized_class():
 
 def test_synchronized_class__no_parentheses():
 
-    @synchronized  #TODO: Is this really necessary for class?
+    @synchronized
     class A(object):
 
         def method(self):

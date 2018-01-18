@@ -26,8 +26,6 @@ class Decorator:
         self.called_function = called_function
 
 
-
-
     def generic_decorator_for_class(self, target):
         return self.generic_decorator(target)
 
@@ -36,10 +34,21 @@ class Decorator:
 
         @wraps(target)
         def called_function(*args, **kwargs):
-            return parent.called_function(target, *args, **kwargs)
+            return decorator_self.called_function(target, *args, **kwargs)
 
 
-        def _make_class_decorator(target):
+        def _make_class_decorator(target_class):
+            #TODO: ?: for name, value in inspect.getmembers(target_class):
+            for name, value in target_class.__dict__.items():
+                print("%r : %r = %r" % (name, value, inspect.isfunction(value)))  #TODO: remove
+                if inspect.isfunction(value):
+                    setattr(target_class, name, self.generic_decorator(value))
+                # endif
+
+            return target_class
+            
+
+        def _make_class_decorator_old(target):  #TODO: remove
 
             class NewMetaClass(type(target)):
 
@@ -47,6 +56,10 @@ class Decorator:
                     print("@attr_name: %r" % attr_name)  #TODO: remove
 
                     try:  #TODO: Might want to rethink order with next __getattribute__() call
+                        attr = target.__getattribute__(target, attr_name)  #TODO: remove
+                        print("@@attr: %r" % type(attr))  #TODO: remove
+                        print("@@attr: %r" % [each[0] for each in inspect.getmembers(attr)])  #TODO: remove
+
                         class_attr = super(NewMetaClass, self).__getattribute__(
                             attr_name)
                         print("@@class_attr: %r" % class_attr)
@@ -56,6 +69,10 @@ class Decorator:
                         pass
 
                     print("@target: %r" % target)  #TODO: remove
+
+                    attr = target.__getattribute__(target, attr_name)
+                    print("@attr: %r" % attr)  #TODO: remove
+
                     class_attr = type(target).__getattribute__(target, attr_name)
                     print("@class_attr: %r" % class_attr)  #TODO: remove
                     return class_attr
@@ -69,16 +86,33 @@ class Decorator:
 
                     #TODO: Is this going to work for user-overrided functions? searching super before self.instance
 
-                    attr = super(NewClass, self).__getattribute__(attr_name)
+                    if False:  #TODO: select
+                        attr = super(NewClass, self).__getattribute__(attr_name)
+
+                    elif False:
+                        attr = target.__getattribute__(target, attr_name)
+
+                    else:
+                        attr = NewMetaClass.__getattribute__(NewMetaClass, attr_name)
+
+                    print("attr: %r" % attr)  #TODO: remove
 
                     if callable(attr):
+                        attr = super(NewClass, self).__getattribute__(attr_name)
                         print("callable attr: %r" % attr)  #TODO: remove
                         members = inspect.getmembers(attr)
                         print("getmembers: %r" % [each[0] for each in members])  #TODO: remove
                         print("call: %r" % attr.__call__)  #TODO: remove
                         assert not isinstance(attr, type)
 
-                        return parent.generic_decorator(attr)
+                        return decorator_self.generic_decorator(attr)
+
+                    # https://docs.python.org/3/reference/datamodel.html#invoking-descriptors
+                    
+                    if isinstance(attr, (staticmethod, classmethod)):
+                        func = attr.__get__(self, type(self))
+                        print("func: %r" % func)  #TODO: remove
+                        return decorator_self.generic_decorator(func)
 
                     return attr
 
@@ -90,7 +124,7 @@ class Decorator:
             # @synchronized(...) with parentheses
             return self.generic_decorator
 
-        parent = self
+        decorator_self = self
 
         try:
             assert not isinstance(target, types.ClassType), \
@@ -195,6 +229,7 @@ def pass_args(target):
         result = target(*args, kwargs=composed_kwargs, **kwargs)
         return result
 
+    
     decorator = Decorator(passer_function)
     return decorator.generic_decorator(target)
 
@@ -293,7 +328,7 @@ def synchronized(__target=None, *, lock_field='__lock'):
     """
     def call_function(target, *args, **kwargs):
 
-        def _get_self():  #TODO: test with @staticmethod, @classmethod
+        def _get_lock_holder():  #TODO: test with @staticmethod, @classmethod
             print("%r %r" % (inspect.ismethod(target), inspect.isfunction(target))) #TODO: remove
             if inspect.ismethod(target):
                 return target.__self__
@@ -304,15 +339,16 @@ def synchronized(__target=None, *, lock_field='__lock'):
         
 
         print("arguments: %d, %d" % (len(args), len(kwargs)))  #TODO: remove
-        self = _get_self()
-        print("self type: %r" % type(self))  #TODO: remove
-        if self is None:
-            self = target
+        lock_holder = _get_lock_holder()
+        print("lock_holder type: %r" % type(lock_holder))  #TODO: remove
 
-        lock = getattr(self, lock_field, None)
+        if lock_holder is None:
+            return target(*args, **kwargs)
+
+        lock = getattr(lock_holder, lock_field, None)
         if lock is None:
             lock = threading.RLock()
-            setattr(self, lock_field, lock)
+            setattr(lock_holder, lock_field, lock)
 
         with lock:
             result = target(*args, **kwargs)
