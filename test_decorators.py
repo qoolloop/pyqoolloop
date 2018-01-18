@@ -70,6 +70,13 @@ class PassArgsClass(object):
         self.func_called = True
         
 
+    @staticmethod
+    def static_func(arg0=0, kwargs=None):
+        _pass_args_function(arg0, kwargs=kwargs)
+
+        PassArgsClass.static_func_called = True
+        
+
 def test_pass_args_to_class():
 
     instance = PassArgsClass()
@@ -83,6 +90,12 @@ def test_pass_args_to_class():
     instance.func("A")
     instance.func()
 
+    PassArgsClass.static_func()
+    assert PassArgsClass.static_func_called
+
+    PassArgsClass.static_func(arg0="O")
+    PassArgsClass.static_func("")
+    
 
 def test_old_style_class():  #TODO: remove for python 3
 
@@ -92,6 +105,10 @@ def test_old_style_class():  #TODO: remove for python 3
             class OldStyleClass:
                 pass
         # endwith
+    # endif
+
+
+#TODO: test with @staticmethod and @classmethod
 
 
 class OldStyleClass:

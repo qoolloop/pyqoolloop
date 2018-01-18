@@ -20,16 +20,37 @@ be called from the function of interest.
 """
 
 
-class Decorator:
+class Decorator:  #TODO: rename FunctionDecorator
 
-    def __init__(self, called_function):
+    def __init__(self, called_function,
+                 function_for_staticmethod=None,
+                 function_for_classmethod=None):
+        """
+
+        Arguments:
+          called_function -- (callable(target, *args, **kwargs))
+            target -- callable(*args, **kwargs)
+          function_for_staticmethod --
+            (callable(target, cls, *args, **kwargs))
+            target -- callable(*args, **kwargs)
+          function_for_classmethod -- (callable(target, cls, *args, **kwargs))
+            target -- callable(*args, **kwargs)
+        
+        function_for_staticmethod and function_for_classmethod are only
+        used for class decorators
+        """
+
+        def default_function_for_staticmethod(target, cls, *args, **kwargs):
+            return called_function(target, *args, **kwargs)
+
+        
         self.called_function = called_function
+        self.function_for_staticmethod = function_for_staticmethod or \
+            default_function_for_staticmethod
+        self.function_for_classmethod = function_for_classmethod or \
+            called_function
 
 
-    def generic_decorator_for_class(self, target):
-        return self.generic_decorator(target)
-
-    
     def generic_decorator(self, target):
 
         @wraps(target)
@@ -38,11 +59,33 @@ class Decorator:
 
 
         def _make_class_decorator(target_class):
+
+            class DescriptorForStaticmethod(object):
+
+                def __init__(self, static_method):
+                    self.static_method = static_method
+
+
+                def __get__(self, instance, owner):
+
+                    def called_function(*args, **kwargs):
+                        function = self.static_method.__get__(instance, owner)
+                        return decorator_self.function_for_staticmethod(
+                            function, owner, *args, **kwargs)
+
+                    return called_function
+
+
             #TODO: ?: for name, value in inspect.getmembers(target_class):
             for name, value in target_class.__dict__.items():
                 print("%r : %r = %r" % (name, value, inspect.isfunction(value)))  #TODO: remove
                 if inspect.isfunction(value):
+                    # These are actually methods
                     setattr(target_class, name, self.generic_decorator(value))
+
+                elif isinstance(value, staticmethod):
+                    descriptor = DescriptorForStaticmethod(value)
+                    setattr(target_class, name, descriptor)
                 # endif
 
             return target_class
@@ -328,22 +371,9 @@ def synchronized(__target=None, *, lock_field='__lock'):
     """
     def call_function(target, *args, **kwargs):
 
-        def _get_lock_holder():  #TODO: test with @staticmethod, @classmethod
-            print("%r %r" % (inspect.ismethod(target), inspect.isfunction(target))) #TODO: remove
-            if inspect.ismethod(target):
-                return target.__self__
-
-            print("target: %r" % target)  #TODO: remove
-            
-            return args[0]
-        
-
         print("arguments: %d, %d" % (len(args), len(kwargs)))  #TODO: remove
-        lock_holder = _get_lock_holder()
+        lock_holder = args[0]
         print("lock_holder type: %r" % type(lock_holder))  #TODO: remove
-
-        if lock_holder is None:
-            return target(*args, **kwargs)
 
         lock = getattr(lock_holder, lock_field, None)
         if lock is None:
@@ -356,7 +386,13 @@ def synchronized(__target=None, *, lock_field='__lock'):
         return result
 
 
-    decorator = Decorator(call_function)  #TODO: Don't need to use Decorator
+    def through_function(target, cls, *args, **kwargs):
+        return target(*args, **kwargs)
+
+
+    decorator = Decorator(call_function,
+                          function_for_staticmethod=through_function,
+                          function_for_classmethod=through_function)
     return decorator.generic_decorator(__target)
 
 
