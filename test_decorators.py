@@ -558,7 +558,41 @@ def test_retry__staticmethod(retries, exceptions):
     assert result['count'] == retries * 2
     
 
-#TODO: test @classmethod
+@pytest.mark.parametrize('retries, exceptions', (
+    (1, AnException),
+    (2, (AnException, RuntimeError)),
+    (3, (TypeError, AnException)),
+))
+def test_retry__classmethod(retries, exceptions):
+
+    result = {'count': 0}
+
+    class A:
+
+        @classmethod
+        @retry(retries, exceptions)
+        def func(cls, arg1, arg2, kwarg1=None, kwarg2=None):
+            assert arg1 == 'arg1'
+            assert arg2 == 'arg2'
+            assert kwarg1 == 'kwarg1'
+            assert kwarg2 == 'kwarg2'
+
+            result['count'] += 1
+
+            raise AnException("an exception")
+
+
+    with pytest.raises(AnException):
+        A.func('arg1', 'arg2', 'kwarg1', 'kwarg2')
+
+    assert result['count'] == retries
+
+    a = A()
+    with pytest.raises(AnException):
+        a.func('arg1', 'arg2', 'kwarg1', 'kwarg2')
+
+    assert result['count'] == retries * 2
+    
 
 ### synchronized ###
 
