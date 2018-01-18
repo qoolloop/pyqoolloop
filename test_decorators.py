@@ -568,52 +568,40 @@ def test_retry__classmethod(retries, exceptions):
     assert result['count'] == retries * 2
     
 
-### synchronized_on_function ###
+### common functions ###
 
-def test_synchronized_on_function():
+def _inc_dec(variables):
+    variables['called'] = True
 
-    @synchronized_on_function(lock_field='lock')
-    def function():
-        # Can't check for existence of lock, because
-        # the name `function` doesn't point to the target function anymore.
-        return "result"
+    variables['count'] += 1
+    if variables['count'] != 1:
+        variables['failure'] = True
+
+    time.sleep(0.001)
+
+    variables['count'] -= 1
+    if variables['count'] != 0:
+        variables['failure'] = True
+
+    return "result"
 
 
-    result = function()
-    assert result == "result"
+def _test_synchronized(function):
 
-
-def test_synchronized_on_function__wait():
-
-    variables = {'count': 0, 'failure': False}
-
-    @synchronized_on_function(lock_field='lock')
-    def function():
-        variables['count'] += 1
-        if variables['count'] != 1:
-            variables['failure'] = True
-
-        time.sleep(0.001)
-
-        variables['count'] -= 1
-        if variables['count'] != 0:
-            variables['failure'] = True
-
-        return "result"
-
+    variables = {'count': 0, 'failure': False, 'called': False}
 
     class _Thread(threading.Thread):
 
         def run(self):
-            NUM_ITERATIONS = 10
+            NUM_ITERATIONS = 5
             
             for iteration in range(NUM_ITERATIONS):
-                result = function()
+                result = function(variables)
                 assert result == "result"
             # endfor
 
 
-    NUM_THREADS = 10
+    NUM_THREADS = 5
 
     threads = [_Thread() for count in range(NUM_THREADS)]
     for each in threads:
@@ -622,7 +610,22 @@ def test_synchronized_on_function__wait():
     for each in threads:
         each.join()
 
+    assert variables['called']
+
     assert not variables['failure']
+
+ 
+### synchronized_on_function ###
+
+def test_synchronized_on_function():
+
+    @synchronized_on_function(lock_field='lock')
+    def function(variables):
+        # Cannot access lock on function, because the name `function` doesn't
+        # point to this target function anymore after decoration
+        return _inc_dec(variables)
+
+    _test_synchronized(function)
 
 
 ### synchronized ###
@@ -632,15 +635,14 @@ def test_synchronized_method():
     class A(object):
 
         @synchronized(lock_field='lock')
-        def method(self):
+        def method(self, variables):
             lock = threading.RLock() # RLock() is a function
             assert isinstance(self.lock, type(lock))
-            return "result"
+            return _inc_dec(variables)
 
 
     a = A()
-    result = a.method()
-    assert result == "result"
+    _test_synchronized(a.method)
 
 
 def test_synchronized_method__no_parentheses():
@@ -648,17 +650,16 @@ def test_synchronized_method__no_parentheses():
     class A(object):
 
         @synchronized
-        def method(self):
+        def method(self, variables):
             lock = threading.RLock() # RLock() is a function
             print("self: %r" % self)  #TODO: remove
             print("self: %r" % inspect.getmembers(self))  #TODO: remove
             assert isinstance(getattr(self, '__lock'), type(lock))
-            return "result"
+            return _inc_dec(variables)
 
 
     a = A()
-    result = a.method()
-    assert result == "result"
+    _test_synchronized(a.method)
 
 
 def test_synchronized_staticmethod():
@@ -702,21 +703,24 @@ def test_synchronized_classmethod():
     result = A.method()
     assert result == "result"
 
+    a = A()
+    result = a.method()
+    assert result == "result"
+
 
 def test_synchronized_class():
 
     @synchronized(lock_field='lock')
     class A(object):
 
-        def method(self):
+        def method(self, variables):
             lock = threading.RLock() # RLock() is a function
             assert isinstance(self.lock, type(lock))
-            return "result"
+            return _inc_dec(variables)
 
 
     a = A()
-    result = a.method()
-    assert result == "result"
+    _test_synchronized(a.method)
 
 
 def test_synchronized_class__no_parentheses():
@@ -724,17 +728,11 @@ def test_synchronized_class__no_parentheses():
     @synchronized
     class A(object):
 
-        def method(self):
+        def method(self, variables):
             lock = threading.RLock() # RLock() is a function
             assert isinstance(getattr(self, '__lock'), type(lock))
-            return "result"
+            return _inc_dec(variables)
 
-
-    print("__init__: %r %r" % (inspect.ismethod(A.__init__), inspect.isfunction(A.__init__)))  #TODO: remove
 
     a = A()
-    result = a.method()
-    assert result == "result"
-
-
-#TODO: test with wait()
+    _test_synchronized(a.method)
