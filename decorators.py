@@ -26,6 +26,12 @@ class Decorator:  #TODO: rename FunctionDecorator
                  function_for_staticmethod=None,
                  function_for_classmethod=None):
         """
+        A convenience class for creating decorators
+
+        Decorators created with this can decorate functions and methods.
+        If they decorate classes, it will have the same effect as decorating
+        each method. Only methods listed in __dict__ of the class will be
+        decorated.
 
         Arguments:
           called_function -- (callable(target, *args, **kwargs))
@@ -376,7 +382,42 @@ def retry(retries, exceptions, interval_secs=0, extra_argument=False):
     return decorator.generic_decorator
 
 
-def synchronized(__target=None, *, lock_field='__lock'):
+def synchronized_on_function(__target=None, *, lock_field='__lock'):
+    """
+    Used to decorate function that need thread locking for access
+
+    When called for the first time, this decorator creates a field on
+    the function object named by `lock_field`, which holds the lock
+    instance for synchronization.
+    """
+    def call_function(target, *args, **kwargs):
+
+        print("arguments: %d, %d" % (len(args), len(kwargs)))  #TODO: remove
+        lock_holder = target
+        print("lock_holder type: %r" % type(lock_holder))  #TODO: remove
+
+        lock = getattr(lock_holder, lock_field, None)
+        if lock is None:
+            lock = threading.RLock()
+            setattr(lock_holder, lock_field, lock)
+
+        with lock:
+            result = target(*args, **kwargs)
+
+        return result
+
+
+    def through_function(target, cls, *args, **kwargs):
+        return target(*args, **kwargs)
+
+
+    decorator = Decorator(call_function,
+                          function_for_staticmethod=through_function,
+                          function_for_classmethod=through_function)
+    return decorator.generic_decorator(__target)
+
+
+def synchronized(__target=None, *, lock_field='__lock'):  #TODO: rename synchronized_on_instance
     """
     Used to decorate instance methods and classes that need thread locking
     for access

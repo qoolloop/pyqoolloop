@@ -2,14 +2,15 @@ from . import decorators
 from .decorators import (
     pass_args,
     retry,
+    synchronized_on_function,
     synchronized,
     deprecated,
 )
 
 import inspect
 import pytest
-import sys
 import threading
+import time
 
 
 ### Decorator ###
@@ -66,7 +67,9 @@ class PassArgsClass(object):
         self.func_call_count = 0
 
 
-    #TODO: test with special methods like __eq__() (slot wrapper) or __dir__() (method) (They are not in class.__dict__, but they can be obtained with inspect.getmembers()
+    # Special methods like __eq__() (slot wrapper) and __dir__()
+    # (method) are not supported. (They are not in class.__dict__,
+    # but they can be obtained with inspect.getmembers()
 
 
     def func(self, arg0=0, kwargs=None):
@@ -130,35 +133,6 @@ def test_pass_args_to_class():
     assert instance.class_func_call_count == 4
 
     
-def test_old_style_class():  #TODO: remove for python 3
-
-    if sys.version_info[0] < 3:
-        with pytest.raises(AssertionError):
-            @pass_args
-            class OldStyleClass:
-                pass
-        # endwith
-    # endif
-
-
-#TODO: test with @staticmethod and @classmethod
-
-
-class OldStyleClass:
-
-    @pass_args
-    def func(self, arg0=" ", kwargs=None):
-        _pass_args_function(arg0, kwargs=kwargs)
-    
-    
-def test_func_in_old_style_class():
-
-    instance = OldStyleClass()
-
-    instance.func(arg0="A")
-    instance.func("A")
-
-
 ### deprecated ###
 
 def test_deprecated__log():
@@ -594,6 +568,63 @@ def test_retry__classmethod(retries, exceptions):
     assert result['count'] == retries * 2
     
 
+### synchronized_on_function ###
+
+def test_synchronized_on_function():
+
+    @synchronized_on_function(lock_field='lock')
+    def function():
+        # Can't check for existence of lock, because
+        # the name `function` doesn't point to the target function anymore.
+        return "result"
+
+
+    result = function()
+    assert result == "result"
+
+
+def test_synchronized_on_function__wait():
+
+    variables = {'count': 0, 'failure': False}
+
+    @synchronized_on_function(lock_field='lock')
+    def function():
+        variables['count'] += 1
+        if variables['count'] != 1:
+            variables['failure'] = True
+
+        time.sleep(0.001)
+
+        variables['count'] -= 1
+        if variables['count'] != 0:
+            variables['failure'] = True
+
+        return "result"
+
+
+    class _Thread(threading.Thread):
+
+        def run(self):
+            NUM_ITERATIONS = 10
+            
+            for iteration in range(NUM_ITERATIONS):
+                result = function()
+                assert result == "result"
+            # endfor
+
+
+    NUM_THREADS = 10
+
+    threads = [_Thread() for count in range(NUM_THREADS)]
+    for each in threads:
+        each.start()
+
+    for each in threads:
+        each.join()
+
+    assert not variables['failure']
+
+
 ### synchronized ###
 
 def test_synchronized_method():
@@ -635,7 +666,7 @@ def test_synchronized_staticmethod():
     @synchronized(lock_field='lock')
     class A(object):
 
-        #TODO: __init__(self)
+        # __init__(self) doesn't really need locking
 
         @staticmethod
         def method():
@@ -656,8 +687,6 @@ def test_synchronized_classmethod():
 
     @synchronized(lock_field='lock')
     class A(object):
-
-        #TODO: __init__(self)
 
         @classmethod
         def method(cls):

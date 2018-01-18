@@ -6,4 +6,6 @@ ignore =
        # too many blank lines
        E303,
        # function name should be lower case
-       N802
+       N802,
+       # variable in function should be lower case
+       N806,
