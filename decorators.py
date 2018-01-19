@@ -20,7 +20,7 @@ be called from the function of interest.
 """
 
 
-class Decorator:  #TODO: rename FunctionDecorator
+class FunctionDecorator:  #TODO: rename FunctionDecorator
 
     def __init__(self, called_function,
                  function_for_staticmethod=None,
@@ -242,7 +242,7 @@ def log_calls(logger):
         return result
 
 
-    decorator = Decorator(log_function)
+    decorator = FunctionDecorator(log_function)
     return decorator.generic_decorator
 
 
@@ -274,7 +274,7 @@ def log_calls_on_exception(logger, log_exception=True):
         return result
 
 
-    decorator = Decorator(log_function)
+    decorator = FunctionDecorator(log_function)
     return decorator.generic_decorator
 
 
@@ -298,7 +298,7 @@ def pass_args(target):
         return result
 
     
-    decorator = Decorator(passer_function)
+    decorator = FunctionDecorator(passer_function)
     return decorator.generic_decorator(target)
 
 
@@ -333,7 +333,7 @@ def deprecated(logger, message=None, raise_exception=None):
         return result
 
     
-    decorator = Decorator(log_function)
+    decorator = FunctionDecorator(log_function)
     return decorator.generic_decorator
 
 
@@ -378,7 +378,7 @@ def retry(retries, exceptions, interval_secs=0, extra_argument=False):
         raise e  # noqa: F821
 
     
-    decorator = Decorator(retry_function)
+    decorator = FunctionDecorator(retry_function)
     return decorator.generic_decorator
 
 
@@ -411,8 +411,8 @@ def synchronized_on_function(__target=None, *, lock_field='__lock'):
         return target(*args, **kwargs)
 
 
-    #TODO: Don't really need to use Decorator
-    decorator = Decorator(call_function,
+    #TODO: Don't really need to use FunctionDecorator
+    decorator = FunctionDecorator(call_function,
                           function_for_staticmethod=through_function,
                           function_for_classmethod=through_function)
     return decorator.generic_decorator(__target)
@@ -451,11 +451,12 @@ def synchronized_on_instance(__target=None, *, lock_field='__lock'):
         return target(*args, **kwargs)
 
 
-    decorator = Decorator(call_function,
-                          function_for_staticmethod=through_function,
-                          function_for_classmethod=through_function)
+    decorator = FunctionDecorator(call_function,
+                                  function_for_staticmethod=through_function,
+                                  function_for_classmethod=through_function)
     return decorator.generic_decorator(__target)
 
 
 def synchronized_on_class(__target=None, *, lock_field='__lock'):
-    TODO
+    #TODO: Not sure whether locks should be on each subclass or use one for all subclasses
+    ...

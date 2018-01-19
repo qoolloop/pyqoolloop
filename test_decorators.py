@@ -13,14 +13,14 @@ import threading
 import time
 
 
-# Decorator ###
+# FunctionDecorator ###
 
 @pass_args
 def name_of_function():
     pass
 
 
-def test_Decorator__wraps():
+def test_FunctionDecorator__wraps():
     assert 'name_of_function' == name_of_function.__name__
     
 
