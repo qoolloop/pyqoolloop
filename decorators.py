@@ -20,7 +20,7 @@ be called from the function of interest.
 """
 
 
-class FunctionDecorator:  #TODO: rename FunctionDecorator
+class FunctionDecorator:
 
     def __init__(self, called_function,
                  function_for_staticmethod=None,
@@ -97,7 +97,6 @@ class FunctionDecorator:  #TODO: rename FunctionDecorator
                     return called_function
 
 
-            #TODO: ?: for name, value in inspect.getmembers(target_class):
             for name, value in target_class.__dict__.items():
                 print("%r : %r = %r" % (name, value, inspect.isfunction(value)))  #TODO: remove
                 if inspect.isfunction(value):
@@ -115,77 +114,6 @@ class FunctionDecorator:  #TODO: rename FunctionDecorator
 
             return target_class
             
-
-        def _make_class_decorator_old(target):  #TODO: remove
-
-            class NewMetaClass(type(target)):
-
-                def __getattribute__(self, attr_name):  # self = cls
-                    print("@attr_name: %r" % attr_name)  #TODO: remove
-
-                    try:  #TODO: Might want to rethink order with next __getattribute__() call
-                        attr = target.__getattribute__(target, attr_name)  #TODO: remove
-                        print("@@attr: %r" % type(attr))  #TODO: remove
-                        print("@@attr: %r" % [each[0] for each in inspect.getmembers(attr)])  #TODO: remove
-
-                        class_attr = super(NewMetaClass, self).__getattribute__(
-                            attr_name)
-                        print("@@class_attr: %r" % class_attr)
-                        return class_attr
-
-                    except AttributeError:
-                        pass
-
-                    print("@target: %r" % target)  #TODO: remove
-
-                    attr = target.__getattribute__(target, attr_name)
-                    print("@attr: %r" % attr)  #TODO: remove
-
-                    class_attr = type(target).__getattribute__(target, attr_name)
-                    print("@class_attr: %r" % class_attr)  #TODO: remove
-                    return class_attr
-
-
-            class NewClass(target, metaclass=NewMetaClass):
-
-                def __getattribute__(self, attr_name):
-
-                    print("attr_name: %r" % attr_name)  #TODO: remove
-
-                    #TODO: Is this going to work for user-overrided functions? searching super before self.instance
-
-                    if False:  #TODO: select
-                        attr = super(NewClass, self).__getattribute__(attr_name)
-
-                    elif False:
-                        attr = target.__getattribute__(target, attr_name)
-
-                    else:
-                        attr = NewMetaClass.__getattribute__(NewMetaClass, attr_name)
-
-                    print("attr: %r" % attr)  #TODO: remove
-
-                    if callable(attr):
-                        attr = super(NewClass, self).__getattribute__(attr_name)
-                        print("callable attr: %r" % attr)  #TODO: remove
-                        members = inspect.getmembers(attr)
-                        print("getmembers: %r" % [each[0] for each in members])  #TODO: remove
-                        print("call: %r" % attr.__call__)  #TODO: remove
-                        assert not isinstance(attr, type)
-
-                        return decorator_self.generic_decorator(attr)
-
-                    # https://docs.python.org/3/reference/datamodel.html#invoking-descriptors
-                    
-                    if isinstance(attr, (staticmethod, classmethod)):
-                        func = attr.__get__(self, type(self))
-                        print("func: %r" % func)  #TODO: remove
-                        return decorator_self.generic_decorator(func)
-
-                    return attr
-
-            return NewClass
-
 
         if target is None:
             # https://stackoverflow.com/q/653368/2400328
@@ -413,8 +341,8 @@ def synchronized_on_function(__target=None, *, lock_field='__lock'):
 
     #TODO: Don't really need to use FunctionDecorator
     decorator = FunctionDecorator(call_function,
-                          function_for_staticmethod=through_function,
-                          function_for_classmethod=through_function)
+                                  function_for_staticmethod=through_function,
+                                  function_for_classmethod=through_function)
     return decorator.generic_decorator(__target)
 
 
