@@ -7,7 +7,6 @@ from functools import (
 import inspect
 import threading
 import time
-import types
 
 
 """
@@ -98,7 +97,6 @@ class FunctionDecorator:
 
 
             for name, value in target_class.__dict__.items():
-                print("%r : %r = %r" % (name, value, inspect.isfunction(value)))  #TODO: remove
                 if inspect.isfunction(value):
                     # These are actually methods
                     setattr(target_class, name, self.generic_decorator(value))
@@ -122,18 +120,10 @@ class FunctionDecorator:
 
         decorator_self = self
 
-        try:
-            assert not isinstance(target, types.ClassType), \
-                "Decorator doesn't support old-style classes in Python 2"
-
-        except AttributeError:
-            pass  # types.ClassType doesn't exist in Python 3
-
         if isinstance(target, type):
             return _make_class_decorator(target)
 
         elif callable(target):
-            print("callable: %r" % target)  #TODO: remove
             return called_function
 
         elif isinstance(target, staticmethod):
@@ -320,9 +310,7 @@ def synchronized_on_function(__target=None, *, lock_field='__lock'):
     """
     def call_function(target, *args, **kwargs):
 
-        print("arguments: %d, %d" % (len(args), len(kwargs)))  #TODO: remove
         lock_holder = target
-        print("lock_holder type: %r" % type(lock_holder))  #TODO: remove
 
         lock = getattr(lock_holder, lock_field, None)
         if lock is None:
@@ -360,9 +348,7 @@ def synchronized_on_instance(__target=None, *, lock_field='__lock'):
     """
     def call_function(target, *args, **kwargs):
 
-        print("arguments: %d, %d" % (len(args), len(kwargs)))  #TODO: remove
         lock_holder = args[0]
-        print("lock_holder type: %r" % type(lock_holder))  #TODO: remove
 
         lock = getattr(lock_holder, lock_field, None)
         if lock is None:
