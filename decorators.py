@@ -189,7 +189,7 @@ class Decorator:  #TODO: rename FunctionDecorator
 
         if target is None:
             # https://stackoverflow.com/q/653368/2400328
-            # @synchronized(...) with parentheses
+            # @synchronized_on_instance(...) with parentheses
             return self.generic_decorator
 
         decorator_self = self
@@ -411,13 +411,14 @@ def synchronized_on_function(__target=None, *, lock_field='__lock'):
         return target(*args, **kwargs)
 
 
+    #TODO: Don't really need to use Decorator
     decorator = Decorator(call_function,
                           function_for_staticmethod=through_function,
                           function_for_classmethod=through_function)
     return decorator.generic_decorator(__target)
 
 
-def synchronized(__target=None, *, lock_field='__lock'):  #TODO: rename synchronized_on_instance
+def synchronized_on_instance(__target=None, *, lock_field='__lock'):
     """
     Used to decorate instance methods and classes that need thread locking
     for access

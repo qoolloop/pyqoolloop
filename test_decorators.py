@@ -3,7 +3,7 @@ from .decorators import (
     pass_args,
     retry,
     synchronized_on_function,
-    synchronized,
+    synchronized_on_instance,
     deprecated,
 )
 
@@ -13,7 +13,7 @@ import threading
 import time
 
 
-### Decorator ###
+# Decorator ###
 
 @pass_args
 def name_of_function():
@@ -24,7 +24,7 @@ def test_Decorator__wraps():
     assert 'name_of_function' == name_of_function.__name__
     
 
-### pass_args ###
+# pass_args ###
 
 def _pass_args_function(arg0=0, arg1=1, arg2=2, kwargs=None):
 
@@ -133,7 +133,7 @@ def test_pass_args_to_class():
     assert instance.class_func_call_count == 4
 
     
-### deprecated ###
+# deprecated ###
 
 def test_deprecated__log():
 
@@ -313,7 +313,7 @@ def test_deprecated__raise_exception_for_deprecated_false():
     # endtry
 
 
-### retry ###
+# retry ###
 
 class AnException(Exception):
     pass
@@ -568,7 +568,7 @@ def test_retry__classmethod(retries, exceptions):
     assert result['count'] == retries * 2
     
 
-### common functions ###
+# common functions ###
 
 def _inc_dec(variables):
     variables['called'] = True
@@ -615,7 +615,7 @@ def _test_synchronized(function):
     assert not variables['failure']
 
  
-### synchronized_on_function ###
+# synchronized_on_function ###
 
 def test_synchronized_on_function():
 
@@ -628,13 +628,13 @@ def test_synchronized_on_function():
     _test_synchronized(function)
 
 
-### synchronized ###
+# synchronized_on_instance ###
 
-def test_synchronized_method():
+def test_synchronized_on_instance__method():
 
     class A(object):
 
-        @synchronized(lock_field='lock')
+        @synchronized_on_instance(lock_field='lock')
         def method(self, variables):
             lock = threading.RLock() # RLock() is a function
             assert isinstance(self.lock, type(lock))
@@ -645,11 +645,11 @@ def test_synchronized_method():
     _test_synchronized(a.method)
 
 
-def test_synchronized_method__no_parentheses():
+def test_synchronized_on_instance__method__no_parentheses():
 
     class A(object):
 
-        @synchronized
+        @synchronized_on_instance
         def method(self, variables):
             lock = threading.RLock() # RLock() is a function
             print("self: %r" % self)  #TODO: remove
@@ -662,9 +662,9 @@ def test_synchronized_method__no_parentheses():
     _test_synchronized(a.method)
 
 
-def test_synchronized_staticmethod():
+def test_synchronized_on_instance__staticmethod():
 
-    @synchronized(lock_field='lock')
+    @synchronized_on_instance(lock_field='lock')
     class A(object):
 
         # __init__(self) doesn't really need locking
@@ -684,9 +684,9 @@ def test_synchronized_staticmethod():
     assert result == "result"
 
 
-def test_synchronized_classmethod():
+def test_synchronized_on_instance__classmethod():
 
-    @synchronized(lock_field='lock')
+    @synchronized_on_instance(lock_field='lock')
     class A(object):
 
         @classmethod
@@ -708,9 +708,9 @@ def test_synchronized_classmethod():
     assert result == "result"
 
 
-def test_synchronized_class():
+def test_synchronized_on_instance__class():
 
-    @synchronized(lock_field='lock')
+    @synchronized_on_instance(lock_field='lock')
     class A(object):
 
         def method(self, variables):
@@ -723,9 +723,9 @@ def test_synchronized_class():
     _test_synchronized(a.method)
 
 
-def test_synchronized_class__no_parentheses():
+def test_synchronized_on_instance__class__no_parentheses():
 
-    @synchronized
+    @synchronized_on_instance
     class A(object):
 
         def method(self, variables):
