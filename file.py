@@ -11,12 +11,20 @@ def get_file_path(filename):
     return file_path
     
 
-def load_pickle(file_path, filename):
-    with open(os.path.join(file_path, filename), 'rb') as f:
-        value = pickle.load(f)
+def load_pickle(file_path, filename, raise_exception=False):
+    try:
+        with open(os.path.join(file_path, filename), 'rb') as f:
+            value = pickle.load(f)
 
-    return value
+        return value
 
+    except:
+        if raise_exception:
+            raise
+
+        return None
+    # endtry
+    
 
 def dump_pickle(file_path, filename, value):
     with open(os.path.join(file_path, filename), 'wb') as f:
