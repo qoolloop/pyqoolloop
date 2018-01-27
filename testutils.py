@@ -1,5 +1,3 @@
-from .database import transaction
-
 import sys
 
 import pylog
@@ -46,3 +44,41 @@ def equal_set(one_set, another_set, equals=eq):
 def current_function_name(pop_stack=0):
     # https://stackoverflow.com/a/13514318/2400328
     return sys._getframe(pop_stack + 1).f_code.co_name
+
+
+def combine_lists(*args):
+    assert len(args) >= 1
+
+    if len(args) == 1:
+        return args[0]
+    
+    one_list = args[0]
+    another_list = combine_lists(*args[1:])
+                                  
+    result = []
+    for another in another_list:
+        if not isinstance(another, (list, tuple)):
+            another = [another]
+            
+        for one in one_list:
+            if not isinstance(one, (list, tuple)):
+                one = [one]
+                
+            elif isinstance(one, tuple):
+                one = list(one)
+
+            one.extend(another)
+
+            result.append(one)
+        # endfor
+    # endfor
+
+    return result
+
+
+def list_list_to_tuple_set(list_list):
+    result = set()
+    for each_list in list_list:
+        result.add(tuple(each_list))
+
+    return result
