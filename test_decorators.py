@@ -636,7 +636,7 @@ def test_synchronized_on_instance__method():
 
         @synchronized_on_instance(lock_field='lock')
         def method(self, variables):
-            lock = threading.RLock() # RLock() is a function
+            lock = threading.RLock()  # RLock() is a function
             assert isinstance(self.lock, type(lock))
             return _inc_dec(variables)
 
@@ -651,7 +651,7 @@ def test_synchronized_on_instance__method__no_parentheses():
 
         @synchronized_on_instance
         def method(self, variables):
-            lock = threading.RLock() # RLock() is a function
+            lock = threading.RLock()  # RLock() is a function
             print("self: %r" % self)  #TODO: remove
             print("self: %r" % inspect.getmembers(self))  #TODO: remove
             assert isinstance(getattr(self, '__lock'), type(lock))
@@ -714,7 +714,7 @@ def test_synchronized_on_instance__class():
     class A(object):
 
         def method(self, variables):
-            lock = threading.RLock() # RLock() is a function
+            lock = threading.RLock()  # RLock() is a function
             assert isinstance(self.lock, type(lock))
             return _inc_dec(variables)
 
@@ -729,7 +729,7 @@ def test_synchronized_on_instance__class__no_parentheses():
     class A(object):
 
         def method(self, variables):
-            lock = threading.RLock() # RLock() is a function
+            lock = threading.RLock()  # RLock() is a function
             assert isinstance(getattr(self, '__lock'), type(lock))
             return _inc_dec(variables)
 

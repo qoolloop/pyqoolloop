@@ -293,7 +293,7 @@ def retry(retries, exceptions, interval_secs=0, extra_argument=False):
 
         # e is not available outside except clause in Python 3
         # https://cosmicpercolator.com/2016/01/13/exception-leaks-in-python-2-and-3/
-        raise e  # noqa: F821
+        assert False, "Unexpected execution"
 
     
     decorator = FunctionDecorator(retry_function)
