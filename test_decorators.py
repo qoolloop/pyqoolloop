@@ -698,8 +698,6 @@ def test_synchronized_on_instance__classmethod():
             return "result"
 
 
-    print("A: %r" % A)  #TODO: remove
-
     result = A.method()
     assert result == "result"
 
