@@ -10,13 +10,12 @@ import time
 
 
 """
-Doesn't support decorating classes not inheriting from object (old-style
-classes) in Python 2.
-
 Cannot decorate fixtures or test functions directly in py.test.
 Arguments(=fixtures) don't get passed in. Please define another function to
 be called from the function of interest.
 """
+
+#TODO: Drop support for Python 2
 
 
 class FunctionDecorator:
@@ -39,10 +38,23 @@ class FunctionDecorator:
             target -- callable(*args, **kwargs)
           function_for_classmethod -- (callable(target, cls, *args, **kwargs))
             target -- callable(*args, **kwargs)
-        
-        function_for_staticmethod and function_for_classmethod are only
-        used for class decorators
+
+        Notes:
+          function_for_staticmethod and function_for_classmethod are only
+          used for class decorators
         """
+        # Attempt to use this class also as a context manager (for use with
+        # `with` statements) has been abandoned, because:
+        # - It is not possible to write loops with context managers.
+
+        # Attempt to use this class also as a generator (for use with `for`
+        # loops instead of `with` statements) has been abandoned, because:
+        # - Exception handling with generators is error-prone.
+        #   (Need to use throw()
+        #    https://www.python.org/dev/peps/pep-0342/#id9 )
+        # - try-catch is necessary to relay caught exceptions to the generator,
+        #   but the boilerplate is cumbersome, and can be concisely written
+        #   by extracting a function and decorating it.
 
         def default_function(target, cls, *args, **kwargs):
             return called_function(target, *args, **kwargs)
