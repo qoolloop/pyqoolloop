@@ -42,3 +42,15 @@ def dump_text(file_path, filename, value):
     with open(os.path.join(file_path, filename), 'wb') as f:
         f.write(value)
     # endwith
+
+
+def list_directories(path, exclusion=()):
+    exclusion = set(exclusion)
+    
+    result = []
+    for each in os.scandir(path):
+        if each.is_dir() and (each.name not in exclusion):
+            result.append(each.name)
+        # endif
+
+    return result
