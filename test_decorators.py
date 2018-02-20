@@ -12,6 +12,9 @@ import pytest
 import threading
 import time
 
+import pylog
+logger = pylog.getLogger(__name__)
+
 
 # FunctionDecorator ###
 
@@ -652,8 +655,8 @@ def test_synchronized_on_instance__method__no_parentheses():
         @synchronized_on_instance
         def method(self, variables):
             lock = threading.RLock()  # RLock() is a function
-            print("self: %r" % self)  #TODO: remove
-            print("self: %r" % inspect.getmembers(self))  #TODO: remove
+            logger.info("self: %r", self)
+            logger.info("self: %r", inspect.getmembers(self))
             assert isinstance(getattr(self, '__lock'), type(lock))
             return _inc_dec(variables)
 
