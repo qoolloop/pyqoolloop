@@ -47,10 +47,21 @@ def dump_pickle(file_path, filename, value, overwrite=False):
     # endwith
 
 
-def load_text(file_path, filename):
-    with open(os.path.join(file_path, filename), 'rb') as f:
-        return f.read()
-    # endwith
+def load_text(file_path, filename, raise_exception=False):
+    try:
+        with open(os.path.join(file_path, filename), 'r') as f:
+            return f.read()
+        # endwith
+
+    except:
+        print("Caught")  #TODO: remove
+        print("Raising: %r" % raise_exception)  #TODO: remove
+        if raise_exception:
+            raise
+
+        print("Returning None")  #TODO: remove
+        return None
+    # endtry
 
 
 def dump_text(file_path, filename, value, overwrite=False):
@@ -58,7 +69,7 @@ def dump_text(file_path, filename, value, overwrite=False):
 
     _check_overwrite(full_filename, overwrite)
 
-    with open(full_filename, 'wb') as f:  #TODO: Should this be 'wb'?
+    with open(full_filename, 'w') as f:
         f.write(value)
     # endwith
 
