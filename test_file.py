@@ -53,14 +53,10 @@ def test__no_destination(load_func, dump_func, value):
             read = load_func(temp_dir_name, filename)
 
         finally:
-            print("removing: %r" % os.path.join(temp_dir_name, filename))  #TODO: remove
             os.remove(os.path.join(temp_dir_name, filename))
 
         assert read == value
 
-    except:
-        logger.exception("Caught")  #TODO: remove
-        
     finally:
         os.rmdir(temp_dir_name)
     # endtry
@@ -81,7 +77,6 @@ def test__destination_exists__no_exception(load_func, dump_func, value):
         read = load_func('', temp_filename)
 
     finally:
-        print("removing: %r" % temp_filename)  #TODO: remove
         os.remove(temp_filename)
 
     assert read == value
@@ -99,5 +94,4 @@ def test__destination_exists__exception(load_func, dump_func, value):
     with pytest.raises(FileExistsError):
         dump_func('', temp_filename, value)
 
-    print("removing: %r" % temp_filename)  #TODO: remove
     os.remove(temp_filename)

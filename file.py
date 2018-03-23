@@ -15,18 +15,13 @@ def load_pickle(file_path, filename, raise_exception=False):
     try:
         with open(os.path.join(file_path, filename), 'rb') as f:
             value = pickle.load(f)
-            print("Read")  #TODO: remove
 
-        print("Returning")  #TODO: remove
         return value
 
     except:
-        print("Caught")  #TODO: remove
-        print("Raising: %r" % raise_exception)  #TODO: remove
         if raise_exception:
             raise
 
-        print("Returning None")  #TODO: remove
         return None
     # endtry
 
@@ -54,12 +49,9 @@ def load_text(file_path, filename, raise_exception=False):
         # endwith
 
     except:
-        print("Caught")  #TODO: remove
-        print("Raising: %r" % raise_exception)  #TODO: remove
         if raise_exception:
             raise
 
-        print("Returning None")  #TODO: remove
         return None
     # endtry
 
