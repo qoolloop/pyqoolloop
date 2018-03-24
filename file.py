@@ -20,6 +20,8 @@ def load_pickle(file_path, filename, raise_exception=False):
 
     except:
         if raise_exception:
+            # Python 3 raises FileNotFoundError
+            # https://stackoverflow.com/a/15032444/2400328
             raise
 
         return None
@@ -27,6 +29,8 @@ def load_pickle(file_path, filename, raise_exception=False):
 
 
 def _check_overwrite(full_filename, overwrite):
+    #TODO: Do something about race conditions with os.path.exists()
+
     if not overwrite and os.path.exists(full_filename):
         raise FileExistsError()
     # endif
@@ -50,6 +54,8 @@ def load_text(file_path, filename, raise_exception=False):
 
     except:
         if raise_exception:
+            # Python 3 raises FileNotFoundError
+            # https://stackoverflow.com/a/15032444/2400328
             raise
 
         return None
