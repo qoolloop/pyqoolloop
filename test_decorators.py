@@ -5,10 +5,11 @@ from .decorators import (
     synchronized_on_function,
     synchronized_on_instance,
     deprecated,
+    keep_cache,
 )
-
 import inspect
 import pytest
+import random
 import threading
 import time
 
@@ -737,3 +738,127 @@ def test_synchronized_on_instance__class__no_parentheses():
 
     a = A()
     _test_synchronized(a.method)
+
+
+# keep_cache ###
+
+def test_keep_cache__no_args():
+    
+    @keep_cache(keep_time_secs=0.1)
+    def _function():
+        return random.random()
+
+
+    first = _function()
+    
+    second = _function()
+
+    assert first == second
+
+
+def test_keep_cache__args():
+
+    @keep_cache(keep_time_secs=0.1)
+    def _function(arg1, arg2):
+        return arg1 + arg2 + random.random()
+
+
+    first = _function(1, 1)
+    
+    different = _function(1, 2)
+    assert different != first
+
+    second = _function(1, 1)
+
+    assert first == second
+
+
+def test_keep_cache__kwargs():
+
+    @keep_cache(keep_time_secs=0.1)
+    def _function(arg0, arg1=0, arg2=3):
+        return arg1 + arg2 + random.random()
+
+
+    first = _function(1, arg2=1)
+    
+    different = _function(1, arg2=2)
+    assert different != first
+
+    second = _function(1, arg2=1)
+
+    assert first == second
+
+
+def test_keep_cache__default_kwargs():
+
+    @keep_cache(keep_time_secs=0.1)
+    def _function(arg0, arg1=0, arg2=3):
+        return arg1 + arg2 + random.random()
+
+
+    first = _function(1)
+    
+    different = _function(1, arg2=2)
+    assert different != first
+
+    second = _function(1, arg1=0)
+
+    assert first == second
+
+
+def test_keep_cache__max_entries():
+
+    max_entries = 3
+
+    @keep_cache(keep_time_secs=10, max_entries=max_entries)
+    def _function(arg):
+        return arg
+
+
+    for index in range(max_entries):
+        if index == max_entries - 1:
+            with pytest.raises(AssertionError):
+                _ = _function(index)
+            # endwith
+
+        else:
+            value = _function(index)
+            assert value == index
+        # endif
+    # endfor
+
+
+def test_keep_cache__max_entries__same_args():
+
+    max_entries = 3
+
+    @keep_cache(keep_time_secs=10, max_entries=max_entries)
+    def _function(arg):
+        return arg
+
+
+    for index in range(max_entries + 1):
+        value = _function(0)
+        assert value == 0
+    # endfor
+
+
+def test_keep_cache__max_entries__expire():
+
+    max_entries = 3
+
+    keep_time_secs = 0.01
+
+    @keep_cache(keep_time_secs=keep_time_secs, max_entries=max_entries)
+    def _function(arg):
+        return arg
+
+
+    for index in range(max_entries):
+        if index == max_entries - 1:
+            time.sleep(keep_time_secs)
+            
+        value = _function(index)
+        assert value == index
+    # endfor

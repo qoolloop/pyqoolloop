@@ -1,5 +1,7 @@
 from builtins import range
+from collections import OrderedDict
 import copy
+import datetime
 import funcsigs
 from functools import (
     wraps,
@@ -56,7 +58,7 @@ class FunctionDecorator:
         #   but the boilerplate is cumbersome, and can be concisely written
         #   by extracting a function and decorating it.
 
-        def default_function(target, cls, *args, **kwargs):
+        def default_function(target, cls, *args, **kwargs):  #TODO: use _through_function()
             return called_function(target, *args, **kwargs)
 
         
@@ -150,6 +152,10 @@ class FunctionDecorator:
                 "Unsupported target of type: %r\n" % type(target) + \
                 "(You could have forgotten argument to decorator.)"
         # endif
+
+
+def _through_function(target, cls, *args, **kwargs):
+    return target(*args, **kwargs)
 
 
 def log_calls(logger):
@@ -335,14 +341,10 @@ def synchronized_on_function(__target=None, *, lock_field='__lock'):
         return result
 
 
-    def through_function(target, cls, *args, **kwargs):
-        return target(*args, **kwargs)
-
-
     #TODO: Don't really need to use FunctionDecorator
     decorator = FunctionDecorator(call_function,
-                                  function_for_staticmethod=through_function,
-                                  function_for_classmethod=through_function)
+                                  function_for_staticmethod=_through_function,
+                                  function_for_classmethod=_through_function)
     return decorator.generic_decorator(__target)
 
 
@@ -373,16 +375,67 @@ def synchronized_on_instance(__target=None, *, lock_field='__lock'):
         return result
 
 
-    def through_function(target, cls, *args, **kwargs):
-        return target(*args, **kwargs)
-
-
     decorator = FunctionDecorator(call_function,
-                                  function_for_staticmethod=through_function,
-                                  function_for_classmethod=through_function)
+                                  function_for_staticmethod=_through_function,
+                                  function_for_classmethod=_through_function)
     return decorator.generic_decorator(__target)
 
 
 def synchronized_on_class(__target=None, *, lock_field='__lock'):
     #TODO: Not sure whether locks should be on each subclass or use one for all subclasses
     ...
+
+
+def keep_cache(__target=None, *, keep_time_secs=None, max_entries=None):
+    """
+    Decorator to cache returned values of a function for at least the time
+    specified
+
+    Notes:
+      Argument values for the target function must be hashable.
+    
+    Arguments:
+      keep_time_secs -- (float; mandatory) Keep value longer than this period
+        (seconds)
+      max_entries -- (int) Don't keep more than this number of entries
+
+    Raises:
+      AssertionError -- There are more than `max_entries` values within
+        `keep_time_secs`
+    """
+
+    cache = OrderedDict()  # holds tuples (<time>, <value>)
+
+    
+    def cached_function(target, *args, **kwargs):
+
+        def _get_args():
+            signature = inspect.signature(target)
+            bind = signature.bind(*args, **kwargs)
+            bind.apply_defaults()
+            return bind.arguments
+        
+
+        arguments = _get_args()
+        # https://stackoverflow.com/a/39440252/2400328
+        key = frozenset(arguments.items())
+        if key in cache:
+            return cache[key][1]
+
+        now = datetime.datetime.utcnow()
+        
+        if max_entries and (len(cache) >= max_entries - 1):
+            old_key, old_value = cache.popitem(last=False)
+            assert (now - old_value[0]).total_seconds() > keep_time_secs
+
+        value = target(*args, **kwargs)
+
+        cache[key] = (now, value)
+
+        return value
+
+
+    decorator = FunctionDecorator(cached_function,
+                                  function_for_staticmethod=_through_function,
+                                  function_for_classmethod=_through_function)
+    return decorator.generic_decorator(__target)
