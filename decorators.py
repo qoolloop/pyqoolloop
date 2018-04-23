@@ -389,7 +389,7 @@ def synchronized_on_class(__target=None, *, lock_field='__lock'):
 def keep_cache(__target=None, *, keep_time_secs=None, max_entries=None):
     """
     Decorator to cache returned values of a function for at least the time
-    specified
+    specified since the last call
 
     Notes:
       Argument values for the target function must be hashable.
@@ -416,15 +416,21 @@ def keep_cache(__target=None, *, keep_time_secs=None, max_entries=None):
             return bind.arguments
         
 
+        now = datetime.datetime.utcnow()
+        
         arguments = _get_args()
         # https://stackoverflow.com/a/39440252/2400328
         key = frozenset(arguments.items())
         if key in cache:
-            return cache[key][1]
+            value = cache[key][1]
 
-        now = datetime.datetime.utcnow()
-        
-        if max_entries and (len(cache) >= max_entries - 1):
+            del cache[key]
+
+            cache[key] = (now, value)
+
+            return value
+
+        if max_entries and (len(cache) >= max_entries):
             old_key, old_value = cache.popitem(last=False)
             assert (now - old_value[0]).total_seconds() > keep_time_secs
 

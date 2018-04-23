@@ -816,8 +816,8 @@ def test_keep_cache__max_entries():
         return arg
 
 
-    for index in range(max_entries):
-        if index == max_entries - 1:
+    for index in range(max_entries + 1):
+        if index == max_entries:
             with pytest.raises(AssertionError):
                 _ = _function(index)
             # endwith
@@ -861,4 +861,26 @@ def test_keep_cache__max_entries__expire():
             
         value = _function(index)
         assert value == index
+    # endfor
+
+
+def test_keep_cache__max_entries__refresh():
+
+    max_entries = 3
+
+    keep_time_secs = 0.01
+
+    @keep_cache(keep_time_secs=keep_time_secs, max_entries=max_entries)
+    def _function(arg):
+        return arg
+
+
+    for index in range(max_entries):
+        value = _function(index)
+        assert value == index
+
+    for index in range(5):
+        time.sleep(keep_time_secs / 2)
+        value = _function(0)
+        assert value == 0
     # endfor
