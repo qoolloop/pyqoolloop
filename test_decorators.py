@@ -642,7 +642,7 @@ def _test_synchronized(function):
     assert variables['count'] == NUM_THREADS * NUM_ITERATIONS
 
 
-def _test_synchronized_2(function, variables):  #TODO: rename _test_synchronized()
+def _test_synchronized_2(variables, function, *args, **kwargs):  #TODO: rename _test_synchronized()
 
     NUM_ITERATIONS = 5
             
@@ -652,7 +652,7 @@ def _test_synchronized_2(function, variables):  #TODO: rename _test_synchronized
 
         def run(self):
             for iteration in range(NUM_ITERATIONS):
-                result = function()
+                result = function(*args, **kwargs)
                 assert result == "result"
             # endfor
 
@@ -676,26 +676,30 @@ def _test_synchronized_2(function, variables):  #TODO: rename _test_synchronized
 
 def test_synchronized_on_function():
 
+    variables = _create_variables()
+
     @synchronized_on_function(lock_field='lock')
-    def function(variables):
+    def function():
         # Cannot access lock on function, because the name `function` doesn't
         # point to this target function anymore after decoration
         return _inc_dec(variables)
 
-    _test_synchronized(function)
+    _test_synchronized_2(variables, function)
 
 
 @pytest.mark.unreliable
 def test_synchronized_on_function__dont_synchronize():
 
+    variables = _create_variables()
+
     @synchronized_on_function(lock_field='lock', dont_synchronize=True)
-    def function(variables):
+    def function():
         # Cannot access lock on function, because the name `function` doesn't
         # point to this target function anymore after decoration
         return _inc_dec(variables)
 
     with pytest.raises(AssertionError):
-        _test_synchronized(function)
+        _test_synchronized_2(variables, function)
     # endwith
 
 
@@ -712,8 +716,10 @@ def test_synchronized_on_instance__method():
             return _inc_dec(variables)
 
 
+    variables = _create_variables()
+
     a = A()
-    _test_synchronized(a.method)
+    _test_synchronized_2(variables, a.method, variables)
 
 
 def test_synchronized_on_instance__method__no_parentheses():
@@ -729,8 +735,10 @@ def test_synchronized_on_instance__method__no_parentheses():
             return _inc_dec(variables)
 
 
+    variables = _create_variables()
+
     a = A()
-    _test_synchronized(a.method)
+    _test_synchronized_2(variables, a.method, variables)
 
 
 def test_synchronized_on_instance__staticmethod():
@@ -788,8 +796,10 @@ def test_synchronized_on_instance__class():
             return _inc_dec(variables)
 
 
+    variables = _create_variables()
+
     a = A()
-    _test_synchronized(a.method)
+    _test_synchronized_2(variables, a.method, variables)
 
 
 def test_synchronized_on_instance__class__no_parentheses():
@@ -803,8 +813,10 @@ def test_synchronized_on_instance__class__no_parentheses():
             return _inc_dec(variables)
 
 
+    variables = _create_variables()
+
     a = A()
-    _test_synchronized(a.method)
+    _test_synchronized_2(variables, a.method, variables)
 
 
 # keep_cache ###
@@ -1116,4 +1128,4 @@ def test_expire_cache__synchronize():
         return _inc_dec(variables)
 
 
-    _test_synchronized_2(_function, variables)
+    _test_synchronized_2(variables, _function)
