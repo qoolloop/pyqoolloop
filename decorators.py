@@ -352,15 +352,11 @@ def synchronized_on_function(
         return result
 
 
-    def _through_function_static(target, *args, **kwargs):
-        return target(*args, **kwargs)
-    
-
     #TODO: Don't really need to use FunctionDecorator
     #TODO: Is FunctionDecorator necessary when dont_synchronize=False?
     decorator = FunctionDecorator(
         _call_function
-        if not dont_synchronize else _through_function_static,
+        if not dont_synchronize else _through_staticmethod,
         function_for_staticmethod=_through_classmethod,
         function_for_classmethod=_through_classmethod)
     return decorator.generic_decorator(__target)
