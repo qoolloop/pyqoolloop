@@ -942,20 +942,14 @@ def test_keep_cache__max_entries__refresh():
         return arg
 
 
-    def _caller(index):
+    for index in range(max_entries):
         value = _function(index)
         assert value == index
 
-
-    arguments = (index for index in range(max_entries))
-    with ThreadPool(max_entries) as pool:
-        pool.map(_caller, arguments)
-
-    pick = random.randint(0, max_entries - 1)
     for index in range(5):
         time.sleep(keep_time_secs / 2)
-        value = _function(pick)
-        assert value == pick
+        value = _function(0)
+        assert value == 0
     # endfor
 
 
@@ -1071,15 +1065,10 @@ def test_expire_cache__max_entries():
         return arg
 
 
-    def _caller(index):
+    for index in range(max_entries + 1):
         value = _function(index)
         assert value == index
-        
-
-    arguments = (index for index in range(max_entries + 1))
-    with ThreadPool(max_entries) as pool:
-        pool.map(_caller, arguments)
-    # enndwith
+    # endfor
 
 
 def test_expire_cache__max_entries__same_args():
@@ -1091,15 +1080,10 @@ def test_expire_cache__max_entries__same_args():
         return arg
 
 
-    def _caller(arg):
+    for index in range(max_entries + 1):
         value = _function(0)
         assert value == 0
-
-
-    arguments = (0, ) * (max_entries + 1)
-    with ThreadPool(max_entries + 1) as pool:
-        pool.map(_caller, arguments)
-    # endwith
+    # endfor
 
 
 def test_expire_cache__max_entries__refresh():
@@ -1113,9 +1097,8 @@ def test_expire_cache__max_entries__refresh():
 
     first = _function(0)
 
-    arguments = [index + 1 for index in range(max_entries)]
-    with ThreadPool(max_entries) as pool:
-        pool.map(_function, arguments)
+    for index in range(max_entries):
+        _function(index + 1)
 
     second = _function(0)
 
