@@ -793,7 +793,7 @@ def test_keep_cache__no_args():
     
     @keep_cache(keep_time_secs=0.1)
     def _function():
-        return random.random()  #TODO: Should use counter
+        return _counter_function()
 
 
     first = _function()
@@ -807,7 +807,7 @@ def test_keep_cache__args():
 
     @keep_cache(keep_time_secs=0.1)
     def _function(arg1, arg2):
-        return arg1 + arg2 + random.random()
+        return arg1 + arg2 + _counter_function()
 
 
     first = _function(1, 1)
@@ -824,7 +824,7 @@ def test_keep_cache__kwargs():
 
     @keep_cache(keep_time_secs=0.1)
     def _function(arg0, arg1=0, arg2=3):
-        return arg1 + arg2 + random.random()
+        return arg1 + arg2 + _counter_function()
 
 
     first = _function(1, arg2=1)
@@ -841,12 +841,12 @@ def test_keep_cache__default_kwargs():
 
     @keep_cache(keep_time_secs=0.1)
     def _function(arg0, arg1=0, arg2=3):
-        return arg1 + arg2 + random.random()
+        return arg1 + arg2 + _counter_function()
 
 
     first = _function(1)
     
-    different = _function(1, arg2=2)
+    different = _function(1, arg2=4)
     assert different != first
 
     second = _function(1, arg1=0)
@@ -989,7 +989,7 @@ def test_expire_cache__args():
 
     @expire_cache(expire_time_secs=0.1)
     def _function(arg1, arg2):
-        return arg1 + arg2 + random.random()
+        return arg1 + arg2 + _counter_function()
 
 
     first = _function(1, 1)
