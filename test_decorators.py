@@ -610,7 +610,8 @@ def _inc_dec(variables):
     return "result"
 
 
-def _test_synchronized(variables, function, *args, **kwargs):
+def _test_synchronized(variables, function, args=(), kwargs=dict(),
+                       expected_count=None):
 
     NUM_ITERATIONS = 5
             
@@ -637,7 +638,10 @@ def _test_synchronized(variables, function, *args, **kwargs):
 
     assert not variables['failure']
 
-    assert variables['count'] == NUM_THREADS * NUM_ITERATIONS
+    if expected_count is None:
+        expected_count = NUM_THREADS * NUM_ITERATIONS
+        
+    assert variables['count'] == expected_count
 
 
 # synchronized_on_function ###
@@ -687,7 +691,7 @@ def test_synchronized_on_instance__method():
     variables = _create_variables()
 
     a = A()
-    _test_synchronized(variables, a.method, variables)
+    _test_synchronized(variables, a.method, (variables,))
 
 
 def test_synchronized_on_instance__method__no_parentheses():
@@ -706,7 +710,7 @@ def test_synchronized_on_instance__method__no_parentheses():
     variables = _create_variables()
 
     a = A()
-    _test_synchronized(variables, a.method, variables)
+    _test_synchronized(variables, a.method, (variables,))
 
 
 def test_synchronized_on_instance__staticmethod():
@@ -767,7 +771,7 @@ def test_synchronized_on_instance__class():
     variables = _create_variables()
 
     a = A()
-    _test_synchronized(variables, a.method, variables)
+    _test_synchronized(variables, a.method, (variables,))
 
 
 def test_synchronized_on_instance__class__no_parentheses():
@@ -784,7 +788,7 @@ def test_synchronized_on_instance__class__no_parentheses():
     variables = _create_variables()
 
     a = A()
-    _test_synchronized(variables, a.method, variables)
+    _test_synchronized(variables, a.method, (variables,))
 
 
 # keep_cache ###
@@ -933,26 +937,18 @@ def test_keep_cache__max_entries__refresh():
     # endfor
 
 
-def text_keep_cache__synchronize():
+def test_keep_cache__synchronize():
 
     max_entries = 1
 
+    variables = _create_variables()
+
     @keep_cache(keep_time_secs=0, max_entries=max_entries)
-    def _function(arg):
-        return arg
+    def _function():
+        return _inc_dec(variables)
 
 
-    def _caller(index):
-        value = _function(index)
-        assert value == index
-
-
-    pick = random.randint(0, 1000)
-
-    arguments = (pick, ) * 100000
-    with ThreadPool(10) as pool:
-        pool.map(_caller, arguments)
-    # endwith
+    _test_synchronized(variables, _function, expected_count=1)
 
 
 # expire_cache ###

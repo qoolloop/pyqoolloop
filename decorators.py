@@ -21,6 +21,14 @@ be called from the function of interest.
 #TODO: Drop support for Python 2
 
 
+def _through_classmethod(target, cls, *args, **kwargs):
+    return target(*args, **kwargs)
+
+
+def _through_staticmethod(target, *args, **kwargs):
+    return target(*args, **kwargs)
+
+
 class FunctionDecorator:
 
     def __init__(self, called_function,
@@ -59,7 +67,7 @@ class FunctionDecorator:
         #   but the boilerplate is cumbersome, and can be concisely written
         #   by extracting a function and decorating it.
 
-        def default_function(target, cls, *args, **kwargs):  #TODO: use _through_function()
+        def default_function(target, cls, *args, **kwargs):
             return called_function(target, *args, **kwargs)
 
         
@@ -153,10 +161,6 @@ class FunctionDecorator:
                 "Unsupported target of type: %r\n" % type(target) + \
                 "(You could have forgotten argument to decorator.)"
         # endif
-
-
-def _through_function(target, cls, *args, **kwargs):
-    return target(*args, **kwargs)
 
 
 def log_calls(logger):
@@ -321,7 +325,7 @@ def retry(retries, exceptions, interval_secs=0, extra_argument=False):
 
 def synchronized_on_function(
         __target=None,
-        *, lock_field='__lock', dont_synchronize=False):  #TODO: test dont_synchronize
+        *, lock_field='__lock', dont_synchronize=False):
     """
     Used to decorate function that need thread locking for access
 
@@ -357,8 +361,8 @@ def synchronized_on_function(
     decorator = FunctionDecorator(
         _call_function
         if not dont_synchronize else _through_function_static,
-        function_for_staticmethod=_through_function,
-        function_for_classmethod=_through_function)
+        function_for_staticmethod=_through_classmethod,
+        function_for_classmethod=_through_classmethod)
     return decorator.generic_decorator(__target)
 
 
@@ -389,9 +393,10 @@ def synchronized_on_instance(__target=None, *, lock_field='__lock'):
         return result
 
 
-    decorator = FunctionDecorator(call_function,
-                                  function_for_staticmethod=_through_function,
-                                  function_for_classmethod=_through_function)
+    decorator = FunctionDecorator(
+        call_function,
+        function_for_staticmethod=_through_classmethod,
+        function_for_classmethod=_through_classmethod)
     return decorator.generic_decorator(__target)
 
 
@@ -407,8 +412,9 @@ def _get_args(target, args, kwargs):
     return bind.arguments
 
 
-#TODO: @synchronize
-def keep_cache(__target=None, *, keep_time_secs=None, max_entries=None):
+def keep_cache(
+        __target=None, *, keep_time_secs=None, max_entries=None,
+        dont_synchronize=False):
     """
     Decorator to cache returned values of a function for at least the time
     specified since the last call
@@ -429,6 +435,7 @@ def keep_cache(__target=None, *, keep_time_secs=None, max_entries=None):
     cache = OrderedDict()  # holds tuples (<time>, <value>)
 
     
+    @synchronized_on_function(dont_synchronize=dont_synchronize)
     def _cached_function(target, *args, **kwargs):
 
         now = datetime.datetime.utcnow()
@@ -457,13 +464,13 @@ def keep_cache(__target=None, *, keep_time_secs=None, max_entries=None):
         return value
 
 
-    decorator = FunctionDecorator(_cached_function,
-                                  function_for_staticmethod=_through_function,
-                                  function_for_classmethod=_through_function)
+    decorator = FunctionDecorator(
+        _cached_function,
+        function_for_staticmethod=_through_classmethod,
+        function_for_classmethod=_through_classmethod)
     return decorator.generic_decorator(__target)
 
 
-#TODO: @synchronize
 def expire_cache(
         __target=None, *, expire_time_secs=None, max_entries=None,
         dont_synchronize=False):
@@ -514,7 +521,8 @@ def expire_cache(
         return value
 
 
-    decorator = FunctionDecorator(_cached_function,
-                                  function_for_staticmethod=_through_function,
-                                  function_for_classmethod=_through_function)
+    decorator = FunctionDecorator(
+        _cached_function,
+        function_for_staticmethod=_through_classmethod,
+        function_for_classmethod=_through_classmethod)
     return decorator.generic_decorator(__target)
