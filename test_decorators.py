@@ -9,7 +9,7 @@ from .decorators import (
     expire_cache,
 )
 import inspect
-import logging
+from multiprocessing.pool import ThreadPool
 import pytest
 import random
 import threading
@@ -587,17 +587,24 @@ def test_retry__classmethod(retries, exceptions):
 
 # common functions ###
 
+def _create_variables():
+    variables = {'count': 0, 'inc_dec': 0, 'failure': False, 'called': False}
+    return variables
+
+
 def _inc_dec(variables):
     variables['called'] = True
 
     variables['count'] += 1
-    if variables['count'] != 1:
+
+    variables['inc_dec'] += 1
+    if variables['inc_dec'] != 1:
         variables['failure'] = True
 
     time.sleep(0.001)
 
-    variables['count'] -= 1
-    if variables['count'] != 0:
+    variables['inc_dec'] -= 1
+    if variables['inc_dec'] != 0:
         variables['failure'] = True
 
     return "result"
@@ -605,22 +612,23 @@ def _inc_dec(variables):
 
 def _test_synchronized(function):
 
-    variables = {'count': 0, 'failure': False, 'called': False}
+    NUM_ITERATIONS = 5
+            
+    NUM_THREADS = 5
+
+    variables = {'count': 0, 'inc_dec': 0, 'failure': False, 'called': False}
 
     class _Thread(threading.Thread):
 
         def run(self):
-            NUM_ITERATIONS = 5
-            
             for iteration in range(NUM_ITERATIONS):
                 result = function(variables)
                 assert result == "result"
             # endfor
 
 
-    NUM_THREADS = 5
-
     threads = [_Thread() for count in range(NUM_THREADS)]
+
     for each in threads:
         each.start()
 
@@ -631,7 +639,39 @@ def _test_synchronized(function):
 
     assert not variables['failure']
 
- 
+    assert variables['count'] == NUM_THREADS * NUM_ITERATIONS
+
+
+def _test_synchronized_2(function, variables):  #TODO: rename _test_synchronized()
+
+    NUM_ITERATIONS = 5
+            
+    NUM_THREADS = 5
+
+    class _Thread(threading.Thread):
+
+        def run(self):
+            for iteration in range(NUM_ITERATIONS):
+                result = function()
+                assert result == "result"
+            # endfor
+
+
+    threads = [_Thread() for count in range(NUM_THREADS)]
+
+    for each in threads:
+        each.start()
+
+    for each in threads:
+        each.join()
+
+    assert variables['called']
+
+    assert not variables['failure']
+
+    assert variables['count'] == NUM_THREADS * NUM_ITERATIONS
+
+
 # synchronized_on_function ###
 
 def test_synchronized_on_function():
@@ -643,6 +683,20 @@ def test_synchronized_on_function():
         return _inc_dec(variables)
 
     _test_synchronized(function)
+
+
+@pytest.mark.unreliable
+def test_synchronized_on_function__dont_synchronize():
+
+    @synchronized_on_function(lock_field='lock', dont_synchronize=True)
+    def function(variables):
+        # Cannot access lock on function, because the name `function` doesn't
+        # point to this target function anymore after decoration
+        return _inc_dec(variables)
+
+    with pytest.raises(AssertionError):
+        _test_synchronized(function)
+    # endwith
 
 
 # synchronized_on_instance ###
@@ -888,15 +942,43 @@ def test_keep_cache__max_entries__refresh():
         return arg
 
 
-    for index in range(max_entries):
+    def _caller(index):
         value = _function(index)
         assert value == index
 
+
+    arguments = (index for index in range(max_entries))
+    with ThreadPool(max_entries) as pool:
+        pool.map(_caller, arguments)
+
+    pick = random.randint(0, max_entries - 1)
     for index in range(5):
         time.sleep(keep_time_secs / 2)
-        value = _function(0)
-        assert value == 0
+        value = _function(pick)
+        assert value == pick
     # endfor
+
+
+def text_keep_cache__synchronize():
+
+    max_entries = 1
+
+    @keep_cache(keep_time_secs=0, max_entries=max_entries)
+    def _function(arg):
+        return arg
+
+
+    def _caller(index):
+        value = _function(index)
+        assert value == index
+
+
+    pick = random.randint(0, 1000)
+
+    arguments = (pick, ) * 100000
+    with ThreadPool(10) as pool:
+        pool.map(_caller, arguments)
+    # endwith
 
 
 # expire_cache ###
@@ -989,10 +1071,15 @@ def test_expire_cache__max_entries():
         return arg
 
 
-    for index in range(max_entries + 1):
+    def _caller(index):
         value = _function(index)
         assert value == index
-    # endfor
+        
+
+    arguments = (index for index in range(max_entries + 1))
+    with ThreadPool(max_entries) as pool:
+        pool.map(_caller, arguments)
+    # enndwith
 
 
 def test_expire_cache__max_entries__same_args():
@@ -1004,10 +1091,15 @@ def test_expire_cache__max_entries__same_args():
         return arg
 
 
-    for index in range(max_entries + 1):
+    def _caller(arg):
         value = _function(0)
         assert value == 0
-    # endfor
+
+
+    arguments = (0, ) * (max_entries + 1)
+    with ThreadPool(max_entries + 1) as pool:
+        pool.map(_caller, arguments)
+    # endwith
 
 
 def test_expire_cache__max_entries__refresh():
@@ -1021,9 +1113,24 @@ def test_expire_cache__max_entries__refresh():
 
     first = _function(0)
 
-    for index in range(max_entries):
-        _function(index + 1)
+    arguments = [index + 1 for index in range(max_entries)]
+    with ThreadPool(max_entries) as pool:
+        pool.map(_function, arguments)
 
     second = _function(0)
 
     assert first < second
+
+
+def test_expire_cache__synchronize():
+
+    max_entries = 1
+
+    variables = _create_variables()
+
+    @expire_cache(expire_time_secs=0, max_entries=max_entries)
+    def _function():
+        return _inc_dec(variables)
+
+
+    _test_synchronized_2(_function, variables)

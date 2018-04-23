@@ -1,6 +1,7 @@
 # Byte-compiled / optimized / DLL files
 # remove trailing backslash from __pycache__ to allow symbolic links
 __pycache__
+.pytest_cache
 *.py[cod]
 *$py.class
 

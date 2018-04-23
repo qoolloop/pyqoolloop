@@ -319,15 +319,21 @@ def retry(retries, exceptions, interval_secs=0, extra_argument=False):
     return decorator.generic_decorator
 
 
-def synchronized_on_function(__target=None, *, lock_field='__lock'):
+def synchronized_on_function(
+        __target=None,
+        *, lock_field='__lock', dont_synchronize=False):  #TODO: test dont_synchronize
     """
     Used to decorate function that need thread locking for access
 
     When called for the first time, this decorator creates a field on
     the function object named by `lock_field`, which holds the lock
     instance for synchronization.
+
+    Argument:
+      dont_synchronize -- (bool) If True, synchronization will not be
+        performed
     """
-    def call_function(target, *args, **kwargs):
+    def _call_function(target, *args, **kwargs):
 
         lock_holder = target
 
@@ -342,10 +348,17 @@ def synchronized_on_function(__target=None, *, lock_field='__lock'):
         return result
 
 
+    def _through_function_static(target, *args, **kwargs):
+        return target(*args, **kwargs)
+    
+
     #TODO: Don't really need to use FunctionDecorator
-    decorator = FunctionDecorator(call_function,
-                                  function_for_staticmethod=_through_function,
-                                  function_for_classmethod=_through_function)
+    #TODO: Is FunctionDecorator necessary when dont_synchronize=False?
+    decorator = FunctionDecorator(
+        _call_function
+        if not dont_synchronize else _through_function_static,
+        function_for_staticmethod=_through_function,
+        function_for_classmethod=_through_function)
     return decorator.generic_decorator(__target)
 
 
@@ -416,7 +429,7 @@ def keep_cache(__target=None, *, keep_time_secs=None, max_entries=None):
     cache = OrderedDict()  # holds tuples (<time>, <value>)
 
     
-    def cached_function(target, *args, **kwargs):
+    def _cached_function(target, *args, **kwargs):
 
         now = datetime.datetime.utcnow()
         
@@ -435,19 +448,25 @@ def keep_cache(__target=None, *, keep_time_secs=None, max_entries=None):
 
             value = target(*args, **kwargs)
 
+        #TODO: remove
+        import time
+        time.sleep(0.01)
+
         cache[key] = (now, value)
 
         return value
 
 
-    decorator = FunctionDecorator(cached_function,
+    decorator = FunctionDecorator(_cached_function,
                                   function_for_staticmethod=_through_function,
                                   function_for_classmethod=_through_function)
     return decorator.generic_decorator(__target)
 
 
 #TODO: @synchronize
-def expire_cache(__target=None, *, expire_time_secs=None, max_entries=None):
+def expire_cache(
+        __target=None, *, expire_time_secs=None, max_entries=None,
+        dont_synchronize=False):
     """
     Decorator to cache returned values of a function that are held for at most
     a specified amount of time since the first call
@@ -467,19 +486,19 @@ def expire_cache(__target=None, *, expire_time_secs=None, max_entries=None):
     cache = OrderedDict()  # holds tuples (<time>, <value>)
 
     
+    @synchronized_on_function(dont_synchronize=dont_synchronize)
     def _cached_function(target, *args, **kwargs):
 
         now = datetime.datetime.utcnow()
         
         arguments = _get_args(target, args, kwargs)
-        logger.debug("arguments: %r", arguments)  #TODO: remove
         # https://stackoverflow.com/a/39440252/2400328
         key = frozenset(arguments.items())
-        logger.debug("key: %r", key)  #TODO: remove
         if key in cache:
             stored_time, stored_value = cache[key]
 
             if (now - stored_time).total_seconds() < expire_time_secs:
+                logger.debug("cached")  #TODO: remove
                 return stored_value
 
             del cache[key]
@@ -491,6 +510,7 @@ def expire_cache(__target=None, *, expire_time_secs=None, max_entries=None):
 
         cache[key] = (now, value)
 
+        logger.debug("new")  #TODO: remove
         return value
 
 
