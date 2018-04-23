@@ -7,6 +7,7 @@ from functools import (
     wraps,
 )
 import inspect
+import logging
 import threading
 import time
 
@@ -386,6 +387,14 @@ def synchronized_on_class(__target=None, *, lock_field='__lock'):
     ...
 
 
+def _get_args(target, args, kwargs):
+    signature = inspect.signature(target)
+    bind = signature.bind(*args, **kwargs)
+    bind.apply_defaults()
+    return bind.arguments
+
+
+#TODO: @synchronize
 def keep_cache(__target=None, *, keep_time_secs=None, max_entries=None):
     """
     Decorator to cache returned values of a function for at least the time
@@ -409,16 +418,9 @@ def keep_cache(__target=None, *, keep_time_secs=None, max_entries=None):
     
     def cached_function(target, *args, **kwargs):
 
-        def _get_args():
-            signature = inspect.signature(target)
-            bind = signature.bind(*args, **kwargs)
-            bind.apply_defaults()
-            return bind.arguments
-        
-
         now = datetime.datetime.utcnow()
         
-        arguments = _get_args()
+        arguments = _get_args(target, args, kwargs)
         # https://stackoverflow.com/a/39440252/2400328
         key = frozenset(arguments.items())
         if key in cache:
@@ -426,13 +428,64 @@ def keep_cache(__target=None, *, keep_time_secs=None, max_entries=None):
 
             del cache[key]
 
-            cache[key] = (now, value)
+        else:
+            if max_entries and (len(cache) >= max_entries):
+                old_key, old_value = cache.popitem(last=False)
+                assert (now - old_value[0]).total_seconds() > keep_time_secs
 
-            return value
+            value = target(*args, **kwargs)
+
+        cache[key] = (now, value)
+
+        return value
+
+
+    decorator = FunctionDecorator(cached_function,
+                                  function_for_staticmethod=_through_function,
+                                  function_for_classmethod=_through_function)
+    return decorator.generic_decorator(__target)
+
+
+#TODO: @synchronize
+def expire_cache(__target=None, *, expire_time_secs=None, max_entries=None):
+    """
+    Decorator to cache returned values of a function that are held for at most
+    a specified amount of time since the first call
+
+    Notes:
+      Argument values for the target function must be hashable.
+    
+    Arguments:
+      expire_time_secs -- (float; mandatory) Keep value for less than this
+        period (seconds)
+      max_entries -- (int) Don't keep more than this number of entries
+    """
+
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)  #TODO: remove
+
+    cache = OrderedDict()  # holds tuples (<time>, <value>)
+
+    
+    def _cached_function(target, *args, **kwargs):
+
+        now = datetime.datetime.utcnow()
+        
+        arguments = _get_args(target, args, kwargs)
+        logger.debug("arguments: %r", arguments)  #TODO: remove
+        # https://stackoverflow.com/a/39440252/2400328
+        key = frozenset(arguments.items())
+        logger.debug("key: %r", key)  #TODO: remove
+        if key in cache:
+            stored_time, stored_value = cache[key]
+
+            if (now - stored_time).total_seconds() < expire_time_secs:
+                return stored_value
+
+            del cache[key]
 
         if max_entries and (len(cache) >= max_entries):
-            old_key, old_value = cache.popitem(last=False)
-            assert (now - old_value[0]).total_seconds() > keep_time_secs
+            old_key, old_value = cache.popitem(last=False)  #TODO: flake
 
         value = target(*args, **kwargs)
 
@@ -441,7 +494,7 @@ def keep_cache(__target=None, *, keep_time_secs=None, max_entries=None):
         return value
 
 
-    decorator = FunctionDecorator(cached_function,
+    decorator = FunctionDecorator(_cached_function,
                                   function_for_staticmethod=_through_function,
                                   function_for_classmethod=_through_function)
     return decorator.generic_decorator(__target)

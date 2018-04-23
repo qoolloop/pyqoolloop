@@ -6,8 +6,10 @@ from .decorators import (
     synchronized_on_instance,
     deprecated,
     keep_cache,
+    expire_cache,
 )
 import inspect
+import logging
 import pytest
 import random
 import threading
@@ -16,6 +18,17 @@ import time
 import pylog
 logger = pylog.getLogger(__name__)
 
+
+# Common Functions ###
+
+_counter = 0
+
+
+def _counter_function():
+    global _counter
+    _counter += 1
+    return _counter
+    
 
 # FunctionDecorator ###
 
@@ -746,7 +759,7 @@ def test_keep_cache__no_args():
     
     @keep_cache(keep_time_secs=0.1)
     def _function():
-        return random.random()
+        return random.random()  #TODO: Should use counter
 
 
     first = _function()
@@ -884,3 +897,133 @@ def test_keep_cache__max_entries__refresh():
         value = _function(0)
         assert value == 0
     # endfor
+
+
+# expire_cache ###
+
+def test_expire_cache__no_args():
+    
+    @expire_cache(expire_time_secs=10)
+    def _function():
+        return _counter_function()
+
+
+    first = _function()
+    
+    second = _function()
+
+    assert first == second
+
+
+def test_expire_cache__no_args__expire():
+
+    @expire_cache(expire_time_secs=0)
+    def _function():
+        return _counter_function()
+
+
+    first = _function()
+    
+    second = _function()
+
+    assert first < second
+
+
+def test_expire_cache__args():
+
+    @expire_cache(expire_time_secs=0.1)
+    def _function(arg1, arg2):
+        return arg1 + arg2 + random.random()
+
+
+    first = _function(1, 1)
+    
+    different = _function(1, 2)
+    assert different != first
+
+    second = _function(1, 1)
+
+    assert first == second
+
+
+def test_expire_cache__kwargs():
+
+    @expire_cache(expire_time_secs=10)
+    def _function(arg0, arg1=0, arg2=3):
+        return arg1 + arg2 + _counter_function()
+
+
+    first = _function(1, arg2=1)
+    
+    different = _function(1, arg2=2)
+    assert different != first
+
+    second = _function(1, arg2=1)
+
+    assert first == second
+
+
+def test_expire_cache__default_kwargs():
+
+    @expire_cache(expire_time_secs=10)
+    def _function(arg0, arg1=0, arg2=3):
+        return arg1 + arg2 + _counter_function()
+
+
+    first = _function(1)
+    
+    different = _function(1, arg2=4)
+    assert different != first
+
+    second = _function(1, arg1=0)
+
+    assert first == second
+
+
+def test_expire_cache__max_entries():
+
+    max_entries = 3
+
+    @expire_cache(expire_time_secs=10, max_entries=max_entries)
+    def _function(arg):
+        return arg
+
+
+    for index in range(max_entries + 1):
+        value = _function(index)
+        assert value == index
+    # endfor
+
+
+def test_expire_cache__max_entries__same_args():
+
+    max_entries = 3
+
+    @expire_cache(expire_time_secs=10, max_entries=max_entries)
+    def _function(arg):
+        return arg
+
+
+    for index in range(max_entries + 1):
+        value = _function(0)
+        assert value == 0
+    # endfor
+
+
+def test_expire_cache__max_entries__refresh():
+
+    max_entries = 3
+
+    @expire_cache(expire_time_secs=10, max_entries=max_entries)
+    def _function(arg):
+        return arg + _counter_function()
+
+
+    first = _function(0)
+
+    for index in range(max_entries):
+        _function(index + 1)
+
+    second = _function(0)
+
+    assert first < second
