@@ -9,9 +9,7 @@ from .decorators import (
     expire_cache,
 )
 import inspect
-from multiprocessing.pool import ThreadPool
 import pytest
-import random
 import threading
 import time
 

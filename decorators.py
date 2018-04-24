@@ -7,7 +7,6 @@ from functools import (
     wraps,
 )
 import inspect
-import logging
 import threading
 import time
 
@@ -352,8 +351,10 @@ def synchronized_on_function(
         return result
 
 
-    #TODO: Don't really need to use FunctionDecorator
-    #TODO: Is FunctionDecorator necessary when dont_synchronize=False?
+    if __target and not dont_synchronize:
+        return __target
+        
+    #TODO: A little inefficient when dont_synchronize=True
     decorator = FunctionDecorator(
         _call_function
         if not dont_synchronize else _through_staticmethod,
@@ -451,10 +452,6 @@ def keep_cache(
 
             value = target(*args, **kwargs)
 
-        #TODO: remove
-        import time
-        time.sleep(0.01)
-
         cache[key] = (now, value)
 
         return value
@@ -483,9 +480,6 @@ def expire_cache(
       max_entries -- (int) Don't keep more than this number of entries
     """
 
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.DEBUG)  #TODO: remove
-
     cache = OrderedDict()  # holds tuples (<time>, <value>)
 
     
@@ -501,19 +495,17 @@ def expire_cache(
             stored_time, stored_value = cache[key]
 
             if (now - stored_time).total_seconds() < expire_time_secs:
-                logger.debug("cached")  #TODO: remove
                 return stored_value
 
             del cache[key]
 
         if max_entries and (len(cache) >= max_entries):
-            old_key, old_value = cache.popitem(last=False)  #TODO: flake
+            cache.popitem(last=False)
 
         value = target(*args, **kwargs)
 
         cache[key] = (now, value)
 
-        logger.debug("new")  #TODO: remove
         return value
 
 
