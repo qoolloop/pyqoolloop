@@ -402,16 +402,29 @@ def synchronized_on_class(__target=None, *, lock_field='__lock'):
     ...
 
 
-def _get_args(target, args, kwargs):
-    signature = inspect.signature(target)
-    bind = signature.bind(*args, **kwargs)
-    bind.apply_defaults()
-    return bind.arguments
+def _get_args(target, args, kwargs, exclude_kw=()):
+
+    def _bind_arguments(target, args, kwargs):
+        signature = inspect.signature(target)
+        bind = signature.bind(*args, **kwargs)
+        bind.apply_defaults()
+        return bind.arguments
+
+
+    def _exclude(arguments, exclude_kw):
+        for each in exclude_kw:
+            del arguments[each]
+        # endfor
+        
+
+    arguments = _bind_arguments(target, args, kwargs)
+    _exclude(arguments, exclude_kw)
+    return arguments
 
 
 def keep_cache(
         __target=None, *, keep_time_secs=None, max_entries=None,
-        dont_synchronize=False):
+        dont_synchronize=False, exclude_kw=()):
     """
     Decorator to cache returned values of a function for at least the time
     specified since the last call
@@ -423,6 +436,9 @@ def keep_cache(
       keep_time_secs -- (float; mandatory) Keep value longer than this period
         (seconds)
       max_entries -- (int) Don't keep more than this number of entries
+      dont_synchronize -- (bool) True, if thread safety is not necessary
+      exclude_kw -- (iterable of str) Iterable of argument names to exclude
+        from arguments to identify cache data
 
     Raises:
       AssertionError -- There are more than `max_entries` values within
@@ -437,7 +453,7 @@ def keep_cache(
 
         now = datetime.datetime.utcnow()
         
-        arguments = _get_args(target, args, kwargs)
+        arguments = _get_args(target, args, kwargs, exclude_kw)
         # https://stackoverflow.com/a/39440252/2400328
         key = frozenset(arguments.items())
         if key in cache:
@@ -466,7 +482,7 @@ def keep_cache(
 
 def expire_cache(
         __target=None, *, expire_time_secs=None, max_entries=None,
-        dont_synchronize=False):
+        dont_synchronize=False):  #TODO: exclude_kw
     """
     Decorator to cache returned values of a function that are held for at most
     a specified amount of time since the first call
@@ -478,6 +494,7 @@ def expire_cache(
       expire_time_secs -- (float; mandatory) Keep value for less than this
         period (seconds)
       max_entries -- (int) Don't keep more than this number of entries
+      dont_synchronize -- (bool) True, if thread safety is not necessary
     """
 
     cache = OrderedDict()  # holds tuples (<time>, <value>)

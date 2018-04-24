@@ -949,6 +949,22 @@ def test_keep_cache__synchronize():
     _test_synchronized(variables, _function, expected_count=1)
 
 
+def test_keep_cache__exclude_kw():
+    
+    @keep_cache(keep_time_secs=0, exclude_kw=['extra'])
+    def _function(arg, extra):
+        return arg + extra
+
+
+    first = _function(1, 1)
+
+    different = _function(2, 1)
+    assert different != first
+
+    second = _function(1, 2)
+    assert first == second
+
+
 # expire_cache ###
 
 def test_expire_cache__no_args():
