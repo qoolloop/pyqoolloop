@@ -162,7 +162,7 @@ class FunctionDecorator:
         # endif
 
 
-def log_calls(logger):
+def log_calls(logger, log_result=True):
     """
     Decorator to log calls to functions
 
@@ -178,7 +178,9 @@ def log_calls(logger):
 
         result = target(*args, **kwargs)
 
-        logger.info("%s result: %r" % (target.__name__, result))
+        if log_result:
+            logger.info("%s result: %r" % (target.__name__, result))
+            
         return result
 
 
