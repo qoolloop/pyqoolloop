@@ -154,7 +154,7 @@ def test_deprecated__log():
 
     class _Logger(object):
 
-        def warn(self, message):
+        def warning(self, message):
             self.warn_called = True
 
             assert message.find("deprecated_function") >= 0
@@ -192,7 +192,7 @@ def test_deprecated__raise_exception_true(global_setting):
 
         function_called = False
 
-        def warn(self, message):
+        def warning(self, message):
             self.warn_called = True
 
 
@@ -231,7 +231,7 @@ def test_deprecated__raise_exception_false(global_setting):
 
         function_called = False
 
-        def warn(self, message):
+        def warning(self, message):
             self.warn_called = True
 
 
@@ -265,7 +265,7 @@ def test_deprecated__raise_exception_for_deprecated_true():
 
         function_called = False
 
-        def warn(self, message):
+        def warning(self, message):
             self.warn_called = True
 
 
@@ -300,7 +300,7 @@ def test_deprecated__raise_exception_for_deprecated_false():
 
         function_called = False
 
-        def warn(self, message):
+        def warning(self, message):
             self.warn_called = True
 
 

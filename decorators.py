@@ -265,7 +265,7 @@ def deprecated(logger, message=None, raise_exception=None):
         if message is not None:
             message_str += "\n" + message
         
-        logger.warn(message_str)
+        logger.warning(message_str)
 
         if raise_exception or \
            ((raise_exception is None) and raise_exception_for_deprecated):
