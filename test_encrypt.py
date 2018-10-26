@@ -11,7 +11,7 @@ from . import (
 ))
 def test__key_from_password(index, password, salt):
     save = False
-
+    
     key = encrypt.key_from_password(password, salt)
     testregression.assert_no_change(key, save,
                                     __name__, 'test_key_from_password', index)

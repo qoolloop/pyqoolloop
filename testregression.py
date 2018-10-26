@@ -2,13 +2,20 @@ import os
 import pickle
 
 
-def _save_or_load(value, save, module_name, function_name, index=None):
-    filename = os.path.join(
-        '_testregression', module_name + '_' + function_name)
-    if index is not None:
-        filename += '_%d' % index
+def _save_or_load(value, save, module_name, function_name, index):
 
-    filename += '.p'
+    def _make_filename(module_name, function_name, index):
+        filename = os.path.join(
+            '_testregression', module_name + '_' + function_name)
+        if index is not None:
+            filename += '_%d' % index
+
+        filename += '.p'
+
+        return filename
+
+
+    filename = _make_filename(module_name, function_name, index)
 
     if save:
         with open(filename, 'wb') as f:
@@ -25,6 +32,6 @@ def _save_or_load(value, save, module_name, function_name, index=None):
 
 def assert_no_change(value, save, module_name, function_name, index=None):
     previous_value = _save_or_load(
-        value, save, module_name, function_name, index=index)
+        value, save, module_name, function_name, index)
 
     assert previous_value == value
