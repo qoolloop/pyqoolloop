@@ -8,6 +8,8 @@ from . import (
 
 @pytest.mark.parametrize('index, password, salt', (
     (1, 'password', b'salt'),
+    (2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./',
+     b'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
 ))
 def test__key_from_password(index, password, salt):
     save = False
