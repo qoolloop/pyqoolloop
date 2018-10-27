@@ -172,7 +172,7 @@ def test__encrypt_decrypt_from_file__no_change(index, value):
     (1.2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
 ))
 def test__encrypt_decrypt_from_file__no_change__no_encryption(index, value):
-    save = True
+    save = False
 
     # Change in key should make no difference, because data is not encrypted
     encryptor = _make_temporary_encryptor()

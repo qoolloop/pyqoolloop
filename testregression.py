@@ -52,9 +52,9 @@ def make_filename(*, index=None, suffix=None, extension='.p', depth=1):
         filename += '#%g' % index
 
     if suffix is not None:
-        assert suffix[0] == '.'
         filename += '=' + suffix
 
+    assert extension[0] == '.'
     filename += extension
 
     return filename

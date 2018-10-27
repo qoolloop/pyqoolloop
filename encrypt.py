@@ -219,8 +219,7 @@ class EncryptorDecryptor:
         try:
             decrypted = self.decrypt(encrypted)
 
-        except: #TODO: InvalidToken:
-            logger.debug("encrypted: %r", encrypted)  #TODO: remove
+        except InvalidToken:
             json_string = encrypted.decode('utf-8')
             if (len(json_string) > 0) and json_string.startswith('{"type":"'):
                 value = self.decrypt(json_string)
