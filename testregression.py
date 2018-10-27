@@ -26,7 +26,6 @@ def _get_function_info(depth=2):
     return module_name, function_name
 
     
-#TODO: Get module name and function name from stack https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
 def make_filename(*, index=None, suffix=None, extension='.p', depth=1):
     """
     Make a filename in a subdirectory named `_testregression`

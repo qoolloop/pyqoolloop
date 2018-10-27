@@ -3,6 +3,10 @@ import pytest
 import sys
 import tempfile
 
+from pyexception import (
+    RecoveredException,
+)
+
 from . import (
     encrypt,
     testregression,
@@ -123,7 +127,7 @@ def test__encrypt_decrypt_from_file(index, value):
     encryptor = _make_temporary_encryptor()
 
     with tempfile.TemporaryDirectory() as directory:
-        value_filename = os.path.join(directory, 'value.p')
+        value_filename = os.path.join(directory, 'value.bin')
 
         encryptor.encrypt_to_file(value, value_filename)
 
@@ -191,5 +195,35 @@ def test__encrypt_decrypt_from_file__no_change__no_encryption(index, value):
 
     assert not save, "Warning"
 
+
+@pytest.mark.parametrize('index, value', (
+    (1.1, 'password'),
+    (1.2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
+))
+def test__encrypt_decrypt_from_file__no_change__auto_encrypt(index, value):
+    # Change in key should make no difference, when data is not encrypted
+    none_encryptor = _make_temporary_encryptor()
+
+    encryptor = _make_temporary_encryptor()
+
+    with tempfile.TemporaryDirectory() as directory:
+        value_filename = os.path.join(directory, 'value.bin')
+
+        none_encryptor.encrypt_to_file(
+            value, value_filename, no_encryption=True)
+
+        loaded = none_encryptor.decrypt_from_file(value_filename)
+        assert loaded == value
+
+        loaded = encryptor.decrypt_from_file(value_filename, auto_encrypt=True)
+        assert loaded == value
+
+        with pytest.raises(RecoveredException):
+            none_encryptor.decrypt_from_file(value_filename)
+
+        loaded = encryptor.decrypt_from_file(value_filename)
+        assert loaded == value
+
+    return
 
 #TODO: test optional arguments

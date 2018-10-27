@@ -4,19 +4,27 @@ Convenience functions for encrypting/decrypting via json
 Pickling is not used because of concerns about security.
 """
 import base64
+import cryptography.fernet
 from cryptography.fernet import (
     Fernet,
     MultiFernet,
-    InvalidToken,
 )
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import ujson as json
 
+from pyexception import (
+    Reason,
+    RecoveredException,
+)
 
 import pylog
 logger = pylog.getLogger(__name__)
+
+
+class InvalidToken(Reason):
+    pass
 
 
 def key_from_password(password, salt):
@@ -205,12 +213,12 @@ class EncryptorDecryptor:
           auto_rotate: (bool) When True, reencrypts the file with the first
             key in the key list.
 
+        Returns:
+          Decrypted value.
+
         Raises:
-          cryptography.fernet.InvalidToken -- Could not be decrypted.
-          ValueError, KeyError -- Could not parse unencrypted file.
+          RecoveredException(InvalidToken) -- Could read value.
         """
-        #TODO: raise RecoveredException
-        assert not auto_encrypt, "TODO"
         assert not auto_rotate, "TODO"
 
         with open(filename, 'rb') as f:
@@ -219,13 +227,30 @@ class EncryptorDecryptor:
         try:
             decrypted = self.decrypt(encrypted)
 
-        except InvalidToken:
+        except cryptography.fernet.InvalidToken as e:
             json_string = encrypted.decode('utf-8')
-            if (len(json_string) > 0) and json_string.startswith('{"type":"'):
-                value = self.decrypt(json_string)
+            if (len(json_string) > 0) and (
+                    json_string.startswith('{"type":"') or
+                    json_string.startswith('{"value":"')):
+                try:
+                    value = self.decrypt(json_string)
+
+                except Exception as e:
+                    raise RecoveredException(
+                        "Not in expected format",
+                        reason=InvalidToken,
+                        cause=e,
+                        logger=logger)
+
+                if auto_encrypt:
+                    self.encrypt_to_file(value, filename)
 
             else:
-                raise
+                raise RecoveredException(
+                    "Could not read value",
+                    reason=InvalidToken,
+                    cause=e,
+                    logger=logger)
 
             return value
 
