@@ -40,33 +40,31 @@ class EncryptorDecryptor:
         Argument:
           key -- (bytes/list of bytes) The key for encryption.
             Otherwise, a list of candidate keys for decryption. Only the
-            first key is used for encryption. Keys must be bytes of length 32.
+            first key is used for encryption. Keys must be generated with
+            generate_key().
         """
+        def _check_key(key):
+            decoded_key = base64.urlsafe_b64decode(key)
+            assert len(decoded_key) == 32, \
+                "Key length: %d\n%s" % (len(decoded_key), decoded_key)
+
+
         if isinstance(key, bytes):
-            assert len(base64.urlsafe_b64decode(key)) == 32
+            _check_key(key)
             self._fernet = Fernet(key)
 
         else:
             for each in key:
-                assert len(base64.urlsafe_b64decode(each)) == 32
+                _check_key(each)
 
             self._fernet = MultiFernet(key)
 
         return
 
 
-    def _encrypt_bytes(self, byte_array):
-        TODO
-
-
-    def _encrypt_str(self, string):
-        TODO
-
-
-    def _encrypt_dict(self, dictionary):
-        """
-        """
-        TODO
+    @classmethod
+    def generate_key(cls):
+        return Fernet.generate_key()
 
 
     def encrypt(self, value, *, no_encryption=False):
@@ -145,8 +143,12 @@ class EncryptorDecryptor:
         return result
         
 
-    def encrypt_to_file(self, filename):
-        TODO
+    def encrypt_to_file(self, value, filename, *, no_encryption=False):
+        encrypted = self.encrypt(value, no_encryption=no_encryption)
+        with open(filename, 'wb') as f:
+            f.write(encrypted)
+
+        return
 
 
     def decrypt(self, encrypted):
@@ -198,4 +200,11 @@ class EncryptorDecryptor:
           auto_rotate: (bool) When True, reencrypts the file with the first
             key in the key list.
         """
-        TODO
+        assert not auto_encrypt, "TODO"
+        assert not auto_rotate, "TODO"
+
+        with open(filename, 'rb') as f:
+            encrypted = f.read()
+
+        decrypted = self.decrypt(encrypted)
+        return decrypted

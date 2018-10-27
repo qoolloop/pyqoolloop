@@ -1,7 +1,7 @@
-import base64
 import os
 import pytest
 import sys
+import tempfile
 
 from . import (
     encrypt,
@@ -11,6 +11,16 @@ from . import (
 import pylog
 logger = pylog.getLogger(__name__)
 
+
+def _make_temporary_encryptor():
+    key = encrypt.EncryptorDecryptor.generate_key()
+        
+    logger.info("Key: (%s) %r", type(key), key)
+
+    encryptor = encrypt.EncryptorDecryptor(key)
+
+    return encryptor
+    
 
 @pytest.mark.parametrize('index, password, salt', (
     (1, 'password', b'salt'),
@@ -28,6 +38,8 @@ def test__key_from_password(index, password, salt):
     key = encrypt.key_from_password(password, salt)
     testregression.assert_no_change(key, False,
                                     __name__, 'test_key_from_password', index)
+
+    assert not save, "Warning"
 
 
 @pytest.mark.parametrize('index, value', (
@@ -94,10 +106,8 @@ def test__key_from_password(index, password, salt):
     # ('complex tuple', 1, 3.5, False, None, {'key', 'value'}, [1, 2], (1, 2))),
 ))
 def test__encrypt_decrypt(index, value):
-    key = os.urandom(32)
-    logger.info("Key: (%s) %r", type(key), key)
 
-    encryptor = encrypt.EncryptorDecryptor(base64.urlsafe_b64encode(key))
+    encryptor = _make_temporary_encryptor()
 
     for no_encryption in (False, True):
         encrypted = encryptor.encrypt(value, no_encryption=no_encryption)
@@ -105,3 +115,62 @@ def test__encrypt_decrypt(index, value):
         assert decrypted == value
 
     return
+
+
+@pytest.mark.parametrize('index, value', (
+    (1.1, 'password'),
+    (1.2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
+))
+def test__encrypt_decrypt_from_file(index, value):
+    encryptor = _make_temporary_encryptor()
+
+    with tempfile.TemporaryDirectory() as directory:
+        value_filename = os.path.join(directory, 'value.p')
+
+        encryptor.encrypt_to_file(value, value_filename)
+
+        loaded = encryptor.decrypt_from_file(value_filename)
+
+        assert loaded == value
+
+    return
+
+
+@pytest.mark.parametrize('index, value', (
+    (1.1, 'password'),
+    (1.2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
+))
+def test__encrypt_decrypt_from_file__no_change(index, value):
+    save = False
+
+    function_name = 'test__encrypt_decrypt_from_file'
+    
+    key_filename = testregression.make_filename(
+        __name__, function_name, index=index, suffix='key')
+
+    if save:
+        key = encrypt.EncryptorDecryptor.generate_key()
+
+        with open(key_filename, 'wb') as f:
+            f.write(key)
+
+    else:
+        with open(key_filename, 'rb') as f:
+            key = f.read()
+        
+    encryptor = encrypt.EncryptorDecryptor(key)
+
+    value_filename = testregression.make_filename(
+        __name__, function_name, index=index)
+
+    if save:
+        encryptor.encrypt_to_file(value, value_filename)
+
+    loaded = encryptor.decrypt_from_file(value_filename)
+
+    assert loaded == value
+
+    assert not save, "Warning"
+
+
+#TODO: test optional arguments
