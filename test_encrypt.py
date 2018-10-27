@@ -1,6 +1,7 @@
 import base64
 import os
 import pytest
+import sys
 
 from . import (
     encrypt,
@@ -30,8 +31,67 @@ def test__key_from_password(index, password, salt):
 
 
 @pytest.mark.parametrize('index, value', (
-    (1, 'password'),
-    (2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
+    (1.1, 'password'),
+    (1.2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
+
+    (2.1, 0),
+    (2.2, 1),
+    (2.3, -1),
+    (2.4, sys.maxsize),
+    (2.5, -sys.maxsize),
+
+    (3.1, 0.0),
+    (3.2, 1.0),
+    (3.3, -1.0),
+    # (3.4, float('-inf')),  # not allowed in json
+    # (3.5, float('inf')),  # not allowed in json
+    # (3.6, float('nan')),  # not allowed in json
+
+    (4.1, True),
+    (4.2, False),
+
+    (5.1, None),
+
+    (6.1, {}),
+    (6.2, {'key': 'value'}),
+    (6.3, {'this is a complex dictionary': {
+        'str': 'str',
+        'int': 1,
+        'float': 3.5,
+        'bool': True,
+        'null': None,
+        'dict': {'key': 'value'},
+        'list': [1, 2],
+    }}),
+    # tuple/set not supported as value
+    # (6.4, {'this is a complex dictionary': {
+    #     'str': 'str',
+    #     'int': 1,
+    #     'float': 3.5,
+    #     'bool': True,
+    #     'null': None,
+    #     'dict': {'key', 'value'},
+    #     'list': [1, 2],
+    #     'tuple': (1, 2),
+    # }}),
+
+    (7.1, []),
+    (7.2, [1]),
+    (7.3, [1, 2]),
+    (7.4,
+     ['complex list', 1, 3.5, False, None, {'key': 'value'}, [1, 2], [1, 2]]),
+    # tuple/set not supported as value
+    # (7.5,
+    # ['complex list', 1, 3.5, False, None, {'key', 'value'}, [1, 2], (1, 2)]),
+
+    (8.1, ()),
+    (8.2, (1,)),
+    (8.3, (1, 2)),
+    (8.4,
+     ('complex tuple', 1, 3.5, False, None, {'key': 'value'}, [1, 2], [1, 2])),
+    # tuple/set not supported as element
+    # (8.5,
+    # ('complex tuple', 1, 3.5, False, None, {'key', 'value'}, [1, 2], (1, 2))),
 ))
 def test__encrypt_decrypt(index, value):
     key = os.urandom(32)

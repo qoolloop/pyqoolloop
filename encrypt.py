@@ -72,7 +72,7 @@ class EncryptorDecryptor:
     def encrypt(self, value, *, no_encryption=False):
         """
         Arguments:
-          value -- (dict/list/tuple/int/float/bool/None) Value to encrypt
+          value -- (dict/list/tuple/str/int/float/bool/None) Value to encrypt
           no_encryption -- (bool) When True, don't encrypt.
             Mainly for debugging purposes.
 
@@ -83,9 +83,58 @@ class EncryptorDecryptor:
 
         Notes:
           Currently, only the following value types are supported for dict:
-            bytes, str
+            dict/list/str/int/float/bool/None
+          Note that tuple is not included.
         """
-        json_string = json.dumps({'type': str(type(value)), 'value': value})
+        def _check_top_level(value):
+
+            def _check_types_list(value):
+                for each in value:
+                    _check_types(each)
+
+                return
+
+
+            def _check_types_dict(value):
+                for key, value in value.items():
+                    assert isinstance(key, str)
+                    _check_types(value)
+
+                return
+
+
+            def _check_types(value):
+
+                supported_types = (
+                    dict, list, str, int, float, bool, type(None))
+                assert isinstance(value, supported_types)
+
+                if isinstance(value, dict):
+                    _check_types_dict(value)
+
+                elif isinstance(value, list):
+                    _check_types_list(value)
+
+                return
+
+
+            supported_types = (
+                dict, list, tuple, str, int, float, bool, type(None))
+            assert isinstance(value, supported_types)
+
+            if isinstance(value, tuple):
+                _check_types_list(value)
+
+            else:
+                _check_types(value)
+
+            return
+            
+
+        _check_top_level(value)
+        
+        json_string = json.dumps(
+            {'type': type(value).__name__, 'value': value})
 
         if no_encryption:
             result = json_string
@@ -107,19 +156,34 @@ class EncryptorDecryptor:
         Argument:
           encrypted -- (bytes/str) result of self.encrypt()
         """
-        if isinstance(encrypted, str):
-            json_string = encrypted
 
-        else:
-            json_string = self._fernet.decrypt(encrypted).decode('utf-8')
+        def _get_json_string(encrypted):
+            if isinstance(encrypted, str):
+                json_string = encrypted
+
+            else:
+                json_string = self._fernet.decrypt(encrypted).decode('utf-8')
+
+            return json_string
+
+
+        def _fix_type(value, type_string):
+            if type_string == 'tuple':
+                return tuple(value)
+
+            return value
+
+
+        json_string = _get_json_string(encrypted)
 
         dictionary = json.loads(json_string)
 
         value = dictionary['value']
+        value = _fix_type(value, dictionary['type'])
 
-        assert str(type(value)) == dictionary['type'], \
+        assert value.__class__.__name__ == dictionary['type'], \
             "value type (%s) != decrypted type (%s)" % \
-            (str(type(value)), dictionary['type'])
+            (value.__class__.__name__, dictionary['type'])
 
         return value
 
