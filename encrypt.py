@@ -7,6 +7,7 @@ import base64
 from cryptography.fernet import (
     Fernet,
     MultiFernet,
+    InvalidToken,
 )
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -145,6 +146,10 @@ class EncryptorDecryptor:
 
     def encrypt_to_file(self, value, filename, *, no_encryption=False):
         encrypted = self.encrypt(value, no_encryption=no_encryption)
+
+        if isinstance(encrypted, str):
+            encrypted = encrypted.encode('utf-8')
+
         with open(filename, 'wb') as f:
             f.write(encrypted)
 
@@ -199,12 +204,30 @@ class EncryptorDecryptor:
             contents of the file, if it is not encrypted.
           auto_rotate: (bool) When True, reencrypts the file with the first
             key in the key list.
+
+        Raises:
+          cryptography.fernet.InvalidToken -- Could not be decrypted.
+          ValueError, KeyError -- Could not parse unencrypted file.
         """
+        #TODO: raise RecoveredException
         assert not auto_encrypt, "TODO"
         assert not auto_rotate, "TODO"
 
         with open(filename, 'rb') as f:
             encrypted = f.read()
 
-        decrypted = self.decrypt(encrypted)
+        try:
+            decrypted = self.decrypt(encrypted)
+
+        except: #TODO: InvalidToken:
+            logger.debug("encrypted: %r", encrypted)  #TODO: remove
+            json_string = encrypted.decode('utf-8')
+            if (len(json_string) > 0) and json_string.startswith('{"type":"'):
+                value = self.decrypt(json_string)
+
+            else:
+                raise
+
+            return value
+
         return decrypted

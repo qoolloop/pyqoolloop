@@ -167,4 +167,27 @@ def test__encrypt_decrypt_from_file__no_change(index, value):
     assert not save, "Warning"
 
 
+@pytest.mark.parametrize('index, value', (
+    (1.1, 'password'),
+    (1.2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
+))
+def test__encrypt_decrypt_from_file__no_change__no_encryption(index, value):
+    save = True
+
+    # Change in key should make no difference, because data is not encrypted
+    encryptor = _make_temporary_encryptor()
+
+    value_filename = testregression.make_filename(
+        index=index, extension='.bin')
+
+    if save:
+        encryptor.encrypt_to_file(value, value_filename, no_encryption=True)
+
+    loaded = encryptor.decrypt_from_file(value_filename)
+
+    assert loaded == value
+
+    assert not save, "Warning"
+
+
 #TODO: test optional arguments
