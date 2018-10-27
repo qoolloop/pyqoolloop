@@ -61,12 +61,16 @@ class EncryptorDecryptor:
         if isinstance(key, bytes):
             _check_key(key)
             self._fernet = Fernet(key)
+            self._primary_fernet = self._fernet
 
         else:
             for each in key:
                 _check_key(each)
 
-            self._fernet = MultiFernet(key)
+            fernets = [Fernet(each) for each in key]
+
+            self._fernet = MultiFernet(fernets)
+            self._primary_fernet = Fernet(key[0])
 
         return
 
@@ -75,6 +79,31 @@ class EncryptorDecryptor:
     def generate_key(cls):
         return Fernet.generate_key()
 
+
+    @staticmethod
+    def _read_file(filename):
+        with open(filename, 'rb') as f:
+            encrypted = f.read()
+
+        return encrypted
+
+    
+    @staticmethod
+    def _write_file(encrypted, filename):
+        with open(filename, 'wb') as f:
+            f.write(encrypted)
+
+        return
+
+
+    @staticmethod
+    def _make_RecoveredException_InvalidToken(e):
+        return RecoveredException(
+            "Could not read value",
+            reason=InvalidToken,
+            cause=e,
+            logger=logger)
+        
 
     def encrypt(self, value, *, no_encryption=False):
         """
@@ -158,26 +187,24 @@ class EncryptorDecryptor:
         if isinstance(encrypted, str):
             encrypted = encrypted.encode('utf-8')
 
-        with open(filename, 'wb') as f:
-            f.write(encrypted)
+        self._write_file(encrypted, filename)
 
         return
 
 
-    def decrypt(self, encrypted):
-        """
-        Decrypt data to same type as when the data was encrypted
-
-        Argument:
-          encrypted -- (bytes/str) result of self.encrypt()
-        """
+    @classmethod
+    def _decrypt(cls, fernet, encrypted):
 
         def _get_json_string(encrypted):
             if isinstance(encrypted, str):
                 json_string = encrypted
 
             else:
-                json_string = self._fernet.decrypt(encrypted).decode('utf-8')
+                try:
+                    json_string = fernet.decrypt(encrypted).decode('utf-8')
+
+                except cryptography.fernet.InvalidToken as e:
+                    raise cls._make_RecoveredException_InvalidToken(e)
 
             return json_string
 
@@ -203,29 +230,29 @@ class EncryptorDecryptor:
         return value
 
 
-    def decrypt_from_file(self, filename,
-                          auto_encrypt=False, auto_rotate=False):
+    def decrypt(self, encrypted):
         """
-        Arguments:
-          filename: (str) path to file that stores a value
-          auto_encrypt: (bool) When True, this function will encrypt the
-            contents of the file, if it is not encrypted.
-          auto_rotate: (bool) When True, reencrypts the file with the first
-            key in the key list.
+        Decrypt data to same type as when the data was encrypted
 
-        Returns:
-          Decrypted value.
+        Argument:
+          encrypted -- (bytes/str) result of self.encrypt()
 
         Raises:
-          RecoveredException(InvalidToken) -- Could read value.
+          RecoveredException(InvalidToken) -- Could not read value.
         """
+        return self._decrypt(self._fernet, encrypted)
+        
+
+    def _decrypt_from_file(self, fernet, filename, auto_encrypt=False):
+
         def _parse_json_string(json_string):
             json_string = encrypted.decode('utf-8')
             
-            assert json_string.startswith('{"type":"') or \
-                json_string.startswith('{"value":"')
+            if not (json_string.startswith('{"type":"') or
+                    json_string.startswith('{"value":"')):
+                raise self._make_RecoveredException_InvalidToken(None)
 
-            value = self.decrypt(json_string)
+            value = self._decrypt(fernet, json_string)
 
             if auto_encrypt:
                 self.encrypt_to_file(value, filename)
@@ -233,25 +260,59 @@ class EncryptorDecryptor:
             return value
             
 
-        assert not auto_rotate, "TODO"
-
-        with open(filename, 'rb') as f:
-            encrypted = f.read()
+        encrypted = self._read_file(filename)
 
         try:
-            decrypted = self.decrypt(encrypted)
+            decrypted = self._decrypt(fernet, encrypted)
 
-        except cryptography.fernet.InvalidToken as e:
-            try:
-                value = _parse_json_string(encrypted)
+        except RecoveredException as e:
+            if not e.get_reason().isa(InvalidToken):
+                raise
 
-            except Exception as e:
-                raise RecoveredException(
-                    "Could not read value",
-                    reason=InvalidToken,
-                    cause=e,
-                    logger=logger)
-
+            value = _parse_json_string(encrypted)
             return value
         
         return decrypted
+
+
+    def decrypt_from_file(self, filename, auto_encrypt=False):
+        """
+        Arguments:
+          filename: (str) path to file that stores a value
+          auto_encrypt: (bool) When True, this function will encrypt the
+            contents of the file, if it is not encrypted.
+
+        Returns:
+          Decrypted value.
+
+        Raises:
+          RecoveredException(InvalidToken) -- Could not read value.
+        """
+        return self._decrypt_from_file(
+            self._fernet, filename, auto_encrypt=auto_encrypt)
+
+
+    def rotate_file(self, filename):
+        encrypted = self._read_file(filename)
+
+        try:
+            decrypted = self._decrypt(self._primary_fernet, encrypted)
+
+        except RecoveredException as e:
+            if not e.get_reason().isa(InvalidToken):
+                raise
+
+            try:
+                decrypted = self.decrypt(encrypted)
+
+            except RecoveredException as e:
+                if not e.get_reason().isa(InvalidToken):
+                    raise
+
+                json_string = encrypted.decode('utf-8')
+                decrypted = self.decrypt(json_string)
+                                
+            self.encrypt_to_file(decrypted, filename)
+
+        except:
+            raise

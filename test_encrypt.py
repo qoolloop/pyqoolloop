@@ -226,4 +226,48 @@ def test__encrypt_decrypt_from_file__no_change__auto_encrypt(index, value):
 
     return
 
-#TODO: test optional arguments
+
+@pytest.mark.parametrize('index, value', (
+    (1.1, 'password'),
+    (1.2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
+))
+def test__encrypt_decrypt_from_file__no_change__auto_rotate(index, value):
+    # Change in key should make no difference, when data is not encrypted
+    none_encryptor = _make_temporary_encryptor()
+
+    primary_key = encrypt.EncryptorDecryptor.generate_key()
+
+    primary_encryptor = encrypt.EncryptorDecryptor(primary_key)
+
+    secondary_key = encrypt.EncryptorDecryptor.generate_key()
+
+    secondary_encryptor = encrypt.EncryptorDecryptor(secondary_key)
+
+    joint_encryptor = encrypt.EncryptorDecryptor((primary_key, secondary_key))
+
+    with tempfile.TemporaryDirectory() as directory:
+        value_filename = os.path.join(directory, 'value.bin')
+
+        none_encryptor.encrypt_to_file(
+            value, value_filename, no_encryption=True)
+
+        secondary_encryptor.rotate_file(value_filename)
+
+        loaded = secondary_encryptor.decrypt_from_file(value_filename)
+        assert loaded == value
+
+        joint_encryptor.rotate_file(value_filename)
+
+        with pytest.raises(RecoveredException):
+            none_encryptor.decrypt_from_file(value_filename)
+
+        with pytest.raises(RecoveredException):
+            secondary_encryptor.decrypt_from_file(value_filename)
+
+        loaded = primary_encryptor.decrypt_from_file(value_filename)
+        assert loaded == value
+
+        loaded = joint_encryptor.decrypt_from_file(value_filename)
+        assert loaded == value
+
+    return
