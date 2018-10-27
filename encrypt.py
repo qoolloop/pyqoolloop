@@ -219,6 +219,20 @@ class EncryptorDecryptor:
         Raises:
           RecoveredException(InvalidToken) -- Could read value.
         """
+        def _parse_json_string(json_string):
+            json_string = encrypted.decode('utf-8')
+            
+            assert json_string.startswith('{"type":"') or \
+                json_string.startswith('{"value":"')
+
+            value = self.decrypt(json_string)
+
+            if auto_encrypt:
+                self.encrypt_to_file(value, filename)
+
+            return value
+            
+
         assert not auto_rotate, "TODO"
 
         with open(filename, 'rb') as f:
@@ -228,24 +242,10 @@ class EncryptorDecryptor:
             decrypted = self.decrypt(encrypted)
 
         except cryptography.fernet.InvalidToken as e:
-            json_string = encrypted.decode('utf-8')
-            if (len(json_string) > 0) and (
-                    json_string.startswith('{"type":"') or
-                    json_string.startswith('{"value":"')):
-                try:
-                    value = self.decrypt(json_string)
+            try:
+                value = _parse_json_string(encrypted)
 
-                except Exception as e:
-                    raise RecoveredException(
-                        "Not in expected format",
-                        reason=InvalidToken,
-                        cause=e,
-                        logger=logger)
-
-                if auto_encrypt:
-                    self.encrypt_to_file(value, filename)
-
-            else:
+            except Exception as e:
                 raise RecoveredException(
                     "Could not read value",
                     reason=InvalidToken,
@@ -253,5 +253,5 @@ class EncryptorDecryptor:
                     logger=logger)
 
             return value
-
+        
         return decrypted
