@@ -31,13 +31,11 @@ def test__key_from_password(index, password, salt):
     save = False
     
     key = encrypt.key_from_password(password, salt)
-    testregression.assert_no_change(key, save,
-                                    __name__, 'test_key_from_password', index)
+    testregression.assert_no_change(key, save, index)
 
     # Make sure same PBKDF2HMAC is not used twice, but produces same results
     key = encrypt.key_from_password(password, salt)
-    testregression.assert_no_change(key, False,
-                                    __name__, 'test_key_from_password', index)
+    testregression.assert_no_change(key, False, index)
 
     assert not save, "Warning"
 
@@ -143,10 +141,7 @@ def test__encrypt_decrypt_from_file(index, value):
 def test__encrypt_decrypt_from_file__no_change(index, value):
     save = False
 
-    function_name = 'test__encrypt_decrypt_from_file'
-    
-    key_filename = testregression.make_filename(
-        __name__, function_name, index=index, suffix='key')
+    key_filename = testregression.make_filename(index=index, suffix='key')
 
     if save:
         key = encrypt.EncryptorDecryptor.generate_key()
@@ -160,8 +155,7 @@ def test__encrypt_decrypt_from_file__no_change(index, value):
         
     encryptor = encrypt.EncryptorDecryptor(key)
 
-    value_filename = testregression.make_filename(
-        __name__, function_name, index=index)
+    value_filename = testregression.make_filename(index=index)
 
     if save:
         encryptor.encrypt_to_file(value, value_filename)
