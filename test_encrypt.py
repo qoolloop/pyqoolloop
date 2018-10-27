@@ -141,7 +141,8 @@ def test__encrypt_decrypt_from_file(index, value):
 def test__encrypt_decrypt_from_file__no_change(index, value):
     save = False
 
-    key_filename = testregression.make_filename(index=index, suffix='key')
+    key_filename = testregression.make_filename(
+        index=index, suffix='key', extension='.bin')
 
     if save:
         key = encrypt.EncryptorDecryptor.generate_key()
@@ -155,7 +156,8 @@ def test__encrypt_decrypt_from_file__no_change(index, value):
         
     encryptor = encrypt.EncryptorDecryptor(key)
 
-    value_filename = testregression.make_filename(index=index)
+    value_filename = testregression.make_filename(
+        index=index, extension='.bin')
 
     if save:
         encryptor.encrypt_to_file(value, value_filename)
