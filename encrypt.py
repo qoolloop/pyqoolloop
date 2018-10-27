@@ -1,5 +1,7 @@
 """
-Convenience functions for encrypting/decrypting string serializable objects
+Convenience functions for encrypting/decrypting via json
+
+Pickling is not used because of concerns about security.
 """
 import base64
 from cryptography.fernet import (
@@ -31,19 +33,29 @@ def key_from_password(password, salt):
     return key
 
 
-class EncryptDecryptor:
+class EncryptorDecryptor:
 
     def __init__(self, key):
         """
         Argument:
-          key -- (bytearray/list of bytearray) The key for encryption.
+          key -- (bytes/list of bytes) The key for encryption.
             Otherwise, a list of candidate keys for decryption. Only the
-            first key is used for encryption.
+            first key is used for encryption. Keys must be bytes of length 32.
         """
-        self._key = key
+        if isinstance(key, bytes):
+            assert len(base64.urlsafe_b64decode(key)) == 32
+            self._fernet = Fernet(key)
+
+        else:
+            for each in key:
+                assert len(base64.urlsafe_b64decode(each)) == 32
+
+            self._fernet = MultiFernet(key)
+
+        return
 
 
-    def _encrypt_bytearray(self, byte_array):
+    def _encrypt_bytes(self, byte_array):
         TODO
 
 
@@ -53,15 +65,35 @@ class EncryptDecryptor:
 
     def _encrypt_dict(self, dictionary):
         """
-        Notes:
-          Currently, only the following value types are supported:
-            bytearray, str
         """
         TODO
 
 
-    def encrypt(self, value):
-        TODO
+    def encrypt(self, value, *, no_encryption=False):
+        """
+        Arguments:
+          value -- (dict/list/tuple/int/float/bool/None) Value to encrypt
+          no_encryption -- (bool) When True, don't encrypt.
+            Mainly for debugging purposes.
+
+        Returns:
+          One of either:
+            - (bytes) result of encryption
+            - (str) json encoded `value`
+
+        Notes:
+          Currently, only the following value types are supported for dict:
+            bytes, str
+        """
+        json_string = json.dumps({'type': str(type(value)), 'value': value})
+
+        if no_encryption:
+            result = json_string
+
+        else:
+            result = self._fernet.encrypt(json_string.encode('utf-8'))
+
+        return result
         
 
     def encrypt_to_file(self, filename):
@@ -69,7 +101,27 @@ class EncryptDecryptor:
 
 
     def decrypt(self, encrypted):
-        TODO
+        """
+        Decrypt data to same type as when the data was encrypted
+
+        Argument:
+          encrypted -- (bytes/str) result of self.encrypt()
+        """
+        if isinstance(encrypted, str):
+            json_string = encrypted
+
+        else:
+            json_string = self._fernet.decrypt(encrypted).decode('utf-8')
+
+        dictionary = json.loads(json_string)
+
+        value = dictionary['value']
+
+        assert str(type(value)) == dictionary['type'], \
+            "value type (%s) != decrypted type (%s)" % \
+            (str(type(value)), dictionary['type'])
+
+        return value
 
 
     def decrypt_from_file(self, filename,
