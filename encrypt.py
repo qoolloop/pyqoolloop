@@ -244,6 +244,7 @@ class EncryptorDecryptor:
         
 
     def _decrypt_from_file(self, fernet, filename, auto_encrypt=False):
+        #TODO: remove auto_encrypt
 
         def _parse_json_string(json_string):
             json_string = encrypted.decode('utf-8')
