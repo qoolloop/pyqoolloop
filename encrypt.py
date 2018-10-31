@@ -105,6 +105,14 @@ class EncryptorDecryptor:
             logger=logger)
         
 
+    _supported_root_types = (
+        dict, list, tuple, str, int, float, bool, type(None))
+
+    # Note that tuple is not included.
+    _supported_value_types = (
+        dict, list, str, int, float, bool, type(None)
+    )
+
     def encrypt(self, value, *, no_encryption=False):
         """
         Arguments:
@@ -118,9 +126,8 @@ class EncryptorDecryptor:
             - (str) json encoded `value`
 
         Notes:
-          Currently, only the following value types are supported for dict:
-            dict/list/str/int/float/bool/None
-          Note that tuple is not included.
+          Types supported for values in a dict are defined in
+          _supported_value_types
         """
         def _check_top_level(value):
 
@@ -141,9 +148,9 @@ class EncryptorDecryptor:
 
             def _check_types(value):
 
-                supported_types = (
-                    dict, list, str, int, float, bool, type(None))
-                assert isinstance(value, supported_types)
+                assert isinstance(value, self._supported_value_types), \
+                    ("Values of type (%s) are not supported" %
+                     type(value).__name__)
 
                 if isinstance(value, dict):
                     _check_types_dict(value)
@@ -154,9 +161,7 @@ class EncryptorDecryptor:
                 return
 
 
-            supported_types = (
-                dict, list, tuple, str, int, float, bool, type(None))
-            assert isinstance(value, supported_types)
+            assert isinstance(value, self._supported_root_types)
 
             if isinstance(value, tuple):
                 _check_types_list(value)
