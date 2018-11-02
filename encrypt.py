@@ -1,8 +1,7 @@
 """
 Convenience functions for encrypting/decrypting via json
-
-Pickling is not used because of concerns about security.
 """
+#TODO: May want to switch to a binary encoding instead of json
 import base64
 import cryptography.fernet
 from cryptography.fernet import (
@@ -106,7 +105,7 @@ class EncryptorDecryptor:
         
 
     _supported_root_types = (
-        dict, list, tuple, str, int, float, bool, type(None))
+        dict, list, tuple, bytes, str, int, float, bool, type(None))
 
     # Note that tuple is not included.
     _supported_value_types = (
@@ -116,7 +115,9 @@ class EncryptorDecryptor:
     def encrypt(self, value, *, no_encryption=False):
         """
         Arguments:
-          value -- (dict/list/tuple/str/int/float/bool/None) Value to encrypt
+          value -- (types defined in _supported_root_types) Value to encrypt
+            Types supported for values in a dict are defined in
+            _supported_value_types
           no_encryption -- (bool) When True, don't encrypt.
             Mainly for debugging purposes.
 
@@ -124,12 +125,8 @@ class EncryptorDecryptor:
           One of either:
             - (bytes) result of encryption
             - (str) json encoded `value`
-
-        Notes:
-          Types supported for values in a dict are defined in
-          _supported_value_types
         """
-        def _check_top_level(value):
+        def _check_from_root_level(value):
 
             def _check_types_list(value):
                 for each in value:
@@ -166,13 +163,25 @@ class EncryptorDecryptor:
             if isinstance(value, tuple):
                 _check_types_list(value)
 
+            elif isinstance(value, (str, bytes)):
+                return
+            
             else:
                 _check_types(value)
 
             return
+
+
+        def _convert(value):
+            if isinstance(value, bytes):
+                return value.decode('utf-8')  #TODO: Is utf-8 appropriate?
+
+            return value
             
 
-        _check_top_level(value)
+        _check_from_root_level(value)
+
+        value = _convert(value)
         
         json_string = json.dumps(
             {'type': type(value).__name__, 'value': value})
@@ -217,6 +226,9 @@ class EncryptorDecryptor:
         def _fix_type(value, type_string):
             if type_string == 'tuple':
                 return tuple(value)
+
+            elif type_string == 'bytes':
+                return value.encode('utf-8')  #TOOD: Is utf-8 appropriate?
 
             return value
 

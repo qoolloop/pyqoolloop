@@ -45,6 +45,9 @@ def test__key_from_password(index, password, salt):
 
 
 @pytest.mark.parametrize('index, value', (
+    (0.1, b'password'),
+    (0.2, os.urandom(24)),
+
     (1.1, 'password'),
     (1.2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
 
@@ -108,7 +111,8 @@ def test__key_from_password(index, password, salt):
     # ('complex tuple', 1, 3.5, False, None, {'key', 'value'}, [1, 2], (1, 2))),
 ))
 def test__encrypt_decrypt(index, value):
-
+    logger.info("value: %r", value)
+                         
     encryptor = _make_temporary_encryptor()
 
     for no_encryption in (False, True):
