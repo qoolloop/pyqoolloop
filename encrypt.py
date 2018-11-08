@@ -1,7 +1,6 @@
 """
 Convenience functions for encrypting/decrypting via json
 """
-#TODO: May want to switch to a binary encoding instead of json
 import base64
 import cryptography.fernet
 from cryptography.fernet import (
@@ -47,7 +46,6 @@ _TUPLE_TYPE = 100
 
 def msgpack_default(obj):
     if isinstance(obj, tuple):
-        logger.info("packing: %r" % (obj,))  #TODO: remove
         return msgpack.ExtType(_TUPLE_TYPE, json.dumps(obj).encode('utf-8'))
 
     raise TypeError("Unexpected type: %r" % (obj,))
@@ -56,7 +54,6 @@ def msgpack_default(obj):
 def msgpack_ext_hook(code, data):
     if code == _TUPLE_TYPE:
         obj = tuple(json.loads(data.decode('utf-8')))
-        logger.info("unpacked: %r" % (obj,))  #TODO: remove
 
     else:
         obj = msgpack.ExtType(code, data)
@@ -227,9 +224,7 @@ class EncryptorDecryptor:
             return encoded
 
 
-        logger.info("len(encrypted): %d" % len(encrypted))  #TODO: remove
         encoded = _get_encoded(encrypted)
-        logger.info("len(encoded): %d" % len(encoded))  #TODO: remove
         value = msgpack.unpackb(encoded, raw=False, ext_hook=msgpack_ext_hook)
         return value
 
