@@ -113,6 +113,13 @@ def test__key_from_password(index, password, salt):
      ('complex tuple', 1, 3.5, False, None, {'key': 'value'}, [1, 2], [1, 2])),
     (8.5,
      ('complex tuple', 1, 3.5, False, None, {'key', 'value'}, [1, 2], (1, 2))),
+
+    (9.1, set()),
+    (9.2, {1}),
+    (9.4,
+     {'complex set', 1, 3.5, False, None}),
+    (9.5,
+     {'complex set', 1, 3.5, False, None, (1, 2)}),
 ))
 def test__encrypt_decrypt(index, value):
     logger.info("value: %r", value)
