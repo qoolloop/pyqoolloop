@@ -46,7 +46,13 @@ def test__key_from_password(index, password, salt):
 
 @pytest.mark.parametrize('index, value', (
     (0.1, b'password'),
-    (0.2, os.urandom(24)),
+    # UnicodeDecodeError: 'utf-8' codec can't decode byte 0x80 in position 0:
+    # invalid start byte
+    (0.2, b'\x80'),
+    # UnicodeDecodeError: 'utf-8' codec can't decode byte 0xd0 in position 1:
+    # invalid continuation byte
+    (0.3, b';\xd0bi$\x9bR(\x82I\xd5\xe4\x81VL\xe3\xfds\xa4\xfaIHr\x9c'),
+    (0.4, os.urandom(24)),
 
     (1.1, 'password'),
     (1.2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
@@ -115,10 +121,9 @@ def test__encrypt_decrypt(index, value):
                          
     encryptor = _make_temporary_encryptor()
 
-    for no_encryption in (False, True):
-        encrypted = encryptor.encrypt(value, no_encryption=no_encryption)
-        decrypted = encryptor.decrypt(encrypted)
-        assert decrypted == value
+    encrypted = encryptor.encrypt(value)
+    decrypted = encryptor.decrypt(encrypted)
+    assert decrypted == value
 
     return
 
@@ -158,10 +163,13 @@ def test__encrypt_decrypt_from_file__no_change(index, value):
         with open(key_filename, 'wb') as f:
             f.write(key)
 
-    else:
-        with open(key_filename, 'rb') as f:
-            key = f.read()
+        logger.info("Key length: %d" % len(key))
+
+    with open(key_filename, 'rb') as f:
+        key = f.read()
         
+    logger.info("Key length: %d" % len(key))
+
     encryptor = encrypt.EncryptorDecryptor(key)
 
     value_filename = testregression.make_filename(
@@ -175,60 +183,6 @@ def test__encrypt_decrypt_from_file__no_change(index, value):
     assert loaded == value
 
     assert not save, "Warning"
-
-
-@pytest.mark.parametrize('index, value', (
-    (1.1, 'password'),
-    (1.2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
-))
-def test__encrypt_decrypt_from_file__no_change__no_encryption(index, value):
-    save = False
-
-    # Change in key should make no difference, because data is not encrypted
-    encryptor = _make_temporary_encryptor()
-
-    value_filename = testregression.make_filename(
-        index=index, extension='.bin')
-
-    if save:
-        encryptor.encrypt_to_file(value, value_filename, no_encryption=True)
-
-    loaded = encryptor.decrypt_from_file(value_filename)
-
-    assert loaded == value
-
-    assert not save, "Warning"
-
-
-@pytest.mark.parametrize('index, value', (
-    (1.1, 'password'),
-    (1.2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
-))
-def test__encrypt_decrypt_from_file__no_change__auto_encrypt(index, value):
-    # Change in key should make no difference, when data is not encrypted
-    none_encryptor = _make_temporary_encryptor()
-
-    encryptor = _make_temporary_encryptor()
-
-    with tempfile.TemporaryDirectory() as directory:
-        value_filename = os.path.join(directory, 'value.bin')
-
-        none_encryptor.encrypt_to_file(
-            value, value_filename, no_encryption=True)
-
-        loaded = none_encryptor.decrypt_from_file(value_filename)
-        assert loaded == value
-
-        loaded = encryptor.decrypt_from_file(value_filename, auto_encrypt=True)
-        assert loaded == value
-
-        with pytest.raises(RecoveredException):
-            none_encryptor.decrypt_from_file(value_filename)
-
-        loaded = encryptor.decrypt_from_file(value_filename)
-        assert loaded == value
-
-    return
 
 
 @pytest.mark.parametrize('index, value', (
@@ -252,8 +206,7 @@ def test__encrypt_decrypt_from_file__no_change__auto_rotate(index, value):
     with tempfile.TemporaryDirectory() as directory:
         value_filename = os.path.join(directory, 'value.bin')
 
-        none_encryptor.encrypt_to_file(
-            value, value_filename, no_encryption=True)
+        secondary_encryptor.encrypt_to_file(value, value_filename)
 
         secondary_encryptor.rotate_file(value_filename)
 

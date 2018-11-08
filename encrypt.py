@@ -12,6 +12,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import ujson as json
+import msgpack  #TODO: Can use Packer class for speed up
 
 from pyexception import (
     Reason,
@@ -39,6 +40,28 @@ def key_from_password(password, salt):
     password_bytes = password.encode('utf-8')
     key = base64.urlsafe_b64encode(kdf.derive(password_bytes))
     return key
+
+
+_TUPLE_TYPE = 100
+
+
+def msgpack_default(obj):
+    if isinstance(obj, tuple):
+        logger.info("packing: %r" % (obj,))  #TODO: remove
+        return msgpack.ExtType(_TUPLE_TYPE, json.dumps(obj).encode('utf-8'))
+
+    raise TypeError("Unexpected type: %r" % (obj,))
+
+
+def msgpack_ext_hook(code, data):
+    if code == _TUPLE_TYPE:
+        obj = tuple(json.loads(data.decode('utf-8')))
+        logger.info("unpacked: %r" % (obj,))  #TODO: remove
+
+    else:
+        obj = msgpack.ExtType(code, data)
+
+    return obj
 
 
 class EncryptorDecryptor:
@@ -113,18 +136,21 @@ class EncryptorDecryptor:
     )
 
     def encrypt(self, value, *, no_encryption=False):
+        #TODO: remove no_encryption
         """
         Arguments:
           value -- (types defined in _supported_root_types) Value to encrypt
             Types supported for values in a dict are defined in
-            _supported_value_types
+            _supported_value_types  #TODO: not anymore?
           no_encryption -- (bool) When True, don't encrypt.
             Mainly for debugging purposes.
 
         Returns:
           One of either:
-            - (bytes) result of encryption
-            - (str) json encoded `value`
+            When no_encryption=True:
+              (bytes) result of encryption
+            When no_encryption=False:
+              (bytes) binary encoded value
         """
         def _check_from_root_level(value):
 
@@ -172,25 +198,18 @@ class EncryptorDecryptor:
             return
 
 
-        def _convert(value):
-            if isinstance(value, bytes):
-                return value.decode('utf-8')  #TODO: Is utf-8 appropriate?
-
-            return value
-            
-
         _check_from_root_level(value)
 
-        value = _convert(value)
-        
-        json_string = json.dumps(
-            {'type': type(value).__name__, 'value': value})
+        encoded = msgpack.packb(
+            value,
+            use_bin_type=True, strict_types=True,
+            default=msgpack_default)
 
         if no_encryption:
-            result = json_string
+            result = encoded
 
         else:
-            result = self._fernet.encrypt(json_string.encode('utf-8'))
+            result = self._fernet.encrypt(encoded)
 
         return result
         
@@ -209,41 +228,20 @@ class EncryptorDecryptor:
     @classmethod
     def _decrypt(cls, fernet, encrypted):
 
-        def _get_json_string(encrypted):
-            if isinstance(encrypted, str):
-                json_string = encrypted
+        def _get_encoded(encrypted):
+            try:
+                encoded = fernet.decrypt(encrypted)
 
-            else:
-                try:
-                    json_string = fernet.decrypt(encrypted).decode('utf-8')
+            except cryptography.fernet.InvalidToken as e:
+                raise cls._make_RecoveredException_InvalidToken(e)
 
-                except cryptography.fernet.InvalidToken as e:
-                    raise cls._make_RecoveredException_InvalidToken(e)
-
-            return json_string
+            return encoded
 
 
-        def _fix_type(value, type_string):
-            if type_string == 'tuple':
-                return tuple(value)
-
-            elif type_string == 'bytes':
-                return value.encode('utf-8')  #TOOD: Is utf-8 appropriate?
-
-            return value
-
-
-        json_string = _get_json_string(encrypted)
-
-        dictionary = json.loads(json_string)
-
-        value = dictionary['value']
-        value = _fix_type(value, dictionary['type'])
-
-        assert value.__class__.__name__ == dictionary['type'], \
-            "value type (%s) != decrypted type (%s)" % \
-            (value.__class__.__name__, dictionary['type'])
-
+        logger.info("len(encrypted): %d" % len(encrypted))  #TODO: remove
+        encoded = _get_encoded(encrypted)
+        logger.info("len(encoded): %d" % len(encoded))  #TODO: remove
+        value = msgpack.unpackb(encoded, raw=False, ext_hook=msgpack_ext_hook)
         return value
 
 
@@ -260,45 +258,16 @@ class EncryptorDecryptor:
         return self._decrypt(self._fernet, encrypted)
         
 
-    def _decrypt_from_file(self, fernet, filename, auto_encrypt=False):
-        #TODO: remove auto_encrypt
-
-        def _parse_json_string(json_string):
-            json_string = encrypted.decode('utf-8')
-            
-            if not (json_string.startswith('{"type":"') or
-                    json_string.startswith('{"value":"')):
-                raise self._make_RecoveredException_InvalidToken(None)
-
-            value = self._decrypt(fernet, json_string)
-
-            if auto_encrypt:
-                self.encrypt_to_file(value, filename)
-
-            return value
-            
-
+    def _decrypt_from_file(self, fernet, filename):
         encrypted = self._read_file(filename)
-
-        try:
-            decrypted = self._decrypt(fernet, encrypted)
-
-        except RecoveredException as e:
-            if not e.get_reason().isa(InvalidToken):
-                raise
-
-            value = _parse_json_string(encrypted)
-            return value
-        
+        decrypted = self._decrypt(fernet, encrypted)
         return decrypted
 
 
-    def decrypt_from_file(self, filename, auto_encrypt=False):
+    def decrypt_from_file(self, filename):
         """
         Arguments:
           filename: (str) path to file that stores a value
-          auto_encrypt: (bool) When True, this function will encrypt the
-            contents of the file, if it is not encrypted.
 
         Returns:
           Decrypted value.
@@ -306,30 +275,22 @@ class EncryptorDecryptor:
         Raises:
           RecoveredException(InvalidToken) -- Could not read value.
         """
-        return self._decrypt_from_file(
-            self._fernet, filename, auto_encrypt=auto_encrypt)
+        return self._decrypt_from_file(self._fernet, filename)
 
 
     def rotate_file(self, filename):
         encrypted = self._read_file(filename)
 
         try:
+            # try with primary key
             decrypted = self._decrypt(self._primary_fernet, encrypted)
 
         except RecoveredException as e:
             if not e.get_reason().isa(InvalidToken):
                 raise
 
-            try:
-                decrypted = self.decrypt(encrypted)
-
-            except RecoveredException as e:
-                if not e.get_reason().isa(InvalidToken):
-                    raise
-
-                json_string = encrypted.decode('utf-8')
-                decrypted = self.decrypt(json_string)
-                                
+            # try with all keys
+            decrypted = self.decrypt(encrypted)
             self.encrypt_to_file(decrypted, filename)
 
         except:
