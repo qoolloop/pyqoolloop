@@ -235,3 +235,25 @@ def test__encrypt_decrypt_from_file__no_change__auto_rotate(index, value):
         assert loaded == value
 
     return
+
+
+def test__decrypt_from_file__no_file_exception():
+    encryptor = _make_temporary_encryptor()
+
+    with pytest.raises(FileNotFoundError):
+        encryptor.decrypt_from_file("any file")
+
+    return
+
+
+@pytest.mark.parametrize('default', (
+    None,
+    'str',
+))
+def test__decrypt_from_file__no_file__default(default):
+    encryptor = _make_temporary_encryptor()
+
+    value = encryptor.decrypt_from_file(
+        "any file", use_default=True, default=default)
+
+    assert value == default

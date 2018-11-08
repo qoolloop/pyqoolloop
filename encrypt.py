@@ -215,16 +215,29 @@ class EncryptorDecryptor:
         return self._decrypt(self._fernet, encrypted)
         
 
-    def _decrypt_from_file(self, fernet, filename):
-        encrypted = self._read_file(filename)
+    def _decrypt_from_file(
+            self, fernet, filename, use_default=False, default=None):
+        try:
+            encrypted = self._read_file(filename)
+
+        except FileNotFoundError as e:
+            if use_default:
+                return default
+
+            raise
+        
         decrypted = self._decrypt(fernet, encrypted)
         return decrypted
 
 
-    def decrypt_from_file(self, filename):
+    def decrypt_from_file(self, filename, use_default=False, default=None):
         """
         Arguments:
-          filename: (str) path to file that stores a value
+          filename: (str) Path to file that stores a value
+          use_default: (bool) Whether to return `default` when file does not
+            exist.
+          default: (object) Value to return, when file does not exist, and
+            `use_default` is True.
 
         Returns:
           Decrypted value.
@@ -232,7 +245,8 @@ class EncryptorDecryptor:
         Raises:
           RecoveredException(InvalidToken) -- Could not read value.
         """
-        return self._decrypt_from_file(self._fernet, filename)
+        return self._decrypt_from_file(
+            self._fernet, filename, use_default=use_default, default=default)
 
 
     def rotate_file(self, filename):
