@@ -42,19 +42,47 @@ def key_from_password(password, salt):
 
 
 _TUPLE_TYPE = 100
+_SET_TYPE = 101
+
+
+def _packb(value):
+    encoded = msgpack.packb(
+        value,
+        use_bin_type=True, strict_types=True,
+        default=msgpack_default)
+    return encoded
+
+
+def _unpackb(encoded):
+    value = msgpack.unpackb(encoded, raw=False, ext_hook=msgpack_ext_hook)
+    return value
 
 
 def msgpack_default(obj):
+    logger.info("obj: %r" % (obj,))  #TODO: remove
     if isinstance(obj, tuple):
-        return msgpack.ExtType(_TUPLE_TYPE, json.dumps(obj).encode('utf-8'))
+        obj_type = _TUPLE_TYPE
+        data = _packb([each for each in obj])
 
-    raise TypeError("Unexpected type: %r" % (obj,))
+    elif isinstance(obj, set):
+        obj_type = _SET_TYPE
+        data = _packb([each for each in obj])
+
+    else:
+        raise TypeError("Unexpected type: %r" % (obj,))
+    
+    return msgpack.ExtType(obj_type, data)
 
 
 def msgpack_ext_hook(code, data):
-    if code == _TUPLE_TYPE:
-        obj = tuple(json.loads(data.decode('utf-8')))
+    logger.info("data: %r" % (data, ))  #TODO: remove
 
+    if code == _TUPLE_TYPE:
+        obj = tuple(_unpackb(data))
+
+    elif code == _SET_TYPE:
+        obj = set(_unpackb(data))
+        
     else:
         obj = msgpack.ExtType(code, data)
 
@@ -135,68 +163,13 @@ class EncryptorDecryptor:
     def encrypt(self, value):
         """
         Arguments:
-          value -- (types defined in _supported_root_types) Value to encrypt
-            Types supported for values in a dict are defined in
-            _supported_value_types  #TODO: not anymore?
+          value -- (object) Value to encrypt
 
         Returns:
           (bytes) result of encryption
         """
-        def _check_from_root_level(value):
-
-            def _check_types_list(value):
-                for each in value:
-                    _check_types(each)
-
-                return
-
-
-            def _check_types_dict(value):
-                for key, value in value.items():
-                    assert isinstance(key, str)
-                    _check_types(value)
-
-                return
-
-
-            def _check_types(value):
-
-                assert isinstance(value, self._supported_value_types), \
-                    ("Values of type (%s) are not supported" %
-                     type(value).__name__)
-
-                if isinstance(value, dict):
-                    _check_types_dict(value)
-
-                elif isinstance(value, list):
-                    _check_types_list(value)
-
-                return
-
-
-            assert isinstance(value, self._supported_root_types)
-
-            if isinstance(value, tuple):
-                _check_types_list(value)
-
-            elif isinstance(value, (str, bytes)):
-                return
-            
-            else:
-                _check_types(value)
-
-            return
-
-
-        _check_from_root_level(value)
-
-        encoded = msgpack.packb(
-            value,
-            use_bin_type=True, strict_types=True,
-            default=msgpack_default)
-
+        encoded = _packb(value)
         result = self._fernet.encrypt(encoded)
-
         return result
         
 
@@ -225,7 +198,7 @@ class EncryptorDecryptor:
 
 
         encoded = _get_encoded(encrypted)
-        value = msgpack.unpackb(encoded, raw=False, ext_hook=msgpack_ext_hook)
+        value = _unpackb(encoded)
         return value
 
 
