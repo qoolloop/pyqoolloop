@@ -135,22 +135,15 @@ class EncryptorDecryptor:
         dict, list, str, int, float, bool, type(None)
     )
 
-    def encrypt(self, value, *, no_encryption=False):
-        #TODO: remove no_encryption
+    def encrypt(self, value):
         """
         Arguments:
           value -- (types defined in _supported_root_types) Value to encrypt
             Types supported for values in a dict are defined in
             _supported_value_types  #TODO: not anymore?
-          no_encryption -- (bool) When True, don't encrypt.
-            Mainly for debugging purposes.
 
         Returns:
-          One of either:
-            When no_encryption=True:
-              (bytes) result of encryption
-            When no_encryption=False:
-              (bytes) binary encoded value
+          (bytes) result of encryption
         """
         def _check_from_root_level(value):
 
@@ -205,17 +198,13 @@ class EncryptorDecryptor:
             use_bin_type=True, strict_types=True,
             default=msgpack_default)
 
-        if no_encryption:
-            result = encoded
-
-        else:
-            result = self._fernet.encrypt(encoded)
+        result = self._fernet.encrypt(encoded)
 
         return result
         
 
-    def encrypt_to_file(self, value, filename, *, no_encryption=False):
-        encrypted = self.encrypt(value, no_encryption=no_encryption)
+    def encrypt_to_file(self, value, filename):
+        encrypted = self.encrypt(value)
 
         if isinstance(encrypted, str):
             encrypted = encrypted.encode('utf-8')
