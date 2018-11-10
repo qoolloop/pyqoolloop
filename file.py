@@ -29,7 +29,7 @@ def load_pickle(file_path, filename, raise_exception=False):
 
 
 def _check_overwrite(full_filename, overwrite):
-    #TODO: Do something about race conditions with os.path.exists()
+    #TODO: Do something about race conditions with os.path.exists()=>Use 'x' for file mode. See encrypt
 
     if not overwrite and os.path.exists(full_filename):
         raise FileExistsError()
