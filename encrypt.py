@@ -10,12 +10,12 @@ from cryptography.fernet import (
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-import ujson as json
 import msgpack  #TODO: Can use Packer class for speed up
 
 from pyexception import (
     Reason,
-    RecoveredException,
+    RecoveredException,  #TODO: Use Recoveredexception in other modules
+    FileExists,
 )
 
 import pylog
@@ -136,9 +136,19 @@ class EncryptorDecryptor:
 
     
     @staticmethod
-    def _write_file(encrypted, filename):
-        with open(filename, 'wb') as f:
-            f.write(encrypted)
+    def _write_file(encrypted, filename, overwrite=False):
+        if overwrite:
+            mode = 'wb'
+
+        else:
+            mode = 'xb'
+            
+        try:
+            with open(filename, mode) as f:
+                f.write(encrypted)
+
+        except FileExistsError as e:
+            raise RecoveredException("File exists", FileExists, cause=e)
 
         return
 
@@ -173,13 +183,13 @@ class EncryptorDecryptor:
         return result
         
 
-    def encrypt_to_file(self, value, filename):
+    def encrypt_to_file(self, value, filename, overwrite=False):
         encrypted = self.encrypt(value)
 
         if isinstance(encrypted, str):
             encrypted = encrypted.encode('utf-8')
 
-        self._write_file(encrypted, filename)
+        self._write_file(encrypted, filename, overwrite=overwrite)
 
         return
 
@@ -262,7 +272,7 @@ class EncryptorDecryptor:
 
             # try with all keys
             decrypted = self.decrypt(encrypted)
-            self.encrypt_to_file(decrypted, filename)
+            self.encrypt_to_file(decrypted, filename, overwrite=True)
 
         except:
             raise

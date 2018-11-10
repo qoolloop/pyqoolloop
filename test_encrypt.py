@@ -6,6 +6,8 @@ import tempfile
 
 from pyexception import (
     RecoveredException,
+    testutils,
+    FileExists,
 )
 
 from . import (
@@ -43,6 +45,30 @@ def test__key_from_password(index, password, salt):
     testregression.assert_no_change(key, False, index)
 
     assert not save, "Warning"
+
+
+def test__encrypt_to_file__overwrite():
+    encryptor = _make_temporary_encryptor()
+
+    with tempfile.TemporaryDirectory() as directory:
+        value_filename = os.path.join(directory, 'file.bin')
+
+        value = {}
+        encryptor.encrypt_to_file(value, value_filename)
+
+        new_value = ()
+        with testutils.raises(RecoveredException, FileExists):
+            encryptor.encrypt_to_file(new_value, value_filename)
+        
+        loaded = encryptor.decrypt_from_file(value_filename)
+        assert loaded == value
+
+        encryptor.encrypt_to_file(new_value, value_filename, overwrite=True)
+
+        loaded = encryptor.decrypt_from_file(value_filename)
+        assert loaded == new_value
+
+    return
 
 
 @pytest.mark.parametrize('index, value', (
