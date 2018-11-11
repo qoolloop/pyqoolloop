@@ -1,3 +1,6 @@
+"""
+Note that reading pickle files from an unknown source can be a security risk.
+"""
 import os
 import pickle
 
