@@ -273,6 +273,3 @@ class EncryptorDecryptor:
             # try with all keys
             decrypted = self.decrypt(encrypted)
             self.encrypt_to_file(decrypted, filename, overwrite=True)
-
-        except:
-            raise
