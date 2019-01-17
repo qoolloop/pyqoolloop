@@ -47,6 +47,10 @@ def current_function_name(pop_stack=0):
 
 
 def combine_lists(*args):
+    """
+    Create a list of lists by taking one element from each of the arguments.
+    Can be used to create test parameters from combinations.
+    """
     assert len(args) >= 1
 
     if len(args) == 1:
