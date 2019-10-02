@@ -148,7 +148,8 @@ class EncryptorDecryptor:
                 f.write(encrypted)
 
         except FileExistsError as e:
-            raise RecoveredException("File exists", FileExists, cause=e)
+            raise RecoveredException(
+                "File exists", FileExists, cause=e, logger=logger)
 
         return
 
