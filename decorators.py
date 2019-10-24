@@ -9,6 +9,7 @@ from functools import (
 import inspect
 import threading
 import time
+from types import MethodType
 
 
 """
@@ -545,9 +546,30 @@ def extend_with_method(__target_class):
 
     class _FunctionDecorator(FunctionDecorator):
         def generic_decorator(self, target):  # override
-            setattr(target_class, target.__name__, target)
+            setattr(
+                target_class,
+                target.__name__,
+                target)
             return super().generic_decorator(target)
         
 
     decorator = _FunctionDecorator(_through_function)
+    return decorator.generic_decorator
+
+
+def extend_with_class_method(__target_class):
+
+    target_class = __target_class
+
+    class _FunctionDecorator(FunctionDecorator):
+        def generic_decorator(self, target):  # override
+            setattr(
+                target_class,
+                target.__name__,
+                MethodType(target, target_class))
+            return super().generic_decorator(target)
+        
+
+    decorator = _FunctionDecorator(
+        called_function=None, function_for_classmethod=_through_function)
     return decorator.generic_decorator

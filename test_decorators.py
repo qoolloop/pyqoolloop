@@ -1,13 +1,14 @@
 from . import decorators
 from .decorators import (
+    deprecated,
+    expire_cache,
+    extend_with_method,
+    extend_with_class_method,
+    keep_cache,
     pass_args,
     retry,
     synchronized_on_function,
     synchronized_on_instance,
-    deprecated,
-    keep_cache,
-    expire_cache,
-    extend_with_method,
 )
 import inspect
 import pytest
@@ -1110,20 +1111,55 @@ def test_expire_cache__synchronize():
     _test_synchronized(variables, _function)
 
 
-# extend_with_method
-def test__extend():
+# extend_with_method ##
+
+def test__extend_with_method():
 
     class A:
-        pass
+        def method(self, value):
+            pass
     
 
     @extend_with_method(A)
-    def method(self, value):
-        self.value = value
+    def new_method(self, value):
+        self.new_value = value
 
 
     a = A()
 
     value = 1
-    a.method(value)
-    assert value == a.value
+    a.new_method(value)
+    assert value == a.new_value
+
+    with pytest.raises(TypeError):
+        A.method(value)
+
+    with pytest.raises(TypeError):
+        A.new_method(value)
+
+
+# extend_with_class_method ##
+
+def test__extend_with_class_method():
+
+    class A:
+        @classmethod
+        def method(cls, value):
+            pass
+    
+
+    @extend_with_class_method(A)
+    def new_method(cls, value):
+        cls.new_value = value
+
+
+    a = A()
+
+    value = 1
+    a.new_method(value)
+    assert value == a.new_value
+    assert value == A.new_value
+
+    new_value = 2
+    A.new_method(new_value)
+    assert new_value == A.new_value
