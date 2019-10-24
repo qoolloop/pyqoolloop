@@ -573,3 +573,22 @@ def extend_with_class_method(__target_class):
     decorator = _FunctionDecorator(
         called_function=None, function_for_classmethod=_through_function)
     return decorator.generic_decorator
+
+
+def extend_with_static_method(__target_class):
+
+    target_class = __target_class
+
+    class _FunctionDecorator(FunctionDecorator):
+        def generic_decorator(self, target):  # override
+            setattr(
+                target_class,
+                target.__name__,
+                staticmethod(target))
+            return super().generic_decorator(target)
+        
+
+    #TODO: function_for_staticmethod necessary?
+    decorator = _FunctionDecorator(
+        called_function=None, function_for_staticmethod=_through_function)
+    return decorator.generic_decorator

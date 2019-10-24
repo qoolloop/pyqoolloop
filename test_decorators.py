@@ -4,6 +4,7 @@ from .decorators import (
     expire_cache,
     extend_with_method,
     extend_with_class_method,
+    extend_with_static_method,
     keep_cache,
     pass_args,
     retry,
@@ -1143,9 +1144,7 @@ def test__extend_with_method():
 def test__extend_with_class_method():
 
     class A:
-        @classmethod
-        def method(cls, value):
-            pass
+        pass
     
 
     @extend_with_class_method(A)
@@ -1163,3 +1162,25 @@ def test__extend_with_class_method():
     new_value = 2
     A.new_method(new_value)
     assert new_value == A.new_value
+
+
+# extend_with_static_method ##
+
+def test__extend_with_static_method():
+
+    class A:
+        pass
+
+
+    @extend_with_static_method(A)
+    def new_method(value):
+        return value
+
+
+    a = A()
+
+    value = 1
+    assert value == a.new_method(value)
+
+    new_value = 2
+    assert new_value == A.new_method(new_value)
