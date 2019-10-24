@@ -542,53 +542,38 @@ def _through_function(target, *args, **kwargs):
 
 def extend_with_method(__target_class):
 
-    target_class = __target_class
-
-    class _FunctionDecorator(FunctionDecorator):
-        def generic_decorator(self, target):  # override
-            setattr(
-                target_class,
-                target.__name__,
-                target)
-            return super().generic_decorator(target)
+    def _decorator(target):
+        setattr(
+            __target_class,
+            target.__name__,
+            target)
+        return target
         
 
-    decorator = _FunctionDecorator(_through_function)
-    return decorator.generic_decorator
+    return _decorator
 
 
 def extend_with_class_method(__target_class):
 
-    target_class = __target_class
-
-    class _FunctionDecorator(FunctionDecorator):
-        def generic_decorator(self, target):  # override
-            setattr(
-                target_class,
-                target.__name__,
-                MethodType(target, target_class))
-            return super().generic_decorator(target)
+    def _decorator(target):
+        setattr(
+            __target_class,
+            target.__name__,
+            classmethod(target))
+        return target
         
 
-    decorator = _FunctionDecorator(
-        called_function=None, function_for_classmethod=_through_function)
-    return decorator.generic_decorator
+    return _decorator
 
 
 def extend_with_static_method(__target_class):
 
-    target_class = __target_class
-
-    class _FunctionDecorator(FunctionDecorator):
-        def generic_decorator(self, target):  # override
-            setattr(
-                target_class,
-                target.__name__,
-                staticmethod(target))
-            return super().generic_decorator(target)
+    def _decorator(target):
+        setattr(
+            __target_class,
+            target.__name__,
+            staticmethod(target))
+        return target
         
 
-    #TODO: function_for_staticmethod necessary?
-    decorator = _FunctionDecorator(
-        called_function=None, function_for_staticmethod=_through_function)
-    return decorator.generic_decorator
+    return _decorator
