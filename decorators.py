@@ -533,3 +533,21 @@ def expire_cache(
         function_for_staticmethod=_through_classmethod,
         function_for_classmethod=_through_classmethod)
     return decorator.generic_decorator(__target)
+
+
+def extend_with_method(__target_class):
+
+    target_class = __target_class
+
+    class _FunctionDecorator(FunctionDecorator):
+        def generic_decorator(self, target):  # override
+            setattr(target_class, target.__name__, target)
+            return super().generic_decorator(target)
+        
+
+    #TODO: @wraps(__target_func)
+    def _function(target, *args, **kwargs):
+        return target(*args, **kwargs)
+        
+    decorator = _FunctionDecorator(_function)
+    return decorator.generic_decorator

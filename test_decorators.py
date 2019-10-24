@@ -7,6 +7,7 @@ from .decorators import (
     deprecated,
     keep_cache,
     expire_cache,
+    extend_with_method,
 )
 import inspect
 import pytest
@@ -1107,3 +1108,22 @@ def test_expire_cache__synchronize():
 
 
     _test_synchronized(variables, _function)
+
+
+# extend_with_method
+def test__extend():
+
+    class A:
+        pass
+    
+
+    @extend_with_method(A)
+    def method(self, value):
+        self.value = value
+
+
+    a = A()
+
+    value = 1
+    a.method(value)
+    assert value == a.value
