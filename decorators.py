@@ -535,6 +535,10 @@ def expire_cache(
     return decorator.generic_decorator(__target)
 
 
+def _through_function(target, *args, **kwargs):
+    return target(*args, **kwargs)
+
+
 def extend_with_method(__target_class):
 
     target_class = __target_class
@@ -545,9 +549,5 @@ def extend_with_method(__target_class):
             return super().generic_decorator(target)
         
 
-    #TODO: @wraps(__target_func)
-    def _function(target, *args, **kwargs):
-        return target(*args, **kwargs)
-        
-    decorator = _FunctionDecorator(_function)
+    decorator = _FunctionDecorator(_through_function)
     return decorator.generic_decorator
