@@ -5,6 +5,7 @@ from .decorators import (
     extend_with_method,
     extend_with_class_method,
     extend_with_static_method,
+    extension,
     keep_cache,
     pass_args,
     retry,
@@ -1114,6 +1115,18 @@ def test_expire_cache__synchronize():
 
 # extend_with_method ##
 
+def _test_new_method(A, a):
+    value = 1
+    a.new_method(value)
+    assert value == a.new_value
+
+    with pytest.raises(TypeError):
+        A.method(value)
+
+    with pytest.raises(TypeError):
+        A.new_method(value)
+
+
 def test__extend_with_method():
 
     class A:
@@ -1128,18 +1141,21 @@ def test__extend_with_method():
 
     a = A()
 
+    _test_new_method(A, a)
+
+
+# @extend_with_class_method ##
+
+def _test_new_class_method(A, a):
     value = 1
-    a.new_method(value)
+    a.new_class_method(value)
     assert value == a.new_value
+    assert value == A.new_value
 
-    with pytest.raises(TypeError):
-        A.method(value)
-
-    with pytest.raises(TypeError):
-        A.new_method(value)
-
-
-# extend_with_class_method ##
+    new_value = 2
+    A.new_class_method(new_value)
+    assert new_value == A.new_value
+    
 
 def test__extend_with_class_method():
 
@@ -1148,23 +1164,24 @@ def test__extend_with_class_method():
     
 
     @extend_with_class_method(A)
-    def new_method(cls, value):
+    def new_class_method(cls, value):
         cls.new_value = value
 
 
     a = A()
 
+    _test_new_class_method(A, a)
+
+
+# @extend_with_static_method ##
+
+def _test_new_static_method(A, a):
     value = 1
-    a.new_method(value)
-    assert value == a.new_value
-    assert value == A.new_value
+    assert value == a.new_static_method(value)
 
     new_value = 2
-    A.new_method(new_value)
-    assert new_value == A.new_value
-
-
-# extend_with_static_method ##
+    assert new_value == A.new_static_method(new_value)
+    
 
 def test__extend_with_static_method():
 
@@ -1173,14 +1190,40 @@ def test__extend_with_static_method():
 
 
     @extend_with_static_method(A)
-    def new_method(value):
+    def new_static_method(value):
         return value
 
 
     a = A()
 
-    value = 1
-    assert value == a.new_method(value)
+    _test_new_static_method(A, a)
 
-    new_value = 2
-    assert new_value == A.new_method(new_value)
+
+# @extension ##
+
+def test__extension():
+
+    class A:
+        def method(self, value):
+            pass
+
+
+    @extension(A)
+    class Extension:
+        def new_method(self, value):
+            self.new_value = value
+
+        @classmethod
+        def new_class_method(cls, value):
+            cls.new_value = value
+
+        @staticmethod
+        def new_static_method(value):
+            return value
+
+        
+    a = A()
+
+    _test_new_method(A, a)
+    _test_new_class_method(A, a)
+    _test_new_static_method(A, a)

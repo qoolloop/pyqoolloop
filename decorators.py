@@ -9,7 +9,9 @@ from functools import (
 import inspect
 import threading
 import time
-from types import MethodType
+
+import pylog
+logger = pylog.getLogger(__name__)
 
 
 """
@@ -21,7 +23,7 @@ be called from the function of interest.
 #TODO: Drop support for Python 2
 
 
-def _through_classmethod(target, cls, *args, **kwargs):
+def _through_classmethod(target, cls, *args, **kwargs):  #TODO: What happens with `cls`?
     return target(*args, **kwargs)
 
 
@@ -31,7 +33,8 @@ def _through_staticmethod(target, *args, **kwargs):
 
 class FunctionDecorator:
 
-    def __init__(self, called_function,
+    def __init__(self,
+                 called_function=None,
                  function_for_staticmethod=None,
                  function_for_classmethod=None):
         """
@@ -42,7 +45,7 @@ class FunctionDecorator:
         each method. Only methods listed in __dict__ of the class will be
         decorated.
 
-        Arguments:
+        Arguments:  #TODO: need more explanation
           called_function -- (callable(target, *args, **kwargs))
             target -- callable(*args, **kwargs)
           function_for_staticmethod -- (callable(target, cls, *args, **kwargs))
@@ -103,7 +106,7 @@ class FunctionDecorator:
                     return called_function
 
 
-            class DescriptorForClassmethod(object):
+            class DescriptorForClassmethod(object):  #TODO: merge with DescriptorForStaticmethod?
 
                 def __init__(self, method):
                     self.method = method
@@ -120,7 +123,7 @@ class FunctionDecorator:
 
 
             for name, value in target_class.__dict__.items():
-                if inspect.isfunction(value):
+                if inspect.isfunction(value):  #TODO: why not `ismethod()`?
                     # These are actually methods
                     setattr(target_class, name, self.generic_decorator(value))
 
@@ -360,7 +363,7 @@ def synchronized_on_function(
     #TODO: A little inefficient when dont_synchronize=True
     decorator = FunctionDecorator(
         _call_function
-        if not dont_synchronize else _through_staticmethod,
+        if not dont_synchronize else _through_staticmethod,  #TODO: `_through_staticmethod` here?
         function_for_staticmethod=_through_classmethod,
         function_for_classmethod=_through_classmethod)
     return decorator.generic_decorator(__target)
@@ -540,11 +543,21 @@ def _through_function(target, *args, **kwargs):
     return target(*args, **kwargs)
 
 
-def extend_with_method(__target_class):
+def extend_with_method(__extended_class):
+    """
+    Decorator to add a global function as a method to a class
+
+    Argument:
+      __extended_class -- (class) class to add method to.
+
+    Notes:
+      The function needs to have `self` as the first argument.
+    """
+    #TODO: `override=False`
 
     def _decorator(target):
         setattr(
-            __target_class,
+            __extended_class,
             target.__name__,
             target)
         return target
@@ -553,11 +566,46 @@ def extend_with_method(__target_class):
     return _decorator
 
 
-def extend_with_class_method(__target_class):
+def extend_with_static_method(__extended_class):
+    """
+    Decorator to add a global function as a static method to a class
+
+    Argument:
+      __extended_class -- (class) class to add method to.
+
+    Decorated:
+      (function) The decorated function does not need `self` or `cls` as
+      arguments.
+    """
+    #TODO: `override=False`
 
     def _decorator(target):
         setattr(
-            __target_class,
+            __extended_class,
+            target.__name__,
+            staticmethod(target))
+        return target
+        
+
+    return _decorator
+
+
+def extend_with_class_method(__extended_class):
+    """
+    Decorator to add a function as a class method to a class
+
+    Argument:
+      __extended_class -- (class) class to add method to.
+
+    Decorated:
+      (function) The decorated function needs to have `cls` as the first
+      argument.
+    """
+    #TODO: `override=False`
+
+    def _decorator(target):
+        setattr(
+            __extended_class,
             target.__name__,
             classmethod(target))
         return target
@@ -566,14 +614,32 @@ def extend_with_class_method(__target_class):
     return _decorator
 
 
-def extend_with_static_method(__target_class):
+def extension(__extended_class):
+    """
+    Decorator to add all the methods in a class to another class
 
-    def _decorator(target):
-        setattr(
-            __target_class,
-            target.__name__,
-            staticmethod(target))
-        return target
+    Argument:
+      __extended_class -- (class) class to add methods to.
+
+    Decorated:
+      (class) The decorated class can have regular methods as well as
+      @classmethod and @staticmethod.
+    """
+
+    def _decorator(extension_class):
+        assert isinstance(extension_class, type), \
+            "@extension is only for decorating classes"
         
+        for name, value in extension_class.__dict__.items():
+            #TODO: why not `ismethod()`?
+            if inspect.isfunction(value) \
+               or isinstance(value, staticmethod) \
+               or isinstance(value, classmethod):
+                setattr(
+                    __extended_class,
+                    name,
+                    value)
+
+        return extension_class
 
     return _decorator
