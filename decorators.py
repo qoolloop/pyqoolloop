@@ -201,7 +201,7 @@ def log_calls_on_exception(logger, log_exception=True):
     Argument:
     logger -- (logging.Logger) object to log to
     log_exception -- (bool) True, to log stacktrace and exception
-    disable -- (bool) True, to disable logging. To be used in test cases.
+    disable -- (bool) True, to disable logging. To be used in test cases.  #TODO:
     """
 
     def log_function(target, *args, **kwargs):
