@@ -78,6 +78,24 @@ def _save_or_load(value, save, index=None, suffix=None, depth=1):
 
 def assert_no_change(
         value, save, index=None, suffix=None, depth=1):
+    """
+    Regression assertion
+
+    Arguments:
+      value -- value to check
+      save -- (bool) if True, `value` will be saved for use later.
+        If False, `value` will be compared with the saved value.
+      index -- (optional: int/float) If specified, this value will be used as
+        additional information to discriminate values.
+      suffix -- (str) extra `str` to discriminate values.
+
+    Raises:
+      AssertionError -- if `value` does not equal saved value
+
+    Notes:
+      A folder named `_testregression` needs to exist in the same folder as
+      the calling module.
+    """
     previous_value = _save_or_load(
         value, save, index=index, suffix=suffix, depth=depth + 1)
 
