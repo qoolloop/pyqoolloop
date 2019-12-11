@@ -106,6 +106,8 @@ def assert_no_change(
         module_name, function_name = _get_function_info(depth=depth)
         logger.error(
             "`save` is True in %s (%s)" % (function_name, module_name))
+        logger.error(
+            "`value` is %r" % (value,))
 
     previous_value = _save_or_load(
         value, save, index=index, suffix=suffix, depth=depth + 1)
