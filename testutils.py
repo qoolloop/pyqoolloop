@@ -12,7 +12,7 @@ def equals(one, another):
     return one.equals(another)
 
 
-def equal_set(one_set, another_set, equals=eq):
+def equal_set(one_set, another_set, equals=eq):  #TODO: reimplemet using `set()`
     """
     Check for equality between two iterables ignoring order
     
@@ -39,6 +39,34 @@ def equal_set(one_set, another_set, equals=eq):
         # endif
 
     return len(another_set_copy) == 0
+
+
+def includes(one_set, another_set, equals=eq):
+    """
+    Check that all elements in one set is included in the other set
+
+    Arguments:
+      one_set -- (iterable)
+      another_set -- (iterable)
+      equals -- (callable) function to see equality
+
+    Returns:
+      (bool) returns True, when elements in `one_set` are included in
+        `another_set`.
+
+    Notes:
+      Same as `one_set <= another_set`, if both arguments are `set`s.
+    """
+    another_set = set(another_set)
+
+    for each in one_set:
+        if each not in another_set:
+            logger.info("%r not included", each)
+            return False
+
+        continue
+
+    return True
 
 
 def current_function_name(pop_stack=0):
