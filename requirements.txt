@@ -1,0 +1,5 @@
+cryptography
+funcsigs
+msgpack
+pylog
+pytest

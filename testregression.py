@@ -2,6 +2,12 @@ import inspect
 import os
 import pickle
 
+import pylog
+logger = pylog.getLogger(__name__)
+
+
+CHECK_SAVE_VALUE = True
+
 
 def _get_function_info(depth=2):
     """
@@ -96,7 +102,17 @@ def assert_no_change(
       A folder named `_testregression` needs to exist in the same folder as
       the calling module.
     """
+    if save:
+        module_name, function_name = _get_function_info(depth=depth)
+        logger.error(
+            "`save` is True in %s (%s)" % (function_name, module_name))
+
     previous_value = _save_or_load(
         value, save, index=index, suffix=suffix, depth=depth + 1)
 
     assert previous_value == value
+
+    if CHECK_SAVE_VALUE:
+        assert not save
+
+    return
