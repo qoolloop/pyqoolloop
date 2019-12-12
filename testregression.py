@@ -6,9 +6,6 @@ import pylog
 logger = pylog.getLogger(__name__)
 
 
-CHECK_SAVE_VALUE = True
-
-
 def _get_function_info(depth=2):
     """
     Argument:
@@ -83,7 +80,12 @@ def _save_or_load(value, save, index=None, suffix=None, depth=1):
 
 
 def assert_no_change(
-        value, save, index=None, suffix=None, depth=1):
+        value,
+        save,
+        index=None,
+        suffix=None,
+        error_on_save=True,
+        depth=1):
     """
     Regression assertion
 
@@ -94,9 +96,12 @@ def assert_no_change(
       index -- (optional: int/float) If specified, this value will be used as
         additional information to discriminate values.
       suffix -- (str) extra `str` to discriminate values.
+      error_on_save -- (bool) if True, raises AssertionError, if
+        `save == True`. This can be used to avoid leaving `save` as True.
 
     Raises:
       AssertionError -- if `value` does not equal saved value
+      FileNotFoundError -- if `value` has not been saved before
 
     Notes:
       A folder named `_testregression` needs to exist in the same folder as
@@ -114,7 +119,7 @@ def assert_no_change(
 
     assert previous_value == value
 
-    if CHECK_SAVE_VALUE:
+    if error_on_save:
         assert not save
 
     return
