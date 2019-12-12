@@ -12,9 +12,10 @@ def _get_function_info(depth=2):
       depth -- (int) How much up the stack to look. -1 for the caller.
 
     Returns:
-      A tuple with the following elements:
+      A tuple with the following elements about the stack frame:
         - (str) name of module
         - (str) name of function
+        - (str) name of the folder that has the module
     """
     frame = inspect.currentframe()
     assert frame is not None, "Not supported on certain python implementations"
@@ -26,7 +27,9 @@ def _get_function_info(depth=2):
 
     function_name = frame.f_code.co_name
 
-    return module_name, function_name
+    dir_name = os.path.dirname(inspect.getfile(frame))
+
+    return module_name, function_name, dir_name
 
     
 def make_filename(*, index=None, suffix=None, extension='.p', depth=1):
@@ -46,9 +49,9 @@ def make_filename(*, index=None, suffix=None, extension='.p', depth=1):
       other than the fact that `extension` will be used as the extension
       and the directory will be respected.
     """
-    module_name, function_name = _get_function_info(depth=depth + 1)
+    module_name, function_name, dir_name = _get_function_info(depth=depth + 1)
     filename = os.path.join(
-        '_testregression', module_name + '.' + function_name)
+        dir_name, '_testregression', module_name + '.' + function_name)
 
     if index is not None:
         filename += '#%g' % index
@@ -108,7 +111,7 @@ def assert_no_change(
       the calling module.
     """
     if save:
-        module_name, function_name = _get_function_info(depth=depth)
+        module_name, function_name, _ = _get_function_info(depth=depth)
         logger.error(
             "`save` is True in %s (%s)" % (function_name, module_name))
         logger.error(
