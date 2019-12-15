@@ -120,7 +120,8 @@ def assert_no_change(
     previous_value = _save_or_load(
         value, save, index=index, suffix=suffix, depth=depth + 1)
 
-    assert previous_value == value
+    assert previous_value == value, \
+        "%r\nDOES NOT EQUAL%r\n" % (previous_value, value)
 
     if error_on_save:
         assert not save

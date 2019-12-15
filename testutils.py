@@ -41,7 +41,7 @@ def equal_set(one_set, another_set, equals=eq):  #TODO: reimplemet using `set()`
     return len(another_set_copy) == 0
 
 
-def includes(one_set, another_set, equals=eq):
+def includes(one_set, another_set, equals=eq):  #TODO: rename `included`
     """
     Check that all elements in one set is included in the other set
 
