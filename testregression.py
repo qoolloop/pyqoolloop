@@ -50,8 +50,11 @@ def make_filename(*, index=None, suffix=None, extension='.p', depth=1):
       and the directory will be respected.
     """
     module_name, function_name, dir_name = _get_function_info(depth=depth + 1)
+
+    split_module = module_name.split('.')
+    
     filename = os.path.join(
-        dir_name, '_testregression', module_name + '.' + function_name)
+        dir_name, '_testregression', split_module[-1] + '.' + function_name)
 
     if index is not None:
         filename += '#%g' % index
