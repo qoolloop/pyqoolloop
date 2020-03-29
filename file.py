@@ -21,7 +21,7 @@ def load_pickle(file_path, filename, raise_exception=False):
 
         return value
 
-    except:
+    except:  # noqa: E722
         if raise_exception:
             # Python 3 raises FileNotFoundError
             # https://stackoverflow.com/a/15032444/2400328
