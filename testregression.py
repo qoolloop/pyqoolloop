@@ -2,6 +2,9 @@ import inspect
 import os
 import pickle
 
+import pylog
+logger = pylog.getLogger(__name__)
+
 
 def _get_function_info(depth=2):
     """
@@ -9,9 +12,10 @@ def _get_function_info(depth=2):
       depth -- (int) How much up the stack to look. -1 for the caller.
 
     Returns:
-      A tuple with the following elements:
+      A tuple with the following elements about the stack frame:
         - (str) name of module
         - (str) name of function
+        - (str) name of the folder that has the module
     """
     frame = inspect.currentframe()
     assert frame is not None, "Not supported on certain python implementations"
@@ -23,7 +27,9 @@ def _get_function_info(depth=2):
 
     function_name = frame.f_code.co_name
 
-    return module_name, function_name
+    dir_name = os.path.dirname(inspect.getfile(frame))
+
+    return module_name, function_name, dir_name
 
     
 def make_filename(*, index=None, suffix=None, extension='.p', depth=1):
@@ -43,9 +49,12 @@ def make_filename(*, index=None, suffix=None, extension='.p', depth=1):
       other than the fact that `extension` will be used as the extension
       and the directory will be respected.
     """
-    module_name, function_name = _get_function_info(depth=depth + 1)
+    module_name, function_name, dir_name = _get_function_info(depth=depth + 1)
+
+    split_module = module_name.split('.')
+    
     filename = os.path.join(
-        '_testregression', module_name + '.' + function_name)
+        dir_name, '_testregression', split_module[-1] + '.' + function_name)
 
     if index is not None:
         filename += '#%g' % index
@@ -77,8 +86,47 @@ def _save_or_load(value, save, index=None, suffix=None, depth=1):
 
 
 def assert_no_change(
-        value, save, index=None, suffix=None, depth=1):
+        value,
+        save,
+        index=None,
+        suffix=None,
+        error_on_save=True,
+        depth=1):
+    """
+    Regression assertion
+
+    Arguments:
+      value -- value to check
+      save -- (bool) if True, `value` will be saved for use later.
+        If False, `value` will be compared with the saved value.
+      index -- (optional: int/float) If specified, this value will be used as
+        additional information to discriminate values.
+      suffix -- (str) extra `str` to discriminate values.
+      error_on_save -- (bool) if True, raises AssertionError, if
+        `save == True`. This can be used to avoid leaving `save` as True.
+
+    Raises:
+      AssertionError -- if `value` does not equal saved value
+      FileNotFoundError -- if `value` has not been saved before
+
+    Notes:
+      A folder named `_testregression` needs to exist in the same folder as
+      the calling module.
+    """
+    if save:
+        module_name, function_name, _ = _get_function_info(depth=depth)
+        logger.error(
+            "`save` is True in %s (%s)" % (function_name, module_name))
+        logger.error(
+            "`value` is %r" % (value,))
+
     previous_value = _save_or_load(
         value, save, index=index, suffix=suffix, depth=depth + 1)
 
-    assert previous_value == value
+    assert previous_value == value, \
+        "%r\nDOES NOT EQUAL%r\n" % (previous_value, value)
+
+    if error_on_save:
+        assert not save
+
+    return
