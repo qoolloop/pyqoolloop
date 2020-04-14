@@ -1,3 +1,4 @@
+import os
 import pytest
 
 from .testregression import (
@@ -57,3 +58,27 @@ def test__assert_no_change__save():
 
     with pytest.raises(AssertionError):
         assert_no_change(4, save=True, index=0, suffix="suffix")
+
+
+@pytest.mark.parametrize('value, kwargs', (  #TODO: Use same parameters for other tests
+    (1, {}),
+    (2, dict(index=0)),
+    (3, dict(suffix="suffix")),
+    (4, dict(index=0, suffix="suffix")),
+))
+def test__assert_no_change__save__no_previous(value, kwargs):
+    
+    filename = make_filename(**kwargs)
+    try:
+        os.remove(filename)
+
+    except FileNotFoundError:
+        pass
+
+    try:
+        assert_no_change(value, save=True, error_on_save=False, **kwargs)
+
+    finally:
+        os.remove(filename)
+
+    return

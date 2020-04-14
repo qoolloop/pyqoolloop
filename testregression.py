@@ -70,19 +70,29 @@ def make_filename(*, index=None, suffix=None, extension='.p', depth=1):
 
 def _save_or_load(value, save, index=None, suffix=None, depth=1):
 
+    class CannotRead:
+        """ Something that should not exist elsewhere"""
+        pass
+    
+
     filename = make_filename(index=index, suffix=suffix, depth=depth + 1)
 
-    if save:
-        with open(filename, 'wb') as f:
-            pickle.dump(value, f)
-
-        return value
-
-    else:
+    try:
         with open(filename, 'rb') as f:
             previous_value = pickle.load(f)
 
-        return previous_value
+    except IOError:
+        if save:
+            previous_value = CannotRead
+
+        else:
+            raise
+
+    if save and (previous_value != value):
+        with open(filename, 'wb') as f:
+            pickle.dump(value, f)
+
+    return value
 
 
 def assert_no_change(
@@ -112,6 +122,8 @@ def assert_no_change(
     Notes:
       A folder named `_testregression` needs to exist in the same folder as
       the calling module.
+      `value` will not be saved, if it is equal to the value that was saved
+      previously. This is to avoid unnecessary commits to git.
     """
     if save:
         module_name, function_name, _ = _get_function_info(depth=depth)

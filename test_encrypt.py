@@ -79,7 +79,7 @@ def test__encrypt_to_file__overwrite():
     # UnicodeDecodeError: 'utf-8' codec can't decode byte 0xd0 in position 1:
     # invalid continuation byte
     (0.3, b';\xd0bi$\x9bR(\x82I\xd5\xe4\x81VL\xe3\xfds\xa4\xfaIHr\x9c'),
-    (0.4, os.urandom(24)),
+    # (0.4, os.urandom(24)),
 
     (1.1, 'password'),
     (1.2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
