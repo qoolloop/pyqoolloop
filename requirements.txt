@@ -1,5 +1,6 @@
 cryptography
 funcsigs
+future
 msgpack
-pylog
+# pylog
 pytest
