@@ -289,7 +289,7 @@ def retry(retries, exceptions, interval_secs=0, extra_argument=False):
     raised
 
     Arguments:
-    retries -- (int) maximum number of times the function should be run
+    retries -- (int) maximum number of times the function should be run  #TODO: Should be named `tries`?
     exceptions -- ((list of) Exception) rerun the function if these
       exceptions are raised
     extra_argument -- (bool) if True, an argument named `retries` is added to
