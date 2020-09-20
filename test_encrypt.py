@@ -4,11 +4,12 @@ import pytest
 import sys
 import tempfile
 
-from pyexception import (
+from pyexception.exception import (
     RecoveredException,
-    testutils,
     FileExists,
 )
+from pyexception import testutils
+
 
 from . import (
     encrypt,

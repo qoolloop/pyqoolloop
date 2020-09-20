@@ -12,7 +12,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import msgpack  #TODO: Can use Packer class for speed up
 
-from pyexception import (
+from pyexception.exception import (
     Reason,
     RecoveredException,  #TODO: Use Recoveredexception in other modules
     FileExists,

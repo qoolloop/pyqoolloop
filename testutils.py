@@ -8,7 +8,7 @@ def eq(one, another):
     return one == another
 
 
-def equals(one, another):
+def equals(one, another):  #TODO: rename `equals_method`
     return one.equals(another)
 
 
@@ -41,22 +41,7 @@ def equal_set(one_set, another_set, equals=eq):  #TODO: reimplemet using `set()`
     return len(another_set_copy) == 0
 
 
-def included(one_set, another_set, equals=eq):
-    """
-    Check that all elements in one set is included in the other set
-
-    Arguments:
-      one_set -- (iterable)
-      another_set -- (iterable)
-      equals -- (callable) function to see equality
-
-    Returns:
-      (bool) returns True, when elements in `one_set` are included in
-        `another_set`.
-
-    Notes:
-      Same as `one_set <= another_set`, if both arguments are `set`s.
-    """
+def _included_set(one_set, another_set, equals=eq):
     another_set = set(another_set)
 
     for each in one_set:
@@ -67,6 +52,45 @@ def included(one_set, another_set, equals=eq):
         continue
 
     return True
+
+
+def _included_dict(one, another, equals=eq):
+    for each_key, each_value in one.items():
+        if each_key not in another:
+            logger.info("Key %r not included", each_key)
+            return False
+
+        if not equals(each_value, another[each_key]):
+            logger.info(
+                "Values %r and %r are not equal for key %r",
+                each_value, another[each_key], each_key)
+            return False
+
+        continue
+
+    return True
+
+
+def included(one, another, equals=eq):
+    """
+    Check that all elements in one is included in the other
+
+    Arguments:
+      one -- (iterable)
+      another -- (iterable)
+      equals -- (callable) function to see equality
+
+    Returns:
+      (bool) returns True, when elements in `one` are included in
+        `another`.
+
+    Notes:
+      Same as `one_set <= another_set`, if both arguments are `set`s.
+    """
+    if isinstance(one, dict):
+        return _included_dict(one, another, equals=equals)
+
+    return _included_set(one, another, equals=equals)
 
 
 def current_function_name(pop_stack=0):
