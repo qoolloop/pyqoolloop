@@ -149,18 +149,23 @@ class EncryptorDecryptor:
 
         except FileExistsError as e:
             raise RecoveredException(
-                "File exists", FileExists, cause=e, logger=logger)
+                "File exists", FileExists, logger=logger) from e
 
         return
 
 
     @staticmethod
     def _make_RecoveredException_InvalidToken(e):
-        return RecoveredException(
-            "Could not read value",
-            reason=InvalidToken,
-            cause=e,
-            logger=logger)
+        try:
+            raise RecoveredException(
+                "Could not read value",
+                reason=InvalidToken,
+                logger=logger) from e
+
+        except Exception as e:
+            return e
+
+        return
         
 
     _supported_root_types = (
