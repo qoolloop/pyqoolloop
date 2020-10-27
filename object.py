@@ -1,5 +1,5 @@
 
-
+#TODO: remove?
 class AttributeHolder(object):
     """
     A class to which you can add attributes at will
