@@ -1,4 +1,3 @@
-from builtins import range
 from collections import OrderedDict
 import copy
 import datetime
@@ -208,7 +207,7 @@ def log_calls_on_exception(logger, log_exception=True):
         try:
             result = target(*args, **kwargs)
 
-        except Exception as e:
+        except BaseException as e:
             logger.info("%s args: %r %r" %
                         (target.__name__, args, kwargs))
 
