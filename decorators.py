@@ -8,6 +8,7 @@ from functools import (
 import inspect
 import threading
 import time
+from typing import Callable
 
 import pylog
 logger = pylog.getLogger(__name__)
@@ -33,26 +34,33 @@ class FunctionDecorator:
 
     Decorators created with this can decorate functions and methods.
     If they decorate classes, it will have the same effect as decorating
-    each method. Only methods listed in __dict__ of the class will be
+    each method. Only methods listed in `__dict__` of the class will be
     decorated.
     """
 
     def __init__(self,
-                 called_function=None,
-                 function_for_staticmethod=None,
-                 function_for_classmethod=None):
-        """
-        Initializer
-        
+                 called_function:
+                 Callable[..., None]
+                 = None,
+                 function_for_staticmethod:
+                 Callable[..., None]
+                 = None,
+                 function_for_classmethod:
+                 Callable[..., None]
+                 = None):
+        r"""
         #TODO: need more explanation
-        :param called_function: -- (callable(target, *args, **kwargs))
-            target -- callable(*args, **kwargs)
-        :param function_for_staticmethod: -- (callable(target, cls, *args, **kwargs))
-            target -- callable(*args, **kwargs)
-        :param function_for_classmethod: -- (callable(target, cls, *args, **kwargs))
-            target -- callable(*args, **kwargs)
+        
+        :param called_function: | (callable(target, \*args, \**kwargs))
+                                | target - callable(\*args, \**kwargs)
+        
+        :param function_for_staticmethod: | (callable(target, cls, \*args, \**kwargs))
+                                          | target -- callable(\*args, \**kwargs)
+        
+        :param function_for_classmethod: | (callable(target, cls, \*args, \**kwargs))
+                                         | target -- callable(\*args, \**kwargs)
 
-        Notes:
+        .. note::
           `function_for_staticmethod` and `function_for_classmethod` are only
           used for class decorators
         """
