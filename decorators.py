@@ -19,9 +19,6 @@ Arguments(=fixtures) don't get passed in. Please define another function to
 be called from the function of interest.
 """
 
-#TODO: Drop support for Python 2
-
-
 def _through_classmethod(target, cls, *args, **kwargs):  #TODO: What happens with `cls`?
     return target(*args, **kwargs)
 
@@ -31,29 +28,32 @@ def _through_staticmethod(target, *args, **kwargs):
 
 
 class FunctionDecorator:
+    """
+    A convenience class for creating decorators
+
+    Decorators created with this can decorate functions and methods.
+    If they decorate classes, it will have the same effect as decorating
+    each method. Only methods listed in __dict__ of the class will be
+    decorated.
+    """
 
     def __init__(self,
                  called_function=None,
                  function_for_staticmethod=None,
                  function_for_classmethod=None):
         """
-        A convenience class for creating decorators
-
-        Decorators created with this can decorate functions and methods.
-        If they decorate classes, it will have the same effect as decorating
-        each method. Only methods listed in __dict__ of the class will be
-        decorated.
-
-        Arguments:  #TODO: need more explanation
-          called_function -- (callable(target, *args, **kwargs))
+        Initializer
+        
+        #TODO: need more explanation
+        :param called_function: -- (callable(target, *args, **kwargs))
             target -- callable(*args, **kwargs)
-          function_for_staticmethod -- (callable(target, cls, *args, **kwargs))
+        :param function_for_staticmethod: -- (callable(target, cls, *args, **kwargs))
             target -- callable(*args, **kwargs)
-          function_for_classmethod -- (callable(target, cls, *args, **kwargs))
+        :param function_for_classmethod: -- (callable(target, cls, *args, **kwargs))
             target -- callable(*args, **kwargs)
 
         Notes:
-          function_for_staticmethod and function_for_classmethod are only
+          `function_for_staticmethod` and `function_for_classmethod` are only
           used for class decorators
         """
         # Attempt to use this class also as a context manager (for use with
