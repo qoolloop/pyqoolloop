@@ -6,9 +6,15 @@ from functools import (
     wraps,
 )
 import inspect
+import logging
 import threading
 import time
-from typing import Callable
+from typing import (
+    Callable,
+    Optional,
+    Union,
+    Tuple,
+)
 
 import pylog
 logger = pylog.getLogger(__name__)
@@ -36,6 +42,8 @@ class FunctionDecorator:
     If they decorate classes, it will have the same effect as decorating
     each method. Only methods listed in `__dict__` of the class will be
     decorated.
+
+    See implementation of decorators in this module.
     """
 
     def __init__(self,
@@ -49,20 +57,28 @@ class FunctionDecorator:
                  Callable[..., None]
                  = None):
         r"""
-        #TODO: need more explanation
+        :param called_function:
+          |   (callable(target, \*args, \**kwargs))
+          | Function to be called when decorating a regular function or method.
+          | `target` will have the following signature:
+          |   callable(\*args, \**kwargs)
         
-        :param called_function: | (callable(target, \*args, \**kwargs))
-                                | target - callable(\*args, \**kwargs)
+        :param function_for_staticmethod:
+          |   (callable(target, cls, \*args, \**kwargs))
+          | Function to be called when decorating a static method.
+          | `target` will have the following signature:
+          |   callable(\*args, \**kwargs)
         
-        :param function_for_staticmethod: | (callable(target, cls, \*args, \**kwargs))
-                                          | target -- callable(\*args, \**kwargs)
-        
-        :param function_for_classmethod: | (callable(target, cls, \*args, \**kwargs))
-                                         | target -- callable(\*args, \**kwargs)
+        :param function_for_classmethod:
+          |   (callable(target, cls, \*args, \**kwargs))
+          | Function to be called when decorating a class method.
+          | `target` will have the following signature:
+          |   callable(\*args, \**kwargs)
 
         .. note::
           `function_for_staticmethod` and `function_for_classmethod` are only
           used for class decorators
+        
         """
         # Attempt to use this class also as a context manager (for use with
         # `with` statements) has been abandoned, because:
@@ -89,6 +105,12 @@ class FunctionDecorator:
 
 
     def generic_decorator(self, target):
+        """
+        Function object to use to return from decorator.
+
+        Return this function itself for decorators with arguments.
+        Return `self.generic_decorator(target)` when there are no arguments.
+        """
 
         @wraps(target)
         def called_function(*args, **kwargs):
@@ -173,14 +195,13 @@ class FunctionDecorator:
         # endif
 
 
-def log_calls(logger, log_result=True):
+def log_calls(logger: logging.Logger, log_result: bool = True):
     """
     Decorator to log calls to functions
 
     Can be used on classes to log calls to all its methods.
 
-    Argument:
-    logger -- (logging.Logger) object to log to
+    :param logger: object to log to
     """
 
     def log_function(target, *args, **kwargs):
@@ -199,23 +220,21 @@ def log_calls(logger, log_result=True):
     return decorator.generic_decorator
 
 
-def log_calls_on_exception(logger, log_exception=True):
+def log_calls_on_exception(logger: logging.Logger, log_exception: bool = True):
     """
     Decorator to log calls to functions, when exceptions are raised
 
     Can be used on classes to log calls to all its methods.
 
-    Argument:
-    logger -- (logging.Logger) object to log to
-    log_exception -- (bool) True, to log stacktrace and exception
-    disable -- (bool) True, to disable logging. To be used in test cases.  #TODO:
+    :param logger: object to log to
+    :param log_exception: True, to log stacktrace and exception
     """
 
     def log_function(target, *args, **kwargs):
         try:
             result = target(*args, **kwargs)
 
-        except BaseException as e:
+        except BaseException:
             logger.info("%s args: %r %r" %
                         (target.__name__, args, kwargs))
 
@@ -258,15 +277,17 @@ def pass_args(target):
 raise_exception_for_deprecated = False
 
 
-def deprecated(logger, message=None, raise_exception=None):
+def deprecated(
+        logger: logging.Logger,
+        message: Optional[str] = None,
+        raise_exception: Optional[bool] = None):
     """
     Used to decorate deprecated functions and classes
 
-    Arguments:
-    logger -- (Logger) where to log message
-    message -- (str) additional message to log
-    raise_exception -- (bool) True, to raise exception when function (of class)
-      is called
+    :param logger: Where to log message.
+    :param message: Additional message to log.
+    :param raise_exception: `True`, to raise exception when function (of class)
+      is called.
     """
 
     def log_function(target, *args, **kwargs):
@@ -290,16 +311,20 @@ def deprecated(logger, message=None, raise_exception=None):
     return decorator.generic_decorator
 
 
-def retry(retries, exceptions, interval_secs=0, extra_argument=False):
+def retry(
+        retries: int,
+        exceptions: Union[BaseException, Tuple[BaseException]],
+        interval_secs: float = 0.0,
+        extra_argument: bool = False):
     """
     Used to decorate functions that should be retried if certain exceptions are
     raised
 
-    Arguments:
-    retries -- (int) maximum number of times the function should be run  #TODO: Should be named `tries`?
-    exceptions -- ((list of) Exception) rerun the function if these
-      exceptions are raised
-    extra_argument -- (bool) if True, an argument named `retries` is added to
+    :param retries: Maximum number of times the function should be run
+      #TODO: Should be named `tries`?
+    :param exceptions: Rerun the function if these exceptions are raised
+    :param interval_secs: Interval between retries in seconds.
+    :param extra_argument: If True, an argument named `retries` is added to
       the function, which overrides the `retries` value specified by the
       decorator
     """
@@ -317,7 +342,7 @@ def retry(retries, exceptions, interval_secs=0, extra_argument=False):
             try:
                 return target(*args, **kwargs)
 
-            except exceptions as e:
+            except exceptions:
                 if iteration < actual_retries - 1:
                     time.sleep(interval_secs)
 
