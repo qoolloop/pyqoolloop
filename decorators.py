@@ -11,9 +11,11 @@ import threading
 import time
 from typing import (
     Callable,
+    Iterable,
     Optional,
     Union,
     Tuple,
+    Type,
 )
 
 import pylog
@@ -25,6 +27,7 @@ Cannot decorate fixtures or test functions directly in py.test.
 Arguments(=fixtures) don't get passed in. Please define another function to
 be called from the function of interest.
 """
+
 
 def _through_classmethod(target, cls, *args, **kwargs):  #TODO: What happens with `cls`?
     return target(*args, **kwargs)
@@ -108,7 +111,8 @@ class FunctionDecorator:
         """
         Function object to use to return from decorator.
 
-        Return this function itself for decorators with arguments.
+        Return this function itself (`self.generic_decorator`) for decorators
+        with arguments.
         Return `self.generic_decorator(target)` when there are no arguments.
         """
 
@@ -324,7 +328,7 @@ def retry(
       #TODO: Should be named `tries`?
     :param exceptions: Rerun the function if these exceptions are raised
     :param interval_secs: Interval between retries in seconds.
-    :param extra_argument: If True, an argument named `retries` is added to
+    :param extra_argument: If `True`, an argument named `retries` is added to
       the function, which overrides the `retries` value specified by the
       decorator
     """
@@ -362,17 +366,16 @@ def retry(
 
 def synchronized_on_function(
         __target=None,
-        *, lock_field='__lock', dont_synchronize=False):
+        *, lock_field: str = '__lock', dont_synchronize: bool = False):
     """
-    Used to decorate function that need thread locking for access
+    Used to decorate function that needs thread locking for access
 
     When called for the first time, this decorator creates a field on
     the function object named by `lock_field`, which holds the lock
     instance for synchronization.
 
-    Argument:
-      dont_synchronize -- (bool) If True, synchronization will not be
-        performed
+    :param lock_field: The name of the field that holds the lock.
+    :param dont_synchronize: If `True`, synchronization will not be performed.
     """
     def _call_function(target, *args, **kwargs):
 
@@ -410,8 +413,11 @@ def synchronized_on_instance(__target=None, *, lock_field='__lock'):
     a field on self named by `lock_field`, which holds the lock instance for
     synchronization.
 
-    @staticmethod and @classmethod not supported. If put on classes,
-    @staticmethod and @classmethod will be ignored.
+    :param lock_field: The name of the field that holds the lock.
+
+    .. note::
+      `@staticmethod` and `@classmethod` not supported. If put on classes,
+      `@staticmethod` and `@classmethod` will be ignored.
     """
     def call_function(target, *args, **kwargs):
 
@@ -461,26 +467,26 @@ def _get_args(target, args, kwargs, exclude_kw=()):
 
 
 def keep_cache(
-        __target=None, *, keep_time_secs=None, max_entries=None,
-        dont_synchronize=False, exclude_kw=()):
+        __target=None,
+        *,
+        keep_time_secs: float,
+        max_entries: Optional[int] = None,
+        dont_synchronize: bool = False,
+        exclude_kw: Iterable[str] = ()):
     """
     Decorator to cache returned values of a function for at least the time
     specified since the last call
-
-    Notes:
-      Argument values for the target function must be hashable.
     
-    Arguments:
-      keep_time_secs -- (float; mandatory) Keep value longer than this period
-        (seconds)
-      max_entries -- (int) Don't keep more than this number of entries
-      dont_synchronize -- (bool) True, if thread safety is not necessary
-      exclude_kw -- (iterable of str) Iterable of argument names to exclude
-        from arguments to identify cache data
+    :param keep_time_secs: Keep value longer than this period (seconds).
+    :param max_entries: Don't keep more than this number of entries.
+    :param dont_synchronize: True, if thread safety is not necessary.
+    :param exclude_kw: Iterable of argument names to exclude from arguments
+      to identify cache data
 
-    Raises:
-      AssertionError -- There are more than `max_entries` values within
-        `keep_time_secs`
+    :raises AssertionError: There are more than `max_entries` values within
+      `keep_time_secs`
+
+    .. note::: Argument values for the target function must be hashable.
     """
 
     cache = OrderedDict()  # holds tuples (<time>, <value>)
@@ -519,20 +525,20 @@ def keep_cache(
 
 
 def expire_cache(
-        __target=None, *, expire_time_secs=None, max_entries=None,
-        dont_synchronize=False):  #TODO: exclude_kw
+        __target=None,
+        *,
+        expire_time_secs: float,
+        max_entries: Optional[int] = None,
+        dont_synchronize: bool = False):  #TODO: exclude_kw
     """
     Decorator to cache returned values of a function that are held for at most
     a specified amount of time since the first call
-
-    Notes:
-      Argument values for the target function must be hashable.
     
-    Arguments:
-      expire_time_secs -- (float; mandatory) Keep value for less than this
-        period (seconds)
-      max_entries -- (int) Don't keep more than this number of entries
-      dont_synchronize -- (bool) True, if thread safety is not necessary
+    :param expire_time_secs: Keep value for less than this period (seconds)
+    :param max_entries: Don't keep more than this number of entries
+    :param dont_synchronize: `True`, if thread safety is not necessary
+
+    .. note:: Argument values for the target function must be hashable.
     """
 
     cache = OrderedDict()  # holds tuples (<time>, <value>)
@@ -575,15 +581,13 @@ def _through_function(target, *args, **kwargs):
     return target(*args, **kwargs)
 
 
-def extend_with_method(__extended_class):
+def extend_with_method(__extended_class: Type[object]):
     """
     Decorator to add a global function as a method to a class
 
-    Argument:
-      __extended_class -- (class) class to add method to.
+    :param __extended_class: Class to add method to.
 
-    Notes:
-      The function needs to have `self` as the first argument.
+    .. note:: The function needs to have `self` as the first argument.
     """
     #TODO: `override=False`
 
@@ -598,16 +602,14 @@ def extend_with_method(__extended_class):
     return _decorator
 
 
-def extend_with_static_method(__extended_class):
+def extend_with_static_method(__extended_class: Type[object]):
     """
     Decorator to add a global function as a static method to a class
 
-    Argument:
-      __extended_class -- (class) class to add method to.
+    :param __extended_class: Class to add method to.
 
-    Decorated:
-      (function) The decorated function does not need `self` or `cls` as
-      arguments.
+    .. note:: (function) The decorated function does not need `self` or `cls`
+      as arguments.
     """
     #TODO: `override=False`
 
@@ -622,15 +624,13 @@ def extend_with_static_method(__extended_class):
     return _decorator
 
 
-def extend_with_class_method(__extended_class):
+def extend_with_class_method(__extended_class: Type[object]):
     """
     Decorator to add a function as a class method to a class
 
-    Argument:
-      __extended_class -- (class) class to add method to.
+    :param __extended_class: Class to add method to.
 
-    Decorated:
-      (function) The decorated function needs to have `cls` as the first
+    .. note:: The decorated function needs to have `cls` as the first
       argument.
     """
     #TODO: `override=False`
@@ -646,16 +646,14 @@ def extend_with_class_method(__extended_class):
     return _decorator
 
 
-def extension(__extended_class):
+def extension(__extended_class: Type[object]):
     """
     Decorator to add all the methods in a class to another class
 
-    Argument:
-      __extended_class -- (class) class to add methods to.
+    :param __extended_class: Class to add methods to.
 
-    Decorated:
-      (class) The decorated class can have regular methods as well as
-      @classmethod and @staticmethod.
+    .. note:: The decorated class can have regular methods as well as
+      `@classmethod` and `@staticmethod`.
     """
 
     def _decorator(extension_class):
