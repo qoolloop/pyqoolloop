@@ -1,3 +1,12 @@
+"""
+Declares convenient decorators. Also declares features for implementing
+decorators.
+
+.. note:: Cannot decorate fixtures or test functions directly in py.test.
+  Arguments(=fixtures) don't get passed in. Please define another function to
+  be called from the function of interest.
+"""
+
 from collections import OrderedDict
 import copy
 import datetime
@@ -20,13 +29,6 @@ from typing import (
 
 import pylog
 logger = pylog.getLogger(__name__)
-
-
-"""
-Cannot decorate fixtures or test functions directly in py.test.
-Arguments(=fixtures) don't get passed in. Please define another function to
-be called from the function of interest.
-"""
 
 
 def _through_classmethod(target, cls, *args, **kwargs):  #TODO: What happens with `cls`?
