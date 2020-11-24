@@ -11,6 +11,10 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import msgpack  #TODO: Can use Packer class for speed up
+from typing import (
+    Iterable,
+    Union,
+)
 
 from pyexception.exception import (
     Reason,
@@ -23,10 +27,19 @@ logger = pylog.getLogger(__name__)
 
 
 class InvalidToken(Reason):
+    """
+    Reason for exception raised when token is invalid
+    """
     pass
 
 
-def key_from_password(password, salt):
+def key_from_password(password: str, salt: str) -> bytes:
+    """
+    Obtain (hashed) key from password
+
+    :param password: Password to hash.
+    :param salt: Salt to use for hashing.
+    """
     # https://cryptography.io/en/latest/fernet/#using-passwords-with-fernet
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
@@ -58,7 +71,7 @@ def _unpackb(encoded):
     return value
 
 
-def msgpack_default(obj):
+def msgpack_default(obj):  #TODO: rename `_msgpack_default()`
     logger.info("obj: %r" % (obj,))  #TODO: remove
     if isinstance(obj, tuple):
         obj_type = _TUPLE_TYPE
@@ -74,7 +87,7 @@ def msgpack_default(obj):
     return msgpack.ExtType(obj_type, data)
 
 
-def msgpack_ext_hook(code, data):
+def msgpack_ext_hook(code, data):  #TODO: rename `_msgpack_ext_hook()`
     logger.info("data: %r" % (data, ))  #TODO: remove
 
     if code == _TUPLE_TYPE:
@@ -90,14 +103,18 @@ def msgpack_ext_hook(code, data):
 
 
 class EncryptorDecryptor:
+    """
+    Class for encryption and decryption
 
-    def __init__(self, key):
+    This can encrypt and decrypt various types of data.
+    """
+
+    def __init__(self, key: Union[bytes, Iterable[bytes]]):
         """
-        Argument:
-          key -- (bytes/list of bytes) The key for encryption.
-            Otherwise, a list of candidate keys for decryption. Only the
-            first key is used for encryption. Keys must be generated with
-            generate_key().
+        :param key: The key for encryption.
+          Otherwise, a list of candidate keys for decryption. Only the
+          first (primary) key is used for encryption. Keys must be generated
+          with :func:`generate_key()`.
         """
         def _check_key(key):
             decoded_key = base64.urlsafe_b64decode(key)
@@ -123,7 +140,14 @@ class EncryptorDecryptor:
 
 
     @classmethod
-    def generate_key(cls):
+    def generate_key(cls) -> bytes:
+        """
+        Generate key for encryption and decryption
+
+        To be used by :func:`EncryptorDecryptor()`.
+        """
+
+        
         return Fernet.generate_key()
 
 
@@ -168,28 +192,38 @@ class EncryptorDecryptor:
         return
         
 
+    #TODO: necessary?
     _supported_root_types = (
         dict, list, tuple, bytes, str, int, float, bool, type(None))
 
+    #TODO: necessary?
     # Note that tuple is not included.
     _supported_value_types = (
         dict, list, str, int, float, bool, type(None)
     )
 
-    def encrypt(self, value):
+    def encrypt(self, value: object) -> bytes:
         """
-        Arguments:
-          value -- (object) Value to encrypt
+        Encrypt various types of data
 
-        Returns:
-          (bytes) result of encryption
+        :param value: Value to encrypt
+
+        :return: Result of encryption
         """
         encoded = _packb(value)
         result = self._fernet.encrypt(encoded)
         return result
         
 
-    def encrypt_to_file(self, value, filename, overwrite=False):
+    def encrypt_to_file(
+            self, value: object, filename: str, overwrite: bool = False):
+        """
+        Encrypt various types of data and save to file
+
+        :param value: Value to encrypt
+        :param filename: Path of file to save to.  #TODO: rename `path`
+        :param overwrite: Needs to be `True` to overwrite existing file.
+        """
         encrypted = self.encrypt(value)
 
         if isinstance(encrypted, str):
@@ -218,15 +252,15 @@ class EncryptorDecryptor:
         return value
 
 
-    def decrypt(self, encrypted):
+    def decrypt(self, encrypted: bytes) -> object:
         """
         Decrypt data to same type as when the data was encrypted
 
-        Argument:
-          encrypted -- (bytes/str) result of self.encrypt()
+        :param encrypted: -- (bytes/str) result of self.encrypt()
 
-        Raises:
-          RecoveredException(InvalidToken) -- Could not read value.
+        :return: Decrypted value.
+
+        :raises RecoveredException(InvalidToken): Could not read value.
         """
         return self._decrypt(self._fernet, encrypted)
         
@@ -246,30 +280,41 @@ class EncryptorDecryptor:
         return decrypted
 
 
-    def decrypt_from_file(self, filename, use_default=False, default=None):
+    def decrypt_from_file(
+            self,
+            filename: str,
+            use_default: bool = False,
+            default: object = None):
         """
-        Arguments:
-          filename: (str) Path to file that stores a value
-          use_default: (bool) Whether to return `default` when file does not
+        Decrypt contents of file saved by :func:`encrypt_to_file()`
+
+        :param filename: Path to file that stores a value  #TODO: rename `path`
+        :param use_default: Whether to return `default` when file does not
             exist.
-          default: (object) Value to return, when file does not exist, and
+        :param default: (object) Value to return, when file does not exist, and
             `use_default` is True.
 
-        Returns:
-          Decrypted value.
+        :return: Decrypted value.
 
-        Raises:
-          RecoveredException(InvalidToken) -- Could not read value.
+        :raises RecoveredException(InvalidToken): Could not read value.
         """
         return self._decrypt_from_file(
             self._fernet, filename, use_default=use_default, default=default)
 
 
     def rotate_file(self, filename):
+        """
+        Encrypt contents of a file again with the primary key
+
+        .. note:: This makes encrypted files use the primary key even if they
+          were encrypted with other keys.
+
+        :param filename: Path to file that stores a value  #TODO: rename `path`
+        """
         encrypted = self._read_file(filename)
 
         try:
-            # try with primary key
+            # try with primary key, and don't save if ok
             decrypted = self._decrypt(self._primary_fernet, encrypted)
 
         except RecoveredException as e:
