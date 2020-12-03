@@ -137,10 +137,9 @@ def list_directories(
         path: str, exclusion: Iterable[str] = ()) -> Optional[str]:
     """
     List directories in directory.
-    
 
     :param path: Path to directory.
-    :param exclusion: Directories to ignore.
+    :param exclusion: Directories to ignore.  #TODO: rename `exclude`
     """
     exclusion = set(exclusion)
     
