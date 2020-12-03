@@ -1,6 +1,11 @@
 pyqoolloop package
 ==================
 
+.. automodule:: pyqoolloop
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
