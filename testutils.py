@@ -1,22 +1,50 @@
 import sys
+from typing import (
+    Iterable,
+    List,
+    Set,
+    Tuple,
+)
 
 import pylog
 logger = pylog.getLogger(__name__)
 
 
-def eq(one, another):
+def eq(one, another) -> bool:
+    """
+    Function equivalent to the equals operator.
+
+    :param one: One value to compare
+    :param another: Another value to compare
+
+    :returns: `True` if `one == another`.
+    """
     return one == another
 
 
-def equals(one, another):  #TODO: rename `equals_method`
+def equals(one: object, another) -> bool:  #TODO: rename `equals_method`
+    """
+    Function equivalent to the `equals()` method.
+
+    :param one: Object with the `equals()` method.
+    :param another: Value to compare with `one`.
+
+    :returns: `True` if `one.equals(another)`.
+    """
     return one.equals(another)
 
 
-def equal_set(one_set, another_set, equals=eq):  #TODO: reimplemet using `set()
+def equal_set(one_set: Iterable, another_set: Iterable, equals=eq) -> bool:  #TODO: reimplemet using `set()
     """
     Check for equality between two iterables ignoring order
     
     Particularly for lists or unhashable sets
+
+    :param one_set: An iterable to compare.
+    :param another_set: Another iterable to compare.
+    :param equals: The function to compare elements in the sets.
+
+    :returns: `True` if the two iterables are equal.
     """
     # Needs to be list to remove() from unhashable set
     another_set_copy = list(another_set)
@@ -71,20 +99,18 @@ def _included_dict(one, another, equals=eq):
     return True
 
 
-def included(one, another, equals=eq):
+def included(one: Iterable, another: Iterable, equals=eq) -> bool:
     """
     Check that all elements in one is included in the other
 
-    Arguments:
-      one -- (iterable)
-      another -- (iterable)
-      equals -- (callable) function to see equality
+    :param one: Iterable that could be included in `another`
+    :param another: Iterable that could include `one`.
+    :param equals: Function to be used to compare values.
 
-    Returns:
-      (bool) returns True, when elements in `one` are included in
+    :returns: Returns `True`, when elements in `one` are included in
         `another`.
 
-    Notes:
+    .. note::
       Same as `one_set <= another_set`, if both arguments are `set`s.
     """
     if isinstance(one, dict):
@@ -93,15 +119,32 @@ def included(one, another, equals=eq):
     return _included_set(one, another, equals=equals)
 
 
-def current_function_name(pop_stack=0):
+def current_function_name(pop_stack: int = 0) -> str:
+    """
+    Get name of function on stack.
+
+    :param pop_stack: How deep in the stack to look. `0` for direct caller.
+      `1` for caller of caller.  #TODO: rename `depth`
+
+    :returns: Name of function on stack.
+    """
     # https://stackoverflow.com/a/13514318/2400328
     return sys._getframe(pop_stack + 1).f_code.co_name
 
 
-def combine_lists(*args):
+def combine_lists(*args) -> Iterable:
     """
     Create a list of lists by taking one element from each of the arguments.
     Can be used to create test parameters from combinations.
+
+    If one of the arguments is not iterable, it will be treated as though
+    it was in a list.
+
+    #TODO: test example
+      >>> combine_lists((a, b), (c, d))
+      [[a, c], [a, d], [b, c], [b, d]]
+      >>> combline_lists((a, b), c)
+      [[a, c], [b, c]]
     """
     assert len(args) >= 1
 
@@ -132,7 +175,14 @@ def combine_lists(*args):
     return result
 
 
-def list_list_to_tuple_set(list_list):
+def list_list_to_tuple_set(list_list: List[List]) -> Set[Tuple]:
+    """
+    Convert list of lists to set of tuples.
+
+    :param list_list: List of lists
+
+    :returns: Set of tuples.
+    """
     result = set()
     for each_list in list_list:
         result.add(tuple(each_list))

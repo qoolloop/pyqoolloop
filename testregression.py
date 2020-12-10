@@ -42,7 +42,7 @@ def make_filename(
         index: Union[None, int, float] = None,
         suffix: Optional[str] = None,
         extension: str = '.p',
-        depth: int = 1):
+        depth: int = 1) -> str:
     """
     Make a filename in a subdirectory named `_testregression`
     to save values for regression test
@@ -52,6 +52,8 @@ def make_filename(
     :param suffix: Add this value to the base name of the filename.
     :param extension: Use this value as the extension of the filename.
     :param depth: How much up the stack to look. -1 for the caller.
+
+    :returns: The created filename.
 
     .. note::
       Do not assume that the returned filename will be of a particular format
@@ -110,7 +112,7 @@ def assert_no_change(
         index: Union[None, int, float] = None,
         suffix: Optional[str] = None,
         error_on_save: bool = True,
-        depth: int = 1):
+        depth: int = 1) -> None:
     """
     Assertion to check for regression.
 
