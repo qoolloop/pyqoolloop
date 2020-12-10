@@ -1,17 +1,22 @@
 import inspect
 import os
 import pickle
+from typing import (
+    Optional,
+    Union,
+)
 
 import pylog
 logger = pylog.getLogger(__name__)
 
 
-def _get_function_info(depth=2):
+def _get_function_info(depth: int = 2):
     """
-    Argument:
-      depth -- (int) How much up the stack to look. -1 for the caller.
+    Get information about a function on the call stack.
+    
+    :param depth: -- How much up the stack to look. -1 for the caller.
 
-    Returns:
+    :return:
       A tuple with the following elements about the stack frame:
         - (str) name of module
         - (str) name of function
@@ -32,19 +37,23 @@ def _get_function_info(depth=2):
     return module_name, function_name, dir_name
 
     
-def make_filename(*, index=None, suffix=None, extension='.p', depth=1):
+def make_filename(
+        *,
+        index: Union[None, int, float] = None,
+        suffix: Optional[str] = None,
+        extension: str = '.p',
+        depth: int = 1):
     """
     Make a filename in a subdirectory named `_testregression`
     to save values for regression test
 
-    Arguments:
-      index -- (optional: int/float) If specified, this value will be used as
+    :param index: If specified, this value will be used as
         additional information to discriminate produced filename.
-      suffix -- (str) Add this value to the base name of the filename.
-      extension -- (str) Use this value as the extension of the filename.
-      depth -- (int) How much up the stack to look. -1 for the caller.
+    :param suffix: Add this value to the base name of the filename.
+    :param extension: Use this value as the extension of the filename.
+    :param depth: How much up the stack to look. -1 for the caller.
 
-    Notes:
+    .. note::
       Do not assume that the returned filename will be of a particular format
       other than the fact that `extension` will be used as the extension
       and the directory will be respected.
@@ -97,33 +106,33 @@ def _save_or_load(value, save, index=None, suffix=None, depth=1):
 
 def assert_no_change(
         value,
-        save,
-        index=None,
-        suffix=None,
-        error_on_save=True,
-        depth=1):
+        save: bool,
+        index: Union[None, int, float] = None,
+        suffix: Optional[str] = None,
+        error_on_save: bool = True,
+        depth: int = 1):
     """
-    Regression assertion
+    Assertion to check for regression.
 
-    Arguments:
-      value -- value to check
-      save -- (bool) if True, `value` will be saved for use later.
-        If False, `value` will be compared with the saved value.
-      index -- (optional: int/float) If specified, this value will be used as
-        additional information to discriminate values.
-      suffix -- (str) extra `str` to discriminate values.
-      error_on_save -- (bool) if True, raises AssertionError, if
+    :param value: -- Value to check. Needs to be picklable.
+    :param save: If `True`, `value` will be saved for later use.
+        If `False`, `value` will be compared with the saved value.
+    :param index: If specified, this value will be used as part of the filename
+        to store values as additional information to discriminate the values.
+    :param suffix: Extra `str` to discriminate the values.
+    :param error_on_save: If `True`, raises class:`AssertionError` if
         `save == True`. This can be used to avoid leaving `save` as True.
+    :para depth: (For internal use)  #TODO: rename with prefix `_`
 
-    Raises:
-      AssertionError -- if `value` does not equal saved value
-      FileNotFoundError -- if `value` has not been saved before
+    :raises AssertionError: If `value` does not equal saved value
+    :raises FileNotFoundError: If `value` has not been saved before
 
-    Notes:
-      A folder named `_testregression` needs to exist in the same folder as
+    .. note::
+      A folder named `_testregression` needs to exist in the same directory as
       the calling module.
       `value` will not be saved, if it is equal to the value that was saved
       previously. This is to avoid unnecessary commits to git.
+      #TODO: Automatically create subdirectory?
     """
     if save:
         module_name, function_name, _ = _get_function_info(depth=depth)

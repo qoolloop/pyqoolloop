@@ -12,7 +12,7 @@ def equals(one, another):  #TODO: rename `equals_method`
     return one.equals(another)
 
 
-def equal_set(one_set, another_set, equals=eq):  #TODO: reimplemet using `set()`
+def equal_set(one_set, another_set, equals=eq):  #TODO: reimplemet using `set()
     """
     Check for equality between two iterables ignoring order
     
