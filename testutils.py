@@ -7,7 +7,7 @@ from typing import (
 )
 
 import pylog
-logger = pylog.getLogger(__name__)
+_logger = pylog.getLogger(__name__)
 
 
 def eq(one, another) -> bool:
@@ -60,7 +60,7 @@ def equal_set(one_set: Iterable, another_set: Iterable, equals=eq) -> bool:  #TO
                     break
 
                 except (KeyError, ValueError):
-                    logger.info("Couldn't remove: %r / %d",
+                    _logger.info("Couldn't remove: %r / %d",
                                 each_another, len(another_set_copy))
                     return False
                 # endtry
@@ -74,7 +74,7 @@ def _included_set(one_set, another_set, equals=eq):
 
     for each in one_set:
         if each not in another_set:
-            logger.info("%r not included", each)
+            _logger.info("%r not included", each)
             return False
 
         continue
@@ -85,11 +85,11 @@ def _included_set(one_set, another_set, equals=eq):
 def _included_dict(one, another, equals=eq):
     for each_key, each_value in one.items():
         if each_key not in another:
-            logger.info("Key %r not included", each_key)
+            _logger.info("Key %r not included", each_key)
             return False
 
         if not equals(each_value, another[each_key]):
-            logger.info(
+            _logger.info(
                 "Values %r and %r are not equal for key %r",
                 each_value, another[each_key], each_key)
             return False

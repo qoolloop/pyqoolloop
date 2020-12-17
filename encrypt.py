@@ -23,7 +23,7 @@ from pyexception.exception import (
 )
 
 import pylog
-logger = pylog.getLogger(__name__)
+_logger = pylog.getLogger(__name__)
 
 
 class InvalidToken(Reason):
@@ -72,7 +72,6 @@ def _unpackb(encoded):
 
 
 def msgpack_default(obj):  #TODO: rename `_msgpack_default()`
-    logger.info("obj: %r" % (obj,))  #TODO: remove
     if isinstance(obj, tuple):
         obj_type = _TUPLE_TYPE
         data = _packb([each for each in obj])
@@ -88,7 +87,6 @@ def msgpack_default(obj):  #TODO: rename `_msgpack_default()`
 
 
 def msgpack_ext_hook(code, data):  #TODO: rename `_msgpack_ext_hook()`
-    logger.info("data: %r" % (data, ))  #TODO: remove
 
     if code == _TUPLE_TYPE:
         obj = tuple(_unpackb(data))
@@ -173,7 +171,7 @@ class EncryptorDecryptor:
 
         except FileExistsError as e:
             raise RecoveredException(
-                "File exists", FileExists, logger=logger) from e
+                "File exists", FileExists, logger=_logger) from e
 
         return
 
@@ -184,7 +182,7 @@ class EncryptorDecryptor:
             raise RecoveredException(
                 "Could not read value",
                 reason=InvalidToken,
-                logger=logger) from e
+                logger=_logger) from e
 
         except Exception as e:
             return e

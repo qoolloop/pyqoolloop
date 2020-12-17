@@ -7,7 +7,7 @@ from typing import (
 )
 
 import pylog
-logger = pylog.getLogger(__name__)
+_logger = pylog.getLogger(__name__)
 
 
 def _get_function_info(depth: int = 2):
@@ -138,9 +138,9 @@ def assert_no_change(
     """
     if save:
         module_name, function_name, _ = _get_function_info(depth=depth)
-        logger.error(
+        _logger.error(
             "`save` is True in %s (%s)" % (function_name, module_name))
-        logger.error(
+        _logger.error(
             "`value` is %r" % (value,))
 
     previous_value = _save_or_load(

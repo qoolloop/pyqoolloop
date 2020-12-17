@@ -27,9 +27,6 @@ from typing import (
     Type,
 )
 
-import pylog
-logger = pylog.getLogger(__name__)
-
 
 def _through_classmethod(target, cls, *args, **kwargs):  #TODO: What happens with `cls`?
     return target(*args, **kwargs)
