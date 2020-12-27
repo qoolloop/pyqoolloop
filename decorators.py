@@ -316,7 +316,8 @@ def deprecated(
 
 def retry(
         retries: int,
-        exceptions: Union[BaseException, Tuple[BaseException]],
+        exceptions: Union[Type[BaseException],
+                          Tuple[Type[BaseException], ...]],
         interval_secs: float = 0.0,
         extra_argument: bool = False):
     """
