@@ -10,7 +10,6 @@ decorators.
 from collections import OrderedDict
 import copy
 import datetime
-import funcsigs
 from functools import (
     wraps,
 )
@@ -20,6 +19,7 @@ import threading
 import time
 from typing import (
     Callable,
+    Dict,
     Iterable,
     Optional,
     Union,
@@ -266,7 +266,7 @@ def pass_args(target):
     def passer_function(target, *args, **kwargs):
         composed_kwargs = copy.copy(kwargs)
         
-        arg_names = funcsigs.signature(target).parameters
+        arg_names = inspect.signature(target).parameters
         composed_kwargs.update(zip(arg_names, args))
         
         result = target(*args, kwargs=composed_kwargs, **kwargs)
@@ -488,7 +488,8 @@ def keep_cache(
     .. note::: Argument values for the target function must be hashable.
     """
 
-    cache = OrderedDict()  # holds tuples (<time>, <value>)
+    # holds tuples (<time>, <value>)
+    cache: Dict[frozenset, Tuple] = OrderedDict()
 
     
     @synchronized_on_function(dont_synchronize=dont_synchronize)
@@ -540,7 +541,8 @@ def expire_cache(
     .. note:: Argument values for the target function must be hashable.
     """
 
-    cache = OrderedDict()  # holds tuples (<time>, <value>)
+    # holds tuples (<time>, <value>)
+    cache: Dict[frozenset, Tuple] = OrderedDict()
 
     
     @synchronized_on_function(dont_synchronize=dont_synchronize)

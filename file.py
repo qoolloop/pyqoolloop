@@ -6,6 +6,7 @@ import os
 import pickle
 from typing import (
     Iterable,
+    List,
     Optional,
 )
 
@@ -134,7 +135,7 @@ def dump_text(file_path, filename, value, overwrite=False):
 
 
 def list_directories(
-        path: str, exclusion: Iterable[str] = ()) -> Optional[str]:
+        path: str, exclusion: Iterable[str] = ()) -> List[str]:
     """
     List directories in directory.
 
