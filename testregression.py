@@ -27,6 +27,7 @@ def _get_function_info(depth: int = 2):
 
     for index in range(depth):
         frame = frame.f_back
+        assert frame is not None
 
     module_name = frame.f_globals['__name__']
 
