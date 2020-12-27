@@ -1,5 +1,8 @@
 import sys
+from collections.abc import Collection
 from typing import (
+    Any,
+    Callable,
     Iterable,
     List,
     Set,
@@ -8,6 +11,9 @@ from typing import (
 
 import pylog
 _logger = pylog.getLogger(__name__)
+
+
+Operator = Callable[[Any, Any], bool]
 
 
 def eq(one, another) -> bool:
@@ -22,7 +28,7 @@ def eq(one, another) -> bool:
     return one == another
 
 
-def equals(one: object, another) -> bool:  #TODO: rename `equals_method`
+def equals(one, another) -> bool:  #TODO: rename `equals_method`
     """
     Function equivalent to the `equals()` method.
 
@@ -34,7 +40,7 @@ def equals(one: object, another) -> bool:  #TODO: rename `equals_method`
     return one.equals(another)
 
 
-def equal_set(one_set: Iterable, another_set: Iterable, equals=eq) -> bool:  #TODO: reimplemet using `set()
+def equal_set(one_set: Collection, another_set: Collection, equals=eq) -> bool:  #TODO: reimplemet using `set()
     """
     Check for equality between two iterables ignoring order
     
@@ -61,7 +67,7 @@ def equal_set(one_set: Iterable, another_set: Iterable, equals=eq) -> bool:  #TO
 
                 except (KeyError, ValueError):
                     _logger.info("Couldn't remove: %r / %d",
-                                each_another, len(another_set_copy))
+                                 each_another, len(another_set_copy))
                     return False
                 # endtry
         # endif
@@ -69,7 +75,9 @@ def equal_set(one_set: Iterable, another_set: Iterable, equals=eq) -> bool:  #TO
     return len(another_set_copy) == 0
 
 
-def _included_set(one_set, another_set, equals=eq):
+def _included_set(
+        one_set: Iterable, another_set: Iterable, equals: Operator = eq
+) -> bool:
     another_set = set(another_set)
 
     for each in one_set:
@@ -82,7 +90,7 @@ def _included_set(one_set, another_set, equals=eq):
     return True
 
 
-def _included_dict(one, another, equals=eq):
+def _included_dict(one: dict, another: dict, equals: Operator = eq) -> bool:
     for each_key, each_value in one.items():
         if each_key not in another:
             _logger.info("Key %r not included", each_key)
@@ -99,12 +107,12 @@ def _included_dict(one, another, equals=eq):
     return True
 
 
-def included(one: Iterable, another: Iterable, equals=eq) -> bool:
+def included(one: Iterable, another: Iterable, equals: Operator = eq) -> bool:
     """
     Check that all elements in one is included in the other
 
-    :param one: Iterable that could be included in `another`
-    :param another: Iterable that could include `one`.
+    :param one: Iterable or `dict` that could be included in `another`
+    :param another: Iterable or `dict` that could include `one`.
     :param equals: Function to be used to compare values.
 
     :returns: Returns `True`, when elements in `one` are included in
@@ -114,6 +122,7 @@ def included(one: Iterable, another: Iterable, equals=eq) -> bool:
       Same as `one_set <= another_set`, if both arguments are `set`s.
     """
     if isinstance(one, dict):
+        assert isinstance(another, dict)
         return _included_dict(one, another, equals=equals)
 
     return _included_set(one, another, equals=equals)
