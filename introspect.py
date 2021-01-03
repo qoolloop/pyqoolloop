@@ -5,11 +5,13 @@ import inspect
 import os
 
 
+#TODO: test
+#TODO: return `namedtuple` or equivalent
 def get_function_info(depth: int = 2):
     """
     Get information about a function on the call stack.
     
-    :param depth: -- How much up the stack to look. -1 for the caller.
+    :param depth: -- How much up the stack to look. 1 for the caller.
 
     :return:
       A tuple with the following elements about the stack frame:
