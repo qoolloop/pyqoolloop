@@ -1,4 +1,6 @@
-import inspect
+"""
+Functions for testing for regression
+"""
 import os
 import pickle
 from typing import (
@@ -6,38 +8,12 @@ from typing import (
     Union,
 )
 
+from . import introspect
+
 import pylog
 _logger = pylog.getLogger(__name__)
 
 
-def _get_function_info(depth: int = 2):
-    """
-    Get information about a function on the call stack.
-    
-    :param depth: -- How much up the stack to look. -1 for the caller.
-
-    :return:
-      A tuple with the following elements about the stack frame:
-        - (str) name of module
-        - (str) name of function
-        - (str) name of the folder that has the module
-    """
-    frame = inspect.currentframe()
-    assert frame is not None, "Not supported on certain python implementations"
-
-    for index in range(depth):
-        frame = frame.f_back
-        assert frame is not None
-
-    module_name = frame.f_globals['__name__']
-
-    function_name = frame.f_code.co_name
-
-    dir_name = os.path.dirname(inspect.getfile(frame))
-
-    return module_name, function_name, dir_name
-
-    
 def make_filename(
         *,
         index: Union[None, int, float] = None,
@@ -61,7 +37,8 @@ def make_filename(
       other than the fact that `extension` will be used as the extension
       and the directory will be respected.
     """
-    module_name, function_name, dir_name = _get_function_info(depth=depth + 1)
+    module_name, function_name, dir_name = introspect.get_function_info(
+        depth=depth + 1)
 
     split_module = module_name.split('.')
     
@@ -138,7 +115,8 @@ def assert_no_change(
       #TODO: Automatically create subdirectory?
     """
     if save:
-        module_name, function_name, _ = _get_function_info(depth=depth)
+        module_name, function_name, _ = introspect.get_function_info(
+            depth=depth)
         _logger.error(
             "`save` is True in %s (%s)" % (function_name, module_name))
         _logger.error(
