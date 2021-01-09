@@ -12,7 +12,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import msgpack  #TODO: Can use Packer class for speed up
 from typing import (
-    Iterable,
+    Sequence,
     Union,
 )
 
@@ -33,7 +33,7 @@ class InvalidToken(Reason):
     pass
 
 
-def key_from_password(password: str, salt: str) -> bytes:
+def key_from_password(password: str, salt: bytes) -> bytes:
     """
     Obtain (hashed) key from password
 
@@ -107,7 +107,10 @@ class EncryptorDecryptor:
     This can encrypt and decrypt various types of data.
     """
 
-    def __init__(self, key: Union[bytes, Iterable[bytes]]):
+    _fernet: Union[Fernet, MultiFernet]
+    _primary_fernet: Fernet
+
+    def __init__(self, key: Union[bytes, Sequence[bytes]]):
         """
         :param key: The key for encryption.
           Otherwise, a list of candidate keys for decryption. Only the
