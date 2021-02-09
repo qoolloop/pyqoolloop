@@ -141,7 +141,7 @@ def current_function_name(pop_stack: int = 0) -> str:
     return sys._getframe(pop_stack + 1).f_code.co_name
 
 
-def combine_lists(*args) -> Iterable:
+def combine_lists(*args) -> Iterable:  #TODO: test
     """
     Create a list of lists by taking one element from each of the arguments.
     Can be used to create test parameters from combinations.
