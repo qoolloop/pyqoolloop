@@ -13,9 +13,25 @@ from .decorators import (
     synchronized_on_instance,
 )
 import inspect
+from mypy_extensions import (
+    DefaultArg,
+    # DefaultNamedArg,
+)
 import pytest
 import threading
+from typing_extensions import Protocol
 import time
+from typing import (
+    Any,
+    Callable,
+    cast,
+    ClassVar,
+    Dict,
+    Optional,
+    Type,
+    Tuple,
+    Union,
+)
 
 import pylog
 logger = pylog.getLogger(__name__)
@@ -26,7 +42,7 @@ logger = pylog.getLogger(__name__)
 _counter = 0
 
 
-def _counter_function():
+def _counter_function() -> int:
     global _counter
     _counter += 1
     return _counter
@@ -35,19 +51,28 @@ def _counter_function():
 # FunctionDecorator ###
 
 @pass_args
-def name_of_function():
+def name_of_function() -> None:
     pass
 
 
-def test_FunctionDecorator__wraps():
+def test_FunctionDecorator__wraps() -> None:
     assert 'name_of_function' == name_of_function.__name__
     
 
 # pass_args ###
 
-def _pass_args_function(arg0=0, arg1=1, arg2=2, kwargs=None):
+def _pass_args_function(
+        arg0: Any = 0,
+        arg1: Any = 1,
+        arg2: Any = 2,
+        kwargs: Optional[Dict[str, Any]] = None) -> None:
 
-    def _check_argument(name, value, default_value, kwargs):
+    def _check_argument(
+            name: str,
+            value: Any,
+            default_value: Any,
+            kwargs: Optional[Dict[str, Any]] = None) -> None:
+        assert kwargs is not None
         assert ((name not in kwargs) and (value == default_value)) or \
             (kwargs[name] == value)
     
@@ -57,19 +82,46 @@ def _pass_args_function(arg0=0, arg1=1, arg2=2, kwargs=None):
 
 
 @pass_args
-def pass_args_function(arg0=0, arg1=1, arg2=2, kwargs=None):
-    _pass_args_function(arg0, arg1, arg2, kwargs)
+def pass_args_function(
+        arg0: Any = 0,
+        arg1: Any = 1,
+        arg2: Any = 2,
+        kwargs: Optional[Dict[str, Any]] = None) -> None:
+    _pass_args_function(arg0, arg1, arg2, kwargs=kwargs)
 
 
-def test_pass_args_to_function():
+@pass_args
+def pass_args_function_with_mandatory_keyword(
+        arg0: Any = 0,
+        arg1: Any = 1,
+        arg2: Any = 2,
+        *,
+        kwargs: Dict[str, Any]) -> None:
+    _pass_args_function(arg0, arg1, arg2, kwargs=kwargs)
+
+
+@pytest.mark.parametrize('function', (
+    pass_args_function,
+    pass_args_function_with_mandatory_keyword,
+))
+def test_pass_args_to_function(
+        function: Callable[
+            [
+                DefaultArg(Any, 'arg0'),
+                DefaultArg(Any, 'arg1'),
+                DefaultArg(Any, 'arg2'),
+                # DefaultNamedArg(Dict[str, Any], 'kwargs')
+            ],
+            None]
+) -> None:
     
-    pass_args_function()
-    pass_args_function("a")
-    pass_args_function("a", "b")
-    pass_args_function(arg1="b")
-    pass_args_function(arg2="c")
-    pass_args_function(arg0="a", arg1="b")
-    pass_args_function(arg0="a", arg1="b", arg2="c")
+    function()
+    function("a")
+    function("a", "b")
+    function(arg1="b")
+    function(arg2="c")
+    function(arg0="a", arg1="b")
+    function(arg0="a", arg1="b", arg2="c")
 
 
 @pass_args
@@ -79,7 +131,9 @@ class PassArgsClass(object):
 
     class_func_call_count = 0
 
-    def __init__(self, arg0=0, kwargs=None):
+    def __init__(
+            self, arg0: Any = 0, kwargs: Optional[Dict[str, Any]] = None
+    ) -> None:
         _pass_args_function(arg0, kwargs=kwargs)
 
         self.init_call_count = 1
@@ -91,31 +145,124 @@ class PassArgsClass(object):
     # but they can be obtained with inspect.getmembers()
 
 
-    def func(self, arg0=0, kwargs=None):
+    def func(
+            self, arg0: Any = 0, kwargs: Optional[Dict[str, Any]] = None
+    ) -> None:
         _pass_args_function(arg0, kwargs=kwargs)
 
         self.func_call_count += 1
         
 
     @staticmethod
-    def static_func(arg0=0, kwargs=None):
+    def static_func(
+            arg0: Any = 0, kwargs: Optional[Dict[str, Any]] = None
+    ) -> None:
         _pass_args_function(arg0, kwargs=kwargs)
 
         PassArgsClass.static_func_call_count += 1
 
 
     @classmethod
-    def class_func(cls, arg0=0, kwargs=None):
+    def class_func(
+            cls, arg0: Any = 0, kwargs: Optional[Dict[str, Any]] = None
+    ) -> None:
         _pass_args_function(arg0, kwargs=kwargs)
 
         cls.class_func_call_count += 1
         
 
-def test_pass_args_to_class():
+@pass_args
+class PassArgsClassWithMandatoryKeyword(object):
 
-    instance = PassArgsClass()
+    static_func_call_count = 0
 
-    instance = PassArgsClass("a")
+    class_func_call_count = 0
+
+    def __init__(
+            self, arg0: Any = 0, *, kwargs: Dict[str, Any]
+    ) -> None:
+        _pass_args_function(arg0, kwargs=kwargs)
+
+        self.init_call_count = 1
+        self.func_call_count = 0
+
+
+    # Special methods like __eq__() (slot wrapper) and __dir__()
+    # (method) are not supported. (They are not in class.__dict__,
+    # but they can be obtained with inspect.getmembers()
+
+
+    def func(
+            self, arg0: Any = 0, *, kwargs: Dict[str, Any]
+    ) -> None:
+        _pass_args_function(arg0, kwargs=kwargs)
+
+        self.func_call_count += 1
+        
+
+    @staticmethod
+    def static_func(
+            arg0: Any = 0, *, kwargs: Dict[str, Any]
+    ) -> None:
+        _pass_args_function(arg0, kwargs=kwargs)
+
+        PassArgsClass.static_func_call_count += 1
+
+
+    @classmethod
+    def class_func(
+            cls, arg0: Any = 0, *, kwargs: Dict[str, Any]
+    ) -> None:
+        _pass_args_function(arg0, kwargs=kwargs)
+
+        cls.class_func_call_count += 1
+        
+
+class DifferentFunctions(Protocol):
+
+    static_func_call_count: ClassVar[int]
+
+    class_func_call_count: ClassVar[int]
+
+    init_call_count: int
+    
+    func_call_count: int
+    
+    def __init__(
+            self, arg0: Any = 0, # *, kwargs: Dict[str, Any]
+    ) -> None:
+        ...
+
+
+    def func(
+            self, arg0: Any = 0, # *, kwargs: Dict[str, Any]
+    ) -> None:
+        ...
+        
+
+    @staticmethod
+    def static_func(
+            arg0: Any = 0, # *, kwargs: Dict[str, Any]
+    ) -> None:
+        ...
+
+
+    @classmethod
+    def class_func(
+            cls, arg0: Any = 0, # *, kwargs: Dict[str, Any]
+    ) -> None:
+        ...
+        
+
+@pytest.mark.parametrize('Klass', (
+    PassArgsClass,
+    PassArgsClassWithMandatoryKeyword,
+))
+def test_pass_args_to_class(Klass: Type[DifferentFunctions]) -> None:
+
+    instance = Klass()
+
+    instance = Klass("a")
     assert instance.init_call_count == 1
 
     instance.func(arg0="A")
@@ -127,26 +274,28 @@ def test_pass_args_to_class():
     instance.func()
     assert instance.func_call_count == 3
 
-    PassArgsClass.static_func()
-    assert PassArgsClass.static_func_call_count == 1
+    previous_count = PassArgsClass.static_func_call_count  #TODO: remove
+    Klass.static_func()
+    assert PassArgsClass.static_func_call_count == previous_count + 1  #TODO: remove
+    assert Klass.static_func_call_count == 1
 
-    PassArgsClass.static_func(arg0="O")
-    assert PassArgsClass.static_func_call_count == 2
+    Klass.static_func(arg0="O")
+    assert Klass.static_func_call_count == 2
 
-    PassArgsClass.static_func("")
-    assert PassArgsClass.static_func_call_count == 3
+    Klass.static_func("")
+    assert Klass.static_func_call_count == 3
 
     instance.static_func("oo")
     assert instance.static_func_call_count == 4
     
-    PassArgsClass.class_func()
-    assert PassArgsClass.class_func_call_count == 1
+    Klass.class_func()
+    assert Klass.class_func_call_count == 1
 
-    PassArgsClass.class_func(arg0="O")
-    assert PassArgsClass.class_func_call_count == 2
+    Klass.class_func(arg0="O")
+    assert Klass.class_func_call_count == 2
 
-    PassArgsClass.class_func("")
-    assert PassArgsClass.class_func_call_count == 3
+    Klass.class_func("")
+    assert Klass.class_func_call_count == 3
 
     instance.class_func("")
     assert instance.class_func_call_count == 4
@@ -154,21 +303,31 @@ def test_pass_args_to_class():
     
 # deprecated ###
 
-def test_deprecated__log():
+def test_deprecated__log() -> None:
 
-    class _Logger(object):
+    class _Logger(pylog.Logger):
 
-        def warning(self, message):
+        function_called: bool
+
+        def warning(  # type:ignore[override]
+                self, message: str, *arg: Any, **kwargs: Any) -> None:
+            super().warning(message, *arg, **kwargs)
+            
             self.warn_called = True
 
             assert message.find("deprecated_function") >= 0
 
 
-    _logger = _Logger()
+    _logger = _Logger('name')
 
 
     @deprecated(_logger)
-    def deprecated_function(arg1, arg2, kwarg1=None, kwarg2=None):
+    def deprecated_function(
+            arg1: int,
+            arg2: int,
+            kwarg1: Optional[int] = None,
+            kwarg2: Optional[int] = None
+    ) -> int:
         assert arg1 == 1
         assert arg2 == 2
         assert kwarg1 == 3
@@ -190,21 +349,22 @@ def test_deprecated__log():
     True,
     False,
 ))
-def test_deprecated__raise_exception_true(global_setting):
+def test_deprecated__raise_exception_true(global_setting: bool) -> None:
 
-    class _Logger(object):
+    class _Logger(pylog.Logger):
 
         function_called = False
 
-        def warning(self, message):
+        def warning(  # type:ignore[override]
+                self, message: str, *args: Any, **kwargs: Any) -> None:
             self.warn_called = True
 
 
-    _logger = _Logger()
+    _logger = _Logger('name')
 
 
     @deprecated(_logger, raise_exception=True)
-    def deprecated_function():
+    def deprecated_function() -> int:
         _logger.function_called = True
 
         return 5
@@ -229,21 +389,23 @@ def test_deprecated__raise_exception_true(global_setting):
     True,
     False,
 ))
-def test_deprecated__raise_exception_false(global_setting):
+def test_deprecated__raise_exception_false(global_setting: bool) -> None:
 
-    class _Logger(object):
+    class _Logger(pylog.Logger):
 
         function_called = False
 
-        def warning(self, message):
+        def warning(  # type:ignore[override]
+                self, message: str, *args: Any, **kwargs: Any) -> None:
+            super().warning(message, *args, **kwargs)
             self.warn_called = True
 
 
-    _logger = _Logger()
+    _logger = _Logger('name')
 
 
     @deprecated(_logger, raise_exception=False)
-    def deprecated_function():
+    def deprecated_function() -> int:
         _logger.function_called = True
 
         return 5
@@ -263,21 +425,23 @@ def test_deprecated__raise_exception_false(global_setting):
     # endtry
 
 
-def test_deprecated__raise_exception_for_deprecated_true():
+def test_deprecated__raise_exception_for_deprecated_true() -> None:
 
-    class _Logger(object):
+    class _Logger(pylog.Logger):
 
         function_called = False
 
-        def warning(self, message):
+        def warning(  # type:ignore[override]
+                self, message: str, *args: Any, **kwargs: Any) -> None:
+            super().warning(message, *args, **kwargs)
             self.warn_called = True
 
 
-    _logger = _Logger()
+    _logger = _Logger('name')
 
 
     @deprecated(_logger)
-    def deprecated_function():
+    def deprecated_function() -> int:
         _logger.function_called = True
 
         return 5
@@ -298,21 +462,23 @@ def test_deprecated__raise_exception_for_deprecated_true():
     # endtry
 
 
-def test_deprecated__raise_exception_for_deprecated_false():
+def test_deprecated__raise_exception_for_deprecated_false() -> None:
 
-    class _Logger(object):
+    class _Logger(pylog.Logger):
 
         function_called = False
 
-        def warning(self, message):
+        def warning(  # type:ignore[override]
+                self, message: str, *args: Any, **kwargs: Any) -> None:
+            super().warning(message, *args, **kwargs)
             self.warn_called = True
 
 
-    _logger = _Logger()
+    _logger = _Logger('name')
 
 
     @deprecated(_logger)
-    def deprecated_function():
+    def deprecated_function() -> int:
         _logger.function_called = True
 
         return 5
@@ -347,12 +513,19 @@ class UnhandledException(Exception):
     (2, (AnException, RuntimeError)),
     (3, (TypeError, AnException)),
 ))
-def test_retry__with_exceptions(retries, exceptions):
+def test_retry__with_exceptions(
+        retries: int,
+        exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]]
+) -> None:
 
     result = {'count': 0}
 
     @retry(retries, exceptions)
-    def func(arg1, arg2, kwarg1=None, kwarg2=None):
+    def func(
+            arg1: str,
+            arg2: str,
+            kwarg1: Optional[str] = None,
+            kwarg2: Optional[str] = None) -> None:
         assert arg1 == 'arg1'
         assert arg2 == 'arg2'
         assert kwarg1 == 'kwarg1'
@@ -374,12 +547,18 @@ def test_retry__with_exceptions(retries, exceptions):
     (2, (AnException, RuntimeError)),
     (3, (TypeError, AnException)),
 ))
-def test_retry__with_unhandled_exceptions(retries, exceptions):
+def test_retry__with_unhandled_exceptions(
+        retries: int,
+        exceptions: Union[Type[Exception], Tuple[Type[Exception]]]) -> None:
 
     result = {'count': 0}
 
     @retry(retries, exceptions)
-    def func(arg1, arg2, kwarg1=None, kwarg2=None):
+    def func(
+            arg1: str,
+            arg2: str,
+            kwarg1: Optional[str] = None,
+            kwarg2: Optional[str] = None) -> None:
         assert arg1 == 'arg1'
         assert arg2 == 'arg2'
         assert kwarg1 == 'kwarg1'
@@ -401,12 +580,20 @@ def test_retry__with_unhandled_exceptions(retries, exceptions):
     (2, (AnException, RuntimeError)),
     (3, (TypeError, AnException)),
 ))
-def test_retry__with_no_exceptions(retries, exceptions):
+def test_retry__with_no_exceptions(
+        retries: int,
+        exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]]
+) -> None:
 
     result = {'count': 0}
 
     @retry(retries, exceptions)
-    def func(arg1, arg2, kwarg1=None, kwarg2=None):
+    def func(
+            arg1: str,
+            arg2: str,
+            kwarg1: Optional[str] = None,
+            kwarg2: Optional[str] = None
+    ) -> int:
         assert arg1 == 'arg1'
         assert arg2 == 'arg2'
         assert kwarg1 == 'kwarg1'
@@ -428,7 +615,7 @@ def test_retry__with_no_exceptions(retries, exceptions):
     2,
     3,
 ))
-def test_retry__with_extra_argument(retries):
+def test_retry__with_extra_argument(retries: int) -> None:
 
     result = {'count': 0}
 
@@ -436,7 +623,12 @@ def test_retry__with_extra_argument(retries):
         pass
 
     @retry(1, AnException, extra_argument=True)
-    def func(arg1, arg2, kwarg1=None, kwarg2=None):
+    def func(
+            arg1: str,
+            arg2: str,
+            kwarg1: Optional[str] = None,
+            kwarg2: Optional[str] = None
+    ) -> None:
         assert arg1 == 'arg1'
         assert arg2 == 'arg2'
         assert kwarg1 == 'kwarg1'
@@ -448,7 +640,8 @@ def test_retry__with_extra_argument(retries):
 
 
     with pytest.raises(AnException):
-        func('arg1', 'arg2', kwarg2='kwarg2', kwarg1='kwarg1', retries=retries)
+        func(
+            'arg1', 'arg2', kwarg2='kwarg2', kwarg1='kwarg1', retries=retries)
 
     assert result['count'] == retries
 
@@ -458,7 +651,7 @@ def test_retry__with_extra_argument(retries):
     2,
     3,
 ))
-def test_retry__without_extra_argument(retries_value):
+def test_retry__without_extra_argument(retries_value: int) -> None:
 
     result = {'count': 0}
 
@@ -466,7 +659,12 @@ def test_retry__without_extra_argument(retries_value):
         pass
 
     @retry(1, AnException, extra_argument=False)
-    def func(arg1, arg2, kwarg1=None, kwarg2=None, retries=None):
+    def func(
+            arg1: str,
+            arg2: str,
+            kwarg1: Optional[str] = None,
+            kwarg2: Optional[str] = None,
+            retries: Optional[int] = None) -> None:
         assert arg1 == 'arg1'
         assert arg2 == 'arg2'
         assert kwarg1 == 'kwarg1'
@@ -490,14 +688,22 @@ def test_retry__without_extra_argument(retries_value):
     (2, (AnException, RuntimeError)),
     (3, (TypeError, AnException)),
 ))
-def test_retry__method(retries, exceptions):
+def test_retry__method(
+        retries: int,
+        exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]]
+) -> None:
 
     result = {'count': 0}
 
     class A:
 
         @retry(retries, exceptions)
-        def func(self, arg1, arg2, kwarg1=None, kwarg2=None):
+        def func(
+                self,
+                arg1: str,
+                arg2: str,
+                kwarg1: Optional[str] = None,
+                kwarg2: Optional[str] = None) -> None:
             assert arg1 == 'arg1'
             assert arg2 == 'arg2'
             assert kwarg1 == 'kwarg1'
@@ -520,7 +726,10 @@ def test_retry__method(retries, exceptions):
     (2, (AnException, RuntimeError)),
     (3, (TypeError, AnException)),
 ))
-def test_retry__staticmethod(retries, exceptions):
+def test_retry__staticmethod(
+        retries: int,
+        exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]]
+) -> None:
 
     result = {'count': 0}
 
@@ -528,7 +737,11 @@ def test_retry__staticmethod(retries, exceptions):
 
         @staticmethod
         @retry(retries, exceptions)
-        def func(arg1, arg2, kwarg1=None, kwarg2=None):
+        def func(
+                arg1: str,
+                arg2: str,
+                kwarg1: Optional[str] = None,
+                kwarg2: Optional[str] = None) -> None:
             assert arg1 == 'arg1'
             assert arg2 == 'arg2'
             assert kwarg1 == 'kwarg1'
@@ -556,15 +769,22 @@ def test_retry__staticmethod(retries, exceptions):
     (2, (AnException, RuntimeError)),
     (3, (TypeError, AnException)),
 ))
-def test_retry__classmethod(retries, exceptions):
-
+def test_retry__classmethod(
+        retries: int,
+        exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]]
+) -> None:
     result = {'count': 0}
 
     class A:
 
         @classmethod
         @retry(retries, exceptions)
-        def func(cls, arg1, arg2, kwarg1=None, kwarg2=None):
+        def func(
+                cls,
+                arg1: str,
+                arg2: str,
+                kwarg1: Optional[str] = None,
+                kwarg2: Optional[str] = None) -> None:
             assert arg1 == 'arg1'
             assert arg2 == 'arg2'
             assert kwarg1 == 'kwarg1'
@@ -589,12 +809,12 @@ def test_retry__classmethod(retries, exceptions):
 
 # common functions ###
 
-def _create_variables():
+def _create_variables() -> Dict[str, Union[int, bool]]:
     variables = {'count': 0, 'inc_dec': 0, 'failure': False, 'called': False}
     return variables
 
 
-def _inc_dec(variables):
+def _inc_dec(variables: Dict[str, Union[int, bool]]) -> str:
     variables['called'] = True
 
     variables['count'] += 1
@@ -612,8 +832,13 @@ def _inc_dec(variables):
     return "result"
 
 
-def _test_synchronized(variables, function, args=(), kwargs=dict(),
-                       expected_count=None):
+def _test_synchronized(
+        variables: Dict[str, Union[int, bool]],
+        function: Callable[..., str],
+        args: Tuple[Any, ...] = (),
+        kwargs: Dict[str, Any] = dict(),
+        expected_count: Optional[int] = None
+) -> None:
 
     NUM_ITERATIONS = 5
             
@@ -621,7 +846,7 @@ def _test_synchronized(variables, function, args=(), kwargs=dict(),
 
     class _Thread(threading.Thread):
 
-        def run(self):
+        def run(self) -> None:
             for iteration in range(NUM_ITERATIONS):
                 result = function(*args, **kwargs)
                 assert result == "result"
@@ -648,12 +873,12 @@ def _test_synchronized(variables, function, args=(), kwargs=dict(),
 
 # synchronized_on_function ###
 
-def test_synchronized_on_function():
+def test_synchronized_on_function() -> None:
 
     variables = _create_variables()
 
     @synchronized_on_function(lock_field='lock')
-    def function():
+    def function() -> str:
         # Cannot access lock on function, because the name `function` doesn't
         # point to this target function anymore after decoration
         return _inc_dec(variables)
@@ -662,12 +887,12 @@ def test_synchronized_on_function():
 
 
 @pytest.mark.unreliable
-def test_synchronized_on_function__dont_synchronize():
+def test_synchronized_on_function__dont_synchronize() -> None:
 
     variables = _create_variables()
 
     @synchronized_on_function(lock_field='lock', dont_synchronize=True)
-    def function():
+    def function() -> str:
         # Cannot access lock on function, because the name `function` doesn't
         # point to this target function anymore after decoration
         return _inc_dec(variables)
@@ -679,14 +904,15 @@ def test_synchronized_on_function__dont_synchronize():
 
 # synchronized_on_instance ###
 
-def test_synchronized_on_instance__method():
+def test_synchronized_on_instance__method() -> None:
 
     class A(object):
 
         @synchronized_on_instance(lock_field='lock')
-        def method(self, variables):
+        def method(self, variables: Dict[str, Union[int, bool]]) -> str:
             lock = threading.RLock()  # RLock() is a function
-            assert isinstance(self.lock, type(lock))
+            assert isinstance(
+                self.lock, type(lock))  # type:ignore[attr-defined]
             return _inc_dec(variables)
 
 
@@ -696,12 +922,12 @@ def test_synchronized_on_instance__method():
     _test_synchronized(variables, a.method, (variables,))
 
 
-def test_synchronized_on_instance__method__no_parentheses():
+def test_synchronized_on_instance__method__no_parentheses() -> None:
 
     class A(object):
 
         @synchronized_on_instance
-        def method(self, variables):
+        def method(self, variables: Dict[str, Union[int, bool]]) -> str:
             lock = threading.RLock()  # RLock() is a function
             logger.info("self: %r", self)
             logger.info("self: %r", inspect.getmembers(self))
@@ -715,7 +941,7 @@ def test_synchronized_on_instance__method__no_parentheses():
     _test_synchronized(variables, a.method, (variables,))
 
 
-def test_synchronized_on_instance__staticmethod():
+def test_synchronized_on_instance__staticmethod() -> None:
 
     @synchronized_on_instance(lock_field='lock')
     class A(object):
@@ -723,7 +949,7 @@ def test_synchronized_on_instance__staticmethod():
         # __init__(self) doesn't really need locking
 
         @staticmethod
-        def method():
+        def method() -> str:
             assert getattr(A, "lock", None) is None
 
             return "result"
@@ -737,13 +963,13 @@ def test_synchronized_on_instance__staticmethod():
     assert result == "result"
 
 
-def test_synchronized_on_instance__classmethod():
+def test_synchronized_on_instance__classmethod() -> None:
 
     @synchronized_on_instance(lock_field='lock')
     class A(object):
 
         @classmethod
-        def method(cls):
+        def method(cls) -> str:
             assert cls is A
 
             assert getattr(cls, "lock", None) is None
@@ -759,14 +985,15 @@ def test_synchronized_on_instance__classmethod():
     assert result == "result"
 
 
-def test_synchronized_on_instance__class():
+def test_synchronized_on_instance__class() -> None:
 
     @synchronized_on_instance(lock_field='lock')
     class A(object):
 
-        def method(self, variables):
+        def method(self, variables: Dict[str, Union[int, bool]]) -> str:
             lock = threading.RLock()  # RLock() is a function
-            assert isinstance(self.lock, type(lock))
+            assert isinstance(
+                self.lock, type(lock))  # type:ignore[attr-defined]
             return _inc_dec(variables)
 
 
@@ -776,12 +1003,12 @@ def test_synchronized_on_instance__class():
     _test_synchronized(variables, a.method, (variables,))
 
 
-def test_synchronized_on_instance__class__no_parentheses():
+def test_synchronized_on_instance__class__no_parentheses() -> None:
 
     @synchronized_on_instance
     class A(object):
 
-        def method(self, variables):
+        def method(self, variables: Dict[str, Union[int, bool]]) -> str:
             lock = threading.RLock()  # RLock() is a function
             assert isinstance(getattr(self, '__lock'), type(lock))
             return _inc_dec(variables)
@@ -795,10 +1022,10 @@ def test_synchronized_on_instance__class__no_parentheses():
 
 # keep_cache ###
 
-def test_keep_cache__no_args():
+def test_keep_cache__no_args() -> None:
     
     @keep_cache(keep_time_secs=0.1)
-    def _function():
+    def _function() -> int:
         return _counter_function()
 
 
@@ -809,10 +1036,10 @@ def test_keep_cache__no_args():
     assert first == second
 
 
-def test_keep_cache__args():
+def test_keep_cache__args() -> None:
 
     @keep_cache(keep_time_secs=0.1)
-    def _function(arg1, arg2):
+    def _function(arg1: int, arg2: int) -> int:
         return arg1 + arg2 + _counter_function()
 
 
@@ -826,10 +1053,10 @@ def test_keep_cache__args():
     assert first == second
 
 
-def test_keep_cache__kwargs():
+def test_keep_cache__kwargs() -> None:
 
     @keep_cache(keep_time_secs=0.1)
-    def _function(arg0, arg1=0, arg2=3):
+    def _function(arg0: int, arg1: int = 0, arg2: int = 3) -> int:
         return arg1 + arg2 + _counter_function()
 
 
@@ -843,10 +1070,10 @@ def test_keep_cache__kwargs():
     assert first == second
 
 
-def test_keep_cache__default_kwargs():
+def test_keep_cache__default_kwargs() -> None:
 
     @keep_cache(keep_time_secs=0.1)
-    def _function(arg0, arg1=0, arg2=3):
+    def _function(arg0: int, arg1: int = 0, arg2: int = 3) -> int:
         return arg1 + arg2 + _counter_function()
 
 
@@ -860,12 +1087,12 @@ def test_keep_cache__default_kwargs():
     assert first == second
 
 
-def test_keep_cache__max_entries():
+def test_keep_cache__max_entries() -> None:
 
     max_entries = 3
 
     @keep_cache(keep_time_secs=10, max_entries=max_entries)
-    def _function(arg):
+    def _function(arg: int) -> int:
         return arg
 
 
@@ -882,12 +1109,12 @@ def test_keep_cache__max_entries():
     # endfor
 
 
-def test_keep_cache__max_entries__same_args():
+def test_keep_cache__max_entries__same_args() -> None:
 
     max_entries = 3
 
     @keep_cache(keep_time_secs=10, max_entries=max_entries)
-    def _function(arg):
+    def _function(arg: int) -> int:
         return arg
 
 
@@ -897,14 +1124,14 @@ def test_keep_cache__max_entries__same_args():
     # endfor
 
 
-def test_keep_cache__max_entries__expire():
+def test_keep_cache__max_entries__expire() -> None:
 
     max_entries = 3
 
     keep_time_secs = 0.01
 
     @keep_cache(keep_time_secs=keep_time_secs, max_entries=max_entries)
-    def _function(arg):
+    def _function(arg: int) -> int:
         return arg
 
 
@@ -917,14 +1144,14 @@ def test_keep_cache__max_entries__expire():
     # endfor
 
 
-def test_keep_cache__max_entries__refresh():
+def test_keep_cache__max_entries__refresh() -> None:
 
     max_entries = 3
 
     keep_time_secs = 0.01
 
     @keep_cache(keep_time_secs=keep_time_secs, max_entries=max_entries)
-    def _function(arg):
+    def _function(arg: int) -> int:
         return arg
 
 
@@ -939,24 +1166,24 @@ def test_keep_cache__max_entries__refresh():
     # endfor
 
 
-def test_keep_cache__synchronize():
+def test_keep_cache__synchronize() -> None:
 
     max_entries = 1
 
     variables = _create_variables()
 
     @keep_cache(keep_time_secs=0, max_entries=max_entries)
-    def _function():
+    def _function() -> str:
         return _inc_dec(variables)
 
 
     _test_synchronized(variables, _function, expected_count=1)
 
 
-def test_keep_cache__exclude_kw():
+def test_keep_cache__exclude_kw() -> None:
     
     @keep_cache(keep_time_secs=0, exclude_kw=['extra'])
-    def _function(arg, extra):
+    def _function(arg: int, extra: int) -> int:
         return arg + extra
 
 
@@ -971,10 +1198,10 @@ def test_keep_cache__exclude_kw():
 
 # expire_cache ###
 
-def test_expire_cache__no_args():
+def test_expire_cache__no_args() -> None:
     
     @expire_cache(expire_time_secs=10)
-    def _function():
+    def _function() -> int:
         return _counter_function()
 
 
@@ -985,10 +1212,10 @@ def test_expire_cache__no_args():
     assert first == second
 
 
-def test_expire_cache__no_args__expire():
+def test_expire_cache__no_args__expire() -> None:
 
     @expire_cache(expire_time_secs=0)
-    def _function():
+    def _function() -> int:
         return _counter_function()
 
 
@@ -999,10 +1226,10 @@ def test_expire_cache__no_args__expire():
     assert first < second
 
 
-def test_expire_cache__args():
+def test_expire_cache__args() -> None:
 
     @expire_cache(expire_time_secs=0.1)
-    def _function(arg1, arg2):
+    def _function(arg1: int, arg2: int) -> int:
         return arg1 + arg2 + _counter_function()
 
 
@@ -1016,10 +1243,10 @@ def test_expire_cache__args():
     assert first == second
 
 
-def test_expire_cache__kwargs():
+def test_expire_cache__kwargs() -> None:
 
     @expire_cache(expire_time_secs=10)
-    def _function(arg0, arg1=0, arg2=3):
+    def _function(arg0: int, arg1: int = 0, arg2: int = 3) -> int:
         return arg1 + arg2 + _counter_function()
 
 
@@ -1033,10 +1260,10 @@ def test_expire_cache__kwargs():
     assert first == second
 
 
-def test_expire_cache__default_kwargs():
+def test_expire_cache__default_kwargs() -> None:
 
     @expire_cache(expire_time_secs=10)
-    def _function(arg0, arg1=0, arg2=3):
+    def _function(arg0: int, arg1: int = 0, arg2: int = 3) -> int:
         return arg1 + arg2 + _counter_function()
 
 
@@ -1050,12 +1277,12 @@ def test_expire_cache__default_kwargs():
     assert first == second
 
 
-def test_expire_cache__max_entries():
+def test_expire_cache__max_entries() -> None:
 
     max_entries = 3
 
     @expire_cache(expire_time_secs=10, max_entries=max_entries)
-    def _function(arg):
+    def _function(arg: int) -> int:
         return arg
 
 
@@ -1065,12 +1292,12 @@ def test_expire_cache__max_entries():
     # endfor
 
 
-def test_expire_cache__max_entries__same_args():
+def test_expire_cache__max_entries__same_args() -> None:
 
     max_entries = 3
 
     @expire_cache(expire_time_secs=10, max_entries=max_entries)
-    def _function(arg):
+    def _function(arg: int) -> int:
         return arg
 
 
@@ -1080,12 +1307,12 @@ def test_expire_cache__max_entries__same_args():
     # endfor
 
 
-def test_expire_cache__max_entries__refresh():
+def test_expire_cache__max_entries__refresh() -> None:
 
     max_entries = 3
 
     @expire_cache(expire_time_secs=10, max_entries=max_entries)
-    def _function(arg):
+    def _function(arg: int) -> int:
         return arg + _counter_function()
 
 
@@ -1099,14 +1326,14 @@ def test_expire_cache__max_entries__refresh():
     assert first < second
 
 
-def test_expire_cache__synchronize():
+def test_expire_cache__synchronize() -> None:
 
     max_entries = 1
 
     variables = _create_variables()
 
     @expire_cache(expire_time_secs=0, max_entries=max_entries)
-    def _function():
+    def _function() -> str:
         return _inc_dec(variables)
 
 
@@ -1115,38 +1342,59 @@ def test_expire_cache__synchronize():
 
 # extend_with_method ##
 
-def _test_new_method(A, a):
+class NewMethodClass(Protocol):
+    new_value: int
+
+    def method(self, value: int) -> None:
+        ...
+        
+    def new_method(self, value: int) -> None:
+        ...
+
+
+def _test_new_method(A: Type[NewMethodClass], a: NewMethodClass) -> None:
     value = 1
     a.new_method(value)
     assert value == a.new_value
 
     with pytest.raises(TypeError):
-        A.method(value)
+        A.method(value)  # type:ignore[attr-defined, arg-type, call-arg]
 
     with pytest.raises(TypeError):
-        A.new_method(value)
+        A.new_method(value)  # type:ignore[attr-defined, arg-type, call-arg]
 
 
-def test__extend_with_method():
+def test__extend_with_method() -> None:
 
     class A:
-        def method(self, value):
+        new_value: int
+        
+        def method(self, value: int) -> None:
             pass
     
 
     @extend_with_method(A)
-    def new_method(self, value):
+    def new_method(self: A, value: int) -> None:
         self.new_value = value
 
 
     a = A()
 
-    _test_new_method(A, a)
+    _test_new_method(cast(Type[NewMethodClass], A), cast(NewMethodClass, a))
 
 
 # @extend_with_class_method ##
 
-def _test_new_class_method(A, a):
+class NewClassMethodClass(Protocol):
+    new_value: ClassVar[int]
+    
+    @classmethod
+    def new_class_method(cls, value: int) -> None:
+        ...
+        
+
+def _test_new_class_method(
+        A: Type[NewClassMethodClass], a: NewClassMethodClass) -> None:
     value = 1
     a.new_class_method(value)
     assert value == a.new_value
@@ -1157,25 +1405,34 @@ def _test_new_class_method(A, a):
     assert new_value == A.new_value
     
 
-def test__extend_with_class_method():
+def test__extend_with_class_method() -> None:
 
     class A:
-        pass
+        new_value: ClassVar[int]
     
 
     @extend_with_class_method(A)
-    def new_class_method(cls, value):
+    def new_class_method(cls: Type[A], value: int) -> None:
         cls.new_value = value
 
 
-    a = A()
+    # A = cast(Type[NewStaticMethodClass], A)  # Doesn't work for mypy 0.800
+    CastedA = cast(Type[NewClassMethodClass], A)
+    casted_a = CastedA()
 
-    _test_new_class_method(A, a)
+    _test_new_class_method(CastedA, casted_a)
 
 
 # @extend_with_static_method ##
 
-def _test_new_static_method(A, a):
+class NewStaticMethodClass(Protocol):
+    @staticmethod
+    def new_static_method(value: int) -> int:
+        ...
+    
+
+def _test_new_static_method(
+        A: Type[NewStaticMethodClass], a: NewStaticMethodClass) -> None:
     value = 1
     assert value == a.new_static_method(value)
 
@@ -1183,47 +1440,55 @@ def _test_new_static_method(A, a):
     assert new_value == A.new_static_method(new_value)
     
 
-def test__extend_with_static_method():
+def test__extend_with_static_method() -> None:
 
     class A:
         pass
 
 
     @extend_with_static_method(A)
-    def new_static_method(value):
+    def new_static_method(value: int) -> int:
         return value
 
 
-    a = A()
+    # A = cast(Type[NewStaticMethodClass], A)  # Doesn't work for mypy 0.800
+    CastedA = cast(Type[NewStaticMethodClass], A)
+    casted_a = CastedA()
 
-    _test_new_static_method(A, a)
+    _test_new_static_method(CastedA, casted_a)
 
 
 # @extension ##
 
-def test__extension():
+def test__extension() -> None:
 
     class A:
-        def method(self, value):
+        def method(self, value: int) -> None:
             pass
 
 
     @extension(A)
     class Extension:
-        def new_method(self, value):
+        def new_method(self, value: int) -> None:
             self.new_value = value
 
         @classmethod
-        def new_class_method(cls, value):
+        def new_class_method(cls, value: int) -> None:
             cls.new_value = value
 
         @staticmethod
-        def new_static_method(value):
+        def new_static_method(value: int) -> int:
             return value
 
         
+    # A = cast(Type[NewStaticMethodClass], A)  # Doesn't work for mypy 0.800
+    # CastedA = cast(  # Doesn't work for mypy 0.800
+    #     Union[Type[NewClassMethodClass], Type[NewStaticMethodClass]], A)
     a = A()
 
-    _test_new_method(A, a)
-    _test_new_class_method(A, a)
-    _test_new_static_method(A, a)
+    _test_new_method(
+        cast(Type[NewMethodClass], A), cast(NewMethodClass, a))
+    _test_new_class_method(
+        cast(Type[NewClassMethodClass], A), cast(NewClassMethodClass, a))
+    _test_new_static_method(
+        cast(Type[NewStaticMethodClass], A), cast(NewStaticMethodClass, a))

@@ -5,6 +5,7 @@
 import os
 import pickle
 from typing import (
+    Any,
     Iterable,
     List,
     Optional,
@@ -25,7 +26,7 @@ def get_file_path(filename: str) -> str:  #TODO: rename `path`
 
 def load_pickle(
         file_path: str, filename: str, raise_exception: bool = False
-) -> Optional[object]:
+) -> Any:
     """
     Load from pickle file.
 
@@ -33,6 +34,8 @@ def load_pickle(
     :param filename: Name of file in `file_path` directory.  #TODO: Accept `None` to specify file with `file_path`?
     :param raise_exception: `True` to raise exception on error, such as
       file not found. If `False`, this function will return `None` on error.
+
+    :return: loaded value
 
     :raise FileNotFoundError: File is not found
     :raise other: Other file related errors.
