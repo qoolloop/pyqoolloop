@@ -31,6 +31,7 @@ from typing import (
 )
 
 
+# https://mypy.readthedocs.io/en/stable/generics.html#declaring-decorators
 DecoratedFunction = TypeVar('DecoratedFunction', bound=Callable[..., Any])
 """Type for decorated function"""
 
@@ -57,14 +58,12 @@ class FunctionDecorator:
 
     def __init__(self,
                  called_function:
-                 Callable[..., None]
-                 = None,
+                 Callable[..., None],
                  function_for_staticmethod:
-                 Callable[..., None]
-                 = None,
+                 Optional[Callable[..., None]] = None,
                  function_for_classmethod:
-                 Callable[..., None]
-                 = None):
+                 Optional[Callable[..., None]] = None
+                 ) -> None:
         r"""
         :param called_function:
           |   (callable(target, \*args, \**kwargs))
@@ -167,12 +166,12 @@ class FunctionDecorator:
                     setattr(target_class, name, self.generic_decorator(value))
 
                 elif isinstance(value, staticmethod):
-                    descriptor = DescriptorForStaticmethod(value)
-                    setattr(target_class, name, descriptor)
+                    descriptor_static = DescriptorForStaticmethod(value)
+                    setattr(target_class, name, descriptor_static)
 
                 elif isinstance(value, classmethod):
-                    descriptor = DescriptorForClassmethod(value)
-                    setattr(target_class, name, descriptor)
+                    descriptor_class = DescriptorForClassmethod(value)
+                    setattr(target_class, name, descriptor_class)
                 # endif
 
             return target_class
@@ -497,7 +496,7 @@ def keep_cache(
     """
 
     # holds tuples (<time>, <value>)
-    cache: Dict[frozenset, Tuple] = OrderedDict()
+    cache: OrderedDict[frozenset, Tuple] = OrderedDict()
 
     
     @synchronized_on_function(dont_synchronize=dont_synchronize)
@@ -550,7 +549,7 @@ def expire_cache(
     """
 
     # holds tuples (<time>, <value>)
-    cache: Dict[frozenset, Tuple] = OrderedDict()
+    cache: OrderedDict[frozenset, Tuple] = OrderedDict()
 
     
     @synchronized_on_function(dont_synchronize=dont_synchronize)
@@ -607,7 +606,7 @@ def extend_with_method(
             __extended_class,
             target.__name__,
             target)
-        return cast(DecoratedFunction, target)
+        return target
         
 
     return _decorator
@@ -631,7 +630,7 @@ def extend_with_static_method(
             __extended_class,
             target.__name__,
             staticmethod(target))
-        return cast(DecoratedFunction, target)
+        return target
         
 
     return _decorator
@@ -655,7 +654,7 @@ def extend_with_class_method(
             __extended_class,
             target.__name__,
             classmethod(target))
-        return cast(DecoratedFunction, target)
+        return target
         
 
     return _decorator
