@@ -18,14 +18,21 @@ import logging
 import threading
 import time
 from typing import (
+    Any,
     Callable,
+    cast,
     Dict,
     Iterable,
     Optional,
     Union,
     Tuple,
     Type,
+    TypeVar,
 )
+
+
+DecoratedFunction = TypeVar('DecoratedFunction', bound=Callable[..., Any])
+"""Type for decorated function"""
 
 
 def _through_classmethod(target, cls, *args, **kwargs):  #TODO: What happens with `cls`?
@@ -583,7 +590,9 @@ def _through_function(target, *args, **kwargs):
     return target(*args, **kwargs)
 
 
-def extend_with_method(__extended_class: Type[object]):
+def extend_with_method(
+        __extended_class: Type[object]
+) -> Callable[[DecoratedFunction], DecoratedFunction]:
     """
     Decorator to add a global function as a method to a class
 
@@ -593,18 +602,20 @@ def extend_with_method(__extended_class: Type[object]):
     """
     #TODO: `override=False`
 
-    def _decorator(target):
+    def _decorator(target: DecoratedFunction) -> DecoratedFunction:
         setattr(
             __extended_class,
             target.__name__,
             target)
-        return target
+        return cast(DecoratedFunction, target)
         
 
     return _decorator
 
 
-def extend_with_static_method(__extended_class: Type[object]):
+def extend_with_static_method(
+        __extended_class: Type[object]
+) -> Callable[[DecoratedFunction], DecoratedFunction]:
     """
     Decorator to add a global function as a static method to a class
 
@@ -615,18 +626,20 @@ def extend_with_static_method(__extended_class: Type[object]):
     """
     #TODO: `override=False`
 
-    def _decorator(target):
+    def _decorator(target: DecoratedFunction) -> DecoratedFunction:
         setattr(
             __extended_class,
             target.__name__,
             staticmethod(target))
-        return target
+        return cast(DecoratedFunction, target)
         
 
     return _decorator
 
 
-def extend_with_class_method(__extended_class: Type[object]):
+def extend_with_class_method(
+        __extended_class: Type[object]
+) -> Callable[[DecoratedFunction], DecoratedFunction]:
     """
     Decorator to add a function as a class method to a class
 
@@ -637,12 +650,12 @@ def extend_with_class_method(__extended_class: Type[object]):
     """
     #TODO: `override=False`
 
-    def _decorator(target):
+    def _decorator(target: DecoratedFunction) -> DecoratedFunction:
         setattr(
             __extended_class,
             target.__name__,
             classmethod(target))
-        return target
+        return cast(DecoratedFunction, target)
         
 
     return _decorator
