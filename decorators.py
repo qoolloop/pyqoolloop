@@ -486,6 +486,30 @@ def _get_args(target, args, kwargs, exclude_kw=()):
     return arguments
 
 
+@overload
+def keep_cache(
+        __target: DecoratedFunction,
+        *,
+        keep_time_secs: float,
+        max_entries: Optional[int] = None,
+        dont_synchronize: bool = False,
+        exclude_kw: Iterable[str] = ()
+) -> DecoratedFunction:
+    ...
+
+    
+@overload
+def keep_cache(
+        __target=None,
+        *,
+        keep_time_secs: float,
+        max_entries: Optional[int] = None,
+        dont_synchronize: bool = False,
+        exclude_kw: Iterable[str] = ()
+) -> Callable[[DecoratedFunction], DecoratedFunction]:
+    ...
+    
+
 def keep_cache(
         __target=None,
         *,
