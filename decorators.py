@@ -424,6 +424,19 @@ def synchronized_on_function(
     return decorator.generic_decorator(__target)
 
 
+@overload
+def synchronized_on_instance(
+        __target: DecoratedClass, *, lock_field='__lock') -> DecoratedClass:
+    ...
+
+
+@overload
+def synchronized_on_instance(
+        __target=None, *, lock_field='__lock'
+) -> Callable[[DecoratedClass], DecoratedClass]:
+    ...
+    
+
 def synchronized_on_instance(__target=None, *, lock_field='__lock'):
     """
     Used to decorate instance methods and classes that need thread locking
