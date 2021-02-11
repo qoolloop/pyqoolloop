@@ -20,10 +20,9 @@ import time
 from typing import (
     Any,
     Callable,
-    cast,
-    Dict,
     Iterable,
     Optional,
+    overload,
     Union,
     Tuple,
     Type,
@@ -34,6 +33,9 @@ from typing import (
 # https://mypy.readthedocs.io/en/stable/generics.html#declaring-decorators
 DecoratedFunction = TypeVar('DecoratedFunction', bound=Callable[..., Any])
 """Type for decorated function"""
+
+DecoratedClass = TypeVar('DecoratedClass', bound=Type[object])
+"""Type for decorated class"""
 
 
 def _through_classmethod(target, cls, *args, **kwargs):  #TODO: What happens with `cls`?
@@ -112,6 +114,17 @@ class FunctionDecorator:
             default_function
 
 
+    @overload
+    def generic_decorator(
+            self, target: DecoratedFunction) -> DecoratedFunction:
+        ...
+        
+
+    @overload
+    def generic_decorator(self, target: DecoratedClass) -> DecoratedClass:
+        ...
+        
+
     def generic_decorator(self, target):
         """
         Function object to use to return from decorator.
@@ -126,7 +139,8 @@ class FunctionDecorator:
             return decorator_self.called_function(target, *args, **kwargs)
 
 
-        def _make_class_decorator(target_class):
+        def _make_class_decorator(
+                target_class: DecoratedClass) -> DecoratedClass:
 
             class DescriptorForStaticmethod(object):
 
@@ -529,6 +543,28 @@ def keep_cache(
         function_for_staticmethod=_through_classmethod,
         function_for_classmethod=_through_classmethod)
     return decorator.generic_decorator(__target)
+
+
+@overload
+def expire_cache(
+        __target: DecoratedFunction,
+        *,
+        expire_time_secs: float,
+        max_entries: Optional[int] = None,
+        dont_synchronize: bool = False
+) -> DecoratedFunction:  #TODO: exclude_kw
+    ...
+
+
+@overload
+def expire_cache(
+        __target: None = None,
+        *,
+        expire_time_secs: float,
+        max_entries: Optional[int] = None,
+        dont_synchronize: bool = False
+) -> Callable[[DecoratedFunction], DecoratedFunction]:  #TODO: exclude_kw
+    ...
 
 
 def expire_cache(

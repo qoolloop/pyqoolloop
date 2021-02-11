@@ -1332,7 +1332,7 @@ def test_expire_cache__synchronize() -> None:
 
     variables = _create_variables()
 
-    @expire_cache(expire_time_secs=0, max_entries=max_entries)
+    @expire_cache(expire_time_secs=0.0, max_entries=max_entries)
     def _function() -> str:
         return _inc_dec(variables)
 
