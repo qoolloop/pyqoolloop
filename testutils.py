@@ -3,6 +3,7 @@ from collections.abc import Collection
 from typing import (
     Any,
     Callable,
+    Dict,
     Iterable,
     List,
     Set,
@@ -76,7 +77,9 @@ def equal_set(one_set: Collection, another_set: Collection, equals=eq) -> bool: 
 
 
 def _included_set(
-        one_set: Iterable, another_set: Iterable, equals: Operator = eq
+        one_set: Iterable[Any],
+        another_set: Iterable[Any],
+        equals: Operator = eq
 ) -> bool:
     another_set = set(another_set)
 
@@ -90,7 +93,9 @@ def _included_set(
     return True
 
 
-def _included_dict(one: dict, another: dict, equals: Operator = eq) -> bool:
+def _included_dict(
+        one: Dict[Any, Any], another: Dict[Any, Any], equals: Operator = eq
+) -> bool:
     for each_key, each_value in one.items():
         if each_key not in another:
             _logger.info("Key %r not included", each_key)
@@ -107,7 +112,9 @@ def _included_dict(one: dict, another: dict, equals: Operator = eq) -> bool:
     return True
 
 
-def included(one: Iterable, another: Iterable, equals: Operator = eq) -> bool:
+def included(
+        one: Iterable[Any], another: Iterable[Any], equals: Operator = eq
+) -> bool:
     """
     Check that all elements in one is included in the other
 

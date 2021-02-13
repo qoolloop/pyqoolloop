@@ -1,4 +1,8 @@
 import pytest
+from typing import (
+    Any,
+    Iterable,
+)
 
 from .testutils import (
     included,
@@ -25,5 +29,6 @@ from .testutils import (
     (dict(a=1), dict(a="1", bcd=1), False),
     (dict(a="1", bcd=1), dict(a="1"), False),
 ))
-def test__included(one, another, result):
+def test__included(
+        one: Iterable[Any], another: Iterable[Any], result: bool) -> None:
     assert result == included(one, another)
