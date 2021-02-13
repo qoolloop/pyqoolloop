@@ -1,19 +1,31 @@
 from . import file
 
 import os
+from mypy_extensions import (
+    DefaultNamedArg,
+)
 import pytest
 import tempfile
+from typing import (
+    Any,
+    Callable,
+)
 
 import pylog
 logger = pylog.getLogger(__name__)
 
 
-def _test__no_file__no_exception(load_func):
+LoadFunc = Callable[[str, str, DefaultNamedArg(bool, 'raise_exception')], Any]
+
+DumpFunc = Callable[[str, str, Any, DefaultNamedArg(bool, 'overwrite')], None]
+
+
+def _test__no_file__no_exception(load_func: LoadFunc) -> None:
     read = load_func('', 'non-existent-file.pp')
     assert read is None
 
 
-def _test__no_file__exception(load_func):
+def _test__no_file__exception(load_func: LoadFunc) -> None:
     with pytest.raises(FileNotFoundError):
         read = load_func('', 'non-existent-file.pp',
                          raise_exception=True)
@@ -21,27 +33,30 @@ def _test__no_file__exception(load_func):
     # endwith
 
 
-def test_load_pickle__no_file__no_exception():
+def test_load_pickle__no_file__no_exception() -> None:
     _test__no_file__no_exception(file.load_pickle)
     
 
-def test_load_text__no_file__no_exception():
+def test_load_text__no_file__no_exception() -> None:
     _test__no_file__no_exception(file.load_text)
     
 
-def test_load_pickle__no_file__exception():
+def test_load_pickle__no_file__exception() -> None:
     _test__no_file__exception(file.load_pickle)
     
 
-def test_load_text__no_file__exception():
+def test_load_text__no_file__exception() -> None:
     _test__no_file__exception(file.load_text)
     
 
-@pytest.mark.parametrize("load_func, dump_func, value", (
+load_dump_parameters = ("load_func, dump_func, value", (
     (file.load_pickle, file.dump_pickle, {'key': 11}),
     (file.load_text, file.dump_text, 'text'),
 ))
-def test__no_destination(load_func, dump_func, value):
+
+@pytest.mark.parametrize(*load_dump_parameters)
+def test__no_destination(
+        load_func: LoadFunc, dump_func: DumpFunc, value: Any) -> None:
 
     temp_dir_name = tempfile.mkdtemp()
     try:
@@ -62,11 +77,9 @@ def test__no_destination(load_func, dump_func, value):
     # endtry
     
 
-@pytest.mark.parametrize("load_func, dump_func, value", (
-    (file.load_pickle, file.dump_pickle, {'key': 11}),
-    (file.load_text, file.dump_text, 'text'),
-))
-def test__destination_exists__no_exception(load_func, dump_func, value):
+@pytest.mark.parametrize(*load_dump_parameters)
+def test__destination_exists__no_exception(
+        load_func: LoadFunc, dump_func: DumpFunc, value: Any) -> None:
 
     f, temp_filename = tempfile.mkstemp()
     os.close(f)
@@ -82,11 +95,9 @@ def test__destination_exists__no_exception(load_func, dump_func, value):
     assert read == value
     
 
-@pytest.mark.parametrize("load_func, dump_func, value", (
-    (file.load_pickle, file.dump_pickle, {'key': 11}),
-    (file.load_text, file.dump_text, 'text'),
-))
-def test__destination_exists__exception(load_func, dump_func, value):
+@pytest.mark.parametrize(*load_dump_parameters)
+def test__destination_exists__exception(
+        load_func: LoadFunc, dump_func: DumpFunc, value: Any) -> None:
 
     f, temp_filename = tempfile.mkstemp()
     os.close(f)
