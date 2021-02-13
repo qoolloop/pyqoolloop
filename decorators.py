@@ -273,7 +273,8 @@ def log_calls_on_exception(logger: logging.Logger, log_exception: bool = True):
     return decorator.generic_decorator
 
 
-def pass_args(target):
+# Type hint for `kwargs` is not necessary yet with mypy 0.800
+def pass_args(target: DecoratedFunction) -> DecoratedFunction:
     """
     Decorator that passes arguments to the function as a dict as an additional
     argument named `kwargs`
@@ -303,7 +304,8 @@ raise_exception_for_deprecated = False
 def deprecated(
         logger: logging.Logger,
         message: Optional[str] = None,
-        raise_exception: Optional[bool] = None):
+        raise_exception: Optional[bool] = None
+) -> Callable[[DecoratedFunction], DecoratedFunction]:
     """
     Used to decorate deprecated functions and classes
 
@@ -339,7 +341,8 @@ def retry(
         exceptions: Union[Type[BaseException],
                           Tuple[Type[BaseException], ...]],
         interval_secs: float = 0.0,
-        extra_argument: bool = False):
+        extra_argument: bool = False
+) -> Callable[[DecoratedFunction], DecoratedFunction]:  #TODO: type hint for `retries` argument added to decorated function
     """
     Used to decorate functions that should be retried if certain exceptions are
     raised
@@ -384,6 +387,22 @@ def retry(
     return decorator.generic_decorator
 
 
+@overload
+def synchronized_on_function(
+        __target: DecoratedFunction,
+        *, lock_field: str = '__lock', dont_synchronize: bool = False
+) -> DecoratedFunction:
+    ...
+
+    
+@overload
+def synchronized_on_function(
+        __target=None,
+        *, lock_field: str = '__lock', dont_synchronize: bool = False
+) -> Callable[[DecoratedFunction], DecoratedFunction]:
+    ...
+
+
 def synchronized_on_function(
         __target=None,
         *, lock_field: str = '__lock', dont_synchronize: bool = False):
@@ -426,7 +445,22 @@ def synchronized_on_function(
 
 @overload
 def synchronized_on_instance(
-        __target: DecoratedClass, *, lock_field='__lock') -> DecoratedClass:
+        __target: DecoratedFunction, *, lock_field='__lock'
+) -> DecoratedFunction:
+    ...
+
+
+@overload
+def synchronized_on_instance(
+        __target=None, *, lock_field='__lock'
+) -> Callable[[DecoratedFunction], DecoratedFunction]:
+    ...
+    
+
+@overload
+def synchronized_on_instance(
+        __target: DecoratedClass, *, lock_field='__lock'
+) -> DecoratedClass:
     ...
 
 
