@@ -31,6 +31,8 @@ from typing import (
 
 
 # https://mypy.readthedocs.io/en/stable/generics.html#declaring-decorators
+ReturnType = TypeVar('ReturnType')
+
 DecoratedFunction = TypeVar('DecoratedFunction', bound=Callable[..., Any])
 """Type for decorated function"""
 
@@ -336,13 +338,16 @@ def deprecated(
     return decorator.generic_decorator
 
 
+#TODO: type hint for `retries` argument added to decorated function
+# c.f. https://stackoverflow.com/a/47060298/2400328
+# c.f. https://www.python.org/dev/peps/pep-0612/
 def retry(
         retries: int,
         exceptions: Union[Type[BaseException],
                           Tuple[Type[BaseException], ...]],
         interval_secs: float = 0.0,
         extra_argument: bool = False
-) -> Callable[[DecoratedFunction], DecoratedFunction]:  #TODO: type hint for `retries` argument added to decorated function
+) -> Callable[[Callable[..., ReturnType]], Callable[..., ReturnType]]:
     """
     Used to decorate functions that should be retried if certain exceptions are
     raised
