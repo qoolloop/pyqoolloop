@@ -20,7 +20,7 @@ import pylog
 logger = pylog.getLogger(__name__)
 
 
-def _make_temporary_encryptor():
+def _make_temporary_encryptor() -> encrypt.EncryptorDecryptor:
     key = encrypt.EncryptorDecryptor.generate_key()
         
     logger.info("Key: (%s) %r", type(key), key)
@@ -35,7 +35,7 @@ def _make_temporary_encryptor():
     (2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./',
      b'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
 ))
-def test__key_from_password(index, password, salt):
+def test__key_from_password(index: int, password: str, salt: bytes) -> None:
     save = False
     
     key = encrypt.key_from_password(password, salt)
@@ -48,13 +48,13 @@ def test__key_from_password(index, password, salt):
     assert not save, "Warning"
 
 
-def test__encrypt_to_file__overwrite():
+def test__encrypt_to_file__overwrite() -> None:
     encryptor = _make_temporary_encryptor()
 
     with tempfile.TemporaryDirectory() as directory:
         value_filename = os.path.join(directory, 'file.bin')
 
-        value = {}
+        value: object = {}
         encryptor.encrypt_to_file(value, value_filename)
 
         new_value = ()
@@ -148,7 +148,7 @@ def test__encrypt_to_file__overwrite():
     (9.5,
      {'complex set', 1, 3.5, False, None, (1, 2)}),
 ))
-def test__encrypt_decrypt(index, value):
+def test__encrypt_decrypt(index: float, value: object) -> None:
     logger.info("value: %r", value)
                          
     encryptor = _make_temporary_encryptor()
@@ -156,6 +156,7 @@ def test__encrypt_decrypt(index, value):
     encrypted = encryptor.encrypt(value)
     decrypted = encryptor.decrypt(encrypted)
     if isinstance(value, float) and math.isnan(value):
+        assert isinstance(decrypted, float)
         assert math.isnan(decrypted)
 
     else:
@@ -168,7 +169,7 @@ def test__encrypt_decrypt(index, value):
     (1.1, 'password'),
     (1.2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
 ))
-def test__encrypt_decrypt_from_file(index, value):
+def test__encrypt_decrypt_from_file(index: float, value: str) -> None:
     encryptor = _make_temporary_encryptor()
 
     with tempfile.TemporaryDirectory() as directory:
@@ -187,7 +188,8 @@ def test__encrypt_decrypt_from_file(index, value):
     (1.1, 'password'),
     (1.2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
 ))
-def test__encrypt_decrypt_from_file__no_change(index, value):
+def test__encrypt_decrypt_from_file__no_change(
+        index: float, value: str) -> None:
     save = False
 
     key_filename = testregression.make_filename(
@@ -225,7 +227,8 @@ def test__encrypt_decrypt_from_file__no_change(index, value):
     (1.1, 'password'),
     (1.2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
 ))
-def test__encrypt_decrypt_from_file__no_change__auto_rotate(index, value):
+def test__encrypt_decrypt_from_file__no_change__auto_rotate(
+        index: float, value: str) -> None:
     primary_key = encrypt.EncryptorDecryptor.generate_key()
 
     primary_encryptor = encrypt.EncryptorDecryptor(primary_key)
@@ -264,7 +267,7 @@ def test__encrypt_decrypt_from_file__no_change__auto_rotate(index, value):
     return
 
 
-def test__decrypt_from_file__no_file_exception():
+def test__decrypt_from_file__no_file_exception() -> None:
     encryptor = _make_temporary_encryptor()
 
     with pytest.raises(FileNotFoundError):
@@ -277,7 +280,7 @@ def test__decrypt_from_file__no_file_exception():
     None,
     'str',
 ))
-def test__decrypt_from_file__no_file__default(default):
+def test__decrypt_from_file__no_file__default(default: object) -> None:
     encryptor = _make_temporary_encryptor()
 
     value = encryptor.decrypt_from_file(

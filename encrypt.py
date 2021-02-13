@@ -12,6 +12,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import msgpack  #TODO: Can use Packer class for speed up
 from typing import (
+    Any,
     Sequence,
     Union,
 )
@@ -54,6 +55,7 @@ def key_from_password(password: str, salt: bytes) -> bytes:
     return key
 
 
+#TODO: Split `msgpack_ext_hook` per type
 _TUPLE_TYPE = 100
 _SET_TYPE = 101
 
@@ -66,7 +68,7 @@ def _packb(value):
     return encoded
 
 
-def _unpackb(encoded):
+def _unpackb(encoded: bytes) -> object:
     value = msgpack.unpackb(encoded, raw=False, ext_hook=msgpack_ext_hook)
     return value
 
@@ -86,7 +88,8 @@ def msgpack_default(obj):  #TODO: rename `_msgpack_default()`
     return msgpack.ExtType(obj_type, data)
 
 
-def msgpack_ext_hook(code, data):  #TODO: rename `_msgpack_ext_hook()`
+#TODO: Split `msgpack_ext_hook` per type
+def msgpack_ext_hook(code: int, data: bytes):  #TODO: rename `_msgpack_ext_hook()`
 
     if code == _TUPLE_TYPE:
         obj = tuple(_unpackb(data))
@@ -153,7 +156,7 @@ class EncryptorDecryptor:
 
 
     @staticmethod
-    def _read_file(filename):
+    def _read_file(filename: str) -> bytes:
         with open(filename, 'rb') as f:
             encrypted = f.read()
 
@@ -236,7 +239,7 @@ class EncryptorDecryptor:
 
 
     @classmethod
-    def _decrypt(cls, fernet, encrypted):
+    def _decrypt(cls, fernet, encrypted) -> Any:
 
         def _get_encoded(encrypted):
             try:
@@ -271,7 +274,7 @@ class EncryptorDecryptor:
         try:
             encrypted = self._read_file(filename)
 
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             if use_default:
                 return default
 
@@ -303,7 +306,7 @@ class EncryptorDecryptor:
             self._fernet, filename, use_default=use_default, default=default)
 
 
-    def rotate_file(self, filename):
+    def rotate_file(self, filename: str) -> None:
         """
         Encrypt contents of a file again with the primary key
 
