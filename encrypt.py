@@ -12,7 +12,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import msgpack  #TODO: Can use Packer class for speed up
 from typing import (
-    Any,
+    Iterable,
     Sequence,
     Union,
 )
@@ -60,11 +60,12 @@ _TUPLE_TYPE = 100
 _SET_TYPE = 101
 
 
-def _packb(value):
+def _packb(value: object) -> bytes:
     encoded = msgpack.packb(
         value,
         use_bin_type=True, strict_types=True,
         default=msgpack_default)
+    assert isinstance(encoded, bytes)  #TODO: Somehow msgpack.packb() returns type Any
     return encoded
 
 
@@ -73,7 +74,7 @@ def _unpackb(encoded: bytes) -> object:
     return value
 
 
-def msgpack_default(obj):  #TODO: rename `_msgpack_default()`
+def msgpack_default(obj: Iterable[object]) -> msgpack.ExtType:  #TODO: rename `_msgpack_default()`
     if isinstance(obj, tuple):
         obj_type = _TUPLE_TYPE
         data = _packb([each for each in obj])
@@ -89,13 +90,21 @@ def msgpack_default(obj):  #TODO: rename `_msgpack_default()`
 
 
 #TODO: Split `msgpack_ext_hook` per type
-def msgpack_ext_hook(code: int, data: bytes):  #TODO: rename `_msgpack_ext_hook()`
+def msgpack_ext_hook(code: int, data: bytes) -> object:  #TODO: rename `_msgpack_ext_hook()`
 
     if code == _TUPLE_TYPE:
-        obj = tuple(_unpackb(data))
+        unpacked_iterable = _unpackb(data)
+        # warning: https://stackoverflow.com/a/36407550/2400328
+        # Using `Iterable` to convince `mypy`
+        assert isinstance(unpacked_iterable, Iterable)
+        obj: object = tuple(unpacked_iterable)
 
     elif code == _SET_TYPE:
-        obj = set(_unpackb(data))
+        unpacked_iterable = _unpackb(data)
+        # warning: https://stackoverflow.com/a/36407550/2400328
+        # Using `Iterable` to convince `mypy`
+        assert isinstance(unpacked_iterable, Iterable)
+        obj = set(unpacked_iterable)
         
     else:
         obj = msgpack.ExtType(code, data)
@@ -110,7 +119,8 @@ class EncryptorDecryptor:
     This can encrypt and decrypt various types of data.
     """
 
-    _fernet: Union[Fernet, MultiFernet]
+    _FernetType = Union[Fernet, MultiFernet]
+    _fernet: _FernetType
     _primary_fernet: Fernet
 
     def __init__(self, key: Union[bytes, Sequence[bytes]]):
@@ -120,10 +130,11 @@ class EncryptorDecryptor:
           first (primary) key is used for encryption. Keys must be generated
           with :func:`generate_key()`.
         """
-        def _check_key(key):
+        def _check_key(key: bytes) -> None:
             decoded_key = base64.urlsafe_b64decode(key)
             assert len(decoded_key) == 32, \
-                "Key length: %d\n%s" % (len(decoded_key), decoded_key)
+                "Key length: %d\n%s" % \
+                (len(decoded_key), decoded_key)  # type:ignore[str-bytes-safe]
 
 
         if isinstance(key, bytes):
@@ -164,7 +175,8 @@ class EncryptorDecryptor:
 
     
     @staticmethod
-    def _write_file(encrypted, filename, overwrite=False):
+    def _write_file(
+            encrypted: bytes, filename: str, overwrite: bool = False) -> None:
         if overwrite:
             mode = 'wb'
 
@@ -183,14 +195,15 @@ class EncryptorDecryptor:
 
 
     @staticmethod
-    def _make_RecoveredException_InvalidToken(e):
+    def _make_RecoveredException_InvalidToken(
+            e: cryptography.fernet.InvalidToken) -> RecoveredException:
         try:
             raise RecoveredException(
                 "Could not read value",
                 reason=InvalidToken,
                 logger=_logger) from e
 
-        except Exception as e:
+        except RecoveredException as e:
             return e
 
         return
@@ -220,7 +233,8 @@ class EncryptorDecryptor:
         
 
     def encrypt_to_file(
-            self, value: object, filename: str, overwrite: bool = False):
+            self, value: object, filename: str, overwrite: bool = False
+    ) -> None:
         """
         Encrypt various types of data and save to file
 
@@ -239,9 +253,9 @@ class EncryptorDecryptor:
 
 
     @classmethod
-    def _decrypt(cls, fernet, encrypted) -> Any:
+    def _decrypt(cls, fernet: _FernetType, encrypted: bytes) -> object:
 
-        def _get_encoded(encrypted):
+        def _get_encoded(encrypted: bytes) -> bytes:
             try:
                 encoded = fernet.decrypt(encrypted)
 
@@ -270,7 +284,11 @@ class EncryptorDecryptor:
         
 
     def _decrypt_from_file(
-            self, fernet, filename, use_default=False, default=None):
+            self, fernet: _FernetType,
+            filename: str,
+            use_default: bool = False,
+            default: object = None
+    ) -> object:
         try:
             encrypted = self._read_file(filename)
 
@@ -288,7 +306,8 @@ class EncryptorDecryptor:
             self,
             filename: str,
             use_default: bool = False,
-            default: object = None):
+            default: object = None
+    ) -> object:
         """
         Decrypt contents of file saved by :func:`encrypt_to_file()`
 
