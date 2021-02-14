@@ -5,6 +5,7 @@ import os
 import pickle
 from typing import (
     Optional,
+    TypeVar,
     Union,
 )
 
@@ -12,6 +13,9 @@ from . import introspect
 
 import pylog
 _logger = pylog.getLogger(__name__)
+
+
+_ParameterType = TypeVar('_ParameterType')
 
 
 def make_filename(
@@ -57,7 +61,12 @@ def make_filename(
     return filename
 
 
-def _save_or_load(value, save, index=None, suffix=None, depth=1):
+def _save_or_load(
+        value: _ParameterType, save: bool,
+        index: Union[None, int, float] = None,
+        suffix: Optional[str] = None,
+        depth: int = 1
+) -> _ParameterType:
 
     class CannotRead:
         """ Something that should not exist elsewhere"""
@@ -85,7 +94,7 @@ def _save_or_load(value, save, index=None, suffix=None, depth=1):
 
 
 def assert_no_change(
-        value,
+        value: object,
         save: bool,
         index: Union[None, int, float] = None,
         suffix: Optional[str] = None,
