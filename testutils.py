@@ -1,13 +1,16 @@
 import sys
-from collections.abc import Collection
 from typing import (
     Any,
     Callable,
+    Collection,
     Dict,
     Iterable,
     List,
+    Protocol,
     Set,
     Tuple,
+    TypeVar,
+    Union,
 )
 
 import pylog
@@ -16,8 +19,10 @@ _logger = pylog.getLogger(__name__)
 
 Operator = Callable[[Any, Any], bool]
 
+_ObjectType = TypeVar('_ObjectType')
 
-def eq(one, another) -> bool:
+
+def eq(one: object, another: object) -> bool:
     """
     Function equivalent to the equals operator.
 
@@ -29,7 +34,12 @@ def eq(one, another) -> bool:
     return one == another
 
 
-def equals(one, another) -> bool:  #TODO: rename `equals_method`
+class _HasEquals(Protocol):
+    def equals(self, value: object) -> bool:
+        ...
+
+
+def equals(one: _HasEquals, another: object) -> bool:  #TODO: rename `equals_method`
     """
     Function equivalent to the `equals()` method.
 
@@ -41,7 +51,11 @@ def equals(one, another) -> bool:  #TODO: rename `equals_method`
     return one.equals(another)
 
 
-def equal_set(one_set: Collection, another_set: Collection, equals=eq) -> bool:  #TODO: reimplemet using `set()
+def equal_set(
+        one_set: Collection[object],
+        another_set: Collection[object],
+        equals: Callable[[object, object], bool] = eq
+) -> bool:  #TODO: reimplemet using `set()`
     """
     Check for equality between two iterables ignoring order
     
@@ -148,7 +162,8 @@ def current_function_name(pop_stack: int = 0) -> str:
     return sys._getframe(pop_stack + 1).f_code.co_name
 
 
-def combine_lists(*args) -> Iterable:  #TODO: test
+def combine_lists(
+        *args: Union[object, Iterable[object]]) -> Iterable[object]:  #TODO: test
     """
     Create a list of lists by taking one element from each of the arguments.
     Can be used to create test parameters from combinations.
@@ -191,7 +206,8 @@ def combine_lists(*args) -> Iterable:  #TODO: test
     return result
 
 
-def list_list_to_tuple_set(list_list: List[List]) -> Set[Tuple]:
+def list_list_to_tuple_set(
+        list_list: List[List[_ObjectType]]) -> Set[Tuple[_ObjectType, ...]]:
     """
     Convert list of lists to set of tuples.
 
