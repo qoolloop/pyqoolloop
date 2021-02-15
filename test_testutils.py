@@ -5,7 +5,9 @@ from typing import (
 )
 
 from .testutils import (
+    combine_lists,
     included,
+    list_list_to_tuple_set,
 )
 
 
@@ -32,3 +34,23 @@ from .testutils import (
 def test__included(
         one: Iterable[Any], another: Iterable[Any], result: bool) -> None:
     assert result == included(one, another)
+
+
+@pytest.mark.parametrize("expected_result, one_list, another_list", [
+    ([], [], []),
+    ([], [1], []),
+    ([[1]], [1], [()]),
+    ([], [], [2]),
+    ([[2]], [()], [2]),
+    ([[3, 4]], [[3]], [4]),
+    ([[5, 7], [5, 8], [6, 7], [6, 8]], [5, 6], [7, 8]),
+    ([[5, 6, 10], [5, 6, 7, 8], [9, 10], [9, 7, 8]],
+     [(5, 6), 9], [10, (7, 8)]),
+])
+def test_combine_lists(expected_result, one_list, another_list):
+    expected_set = list_list_to_tuple_set(expected_result)
+
+    result_list = combine_lists(one_list, another_list)
+    result_set = list_list_to_tuple_set(result_list)
+
+    assert expected_set == result_set
