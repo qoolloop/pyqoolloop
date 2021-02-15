@@ -2,6 +2,7 @@ import pytest
 from typing import (
     Any,
     Iterable,
+    Union,
 )
 
 from .testutils import (
@@ -47,7 +48,11 @@ def test__included(
     ([[5, 6, 10], [5, 6, 7, 8], [9, 10], [9, 7, 8]],
      [(5, 6), 9], [10, (7, 8)]),
 ])
-def test_combine_lists(expected_result, one_list, another_list):
+def test_combine_lists(
+        expected_result: Iterable[Iterable[object]],
+        one_list: Union[object, Iterable[object]],
+        another_list: Union[object, Iterable[object]]
+) -> None:
     expected_set = list_list_to_tuple_set(expected_result)
 
     result_list = combine_lists(one_list, another_list)

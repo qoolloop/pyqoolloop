@@ -163,7 +163,8 @@ def current_function_name(pop_stack: int = 0) -> str:
 
 
 def combine_lists(
-        *args: Union[object, Iterable[object]]) -> Iterable[object]:  #TODO: test
+        *args: Union[_ObjectType, Iterable[_ObjectType]]
+) -> Iterable[Iterable[_ObjectType]]:  #TODO: test
     """
     Create a list of lists by taking one element from each of the arguments.
     Can be used to create test parameters from combinations.
@@ -207,7 +208,8 @@ def combine_lists(
 
 
 def list_list_to_tuple_set(
-        list_list: List[List[_ObjectType]]) -> Set[Tuple[_ObjectType, ...]]:
+        list_list: Iterable[Iterable[_ObjectType]]
+) -> Set[Tuple[_ObjectType, ...]]:
     """
     Convert list of lists to set of tuples.
 
