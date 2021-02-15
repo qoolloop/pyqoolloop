@@ -37,25 +37,24 @@ def test__included(
     assert result == included(one, another)
 
 
-@pytest.mark.parametrize("expected_result, one_list, another_list", [
-    ([], [], []),
-    ([], [1], []),
-    ([[1]], [1], [()]),
-    ([], [], [2]),
-    ([[2]], [()], [2]),
-    ([[3, 4]], [[3]], [4]),
-    ([[5, 7], [5, 8], [6, 7], [6, 8]], [5, 6], [7, 8]),
+@pytest.mark.parametrize("expected_result, args", [
+    ([], ([], [])),
+    ([], ([1], [])),
+    ([[1]], ([1], [()])),
+    ([], ([], [2])),
+    ([[2]], ([()], [2])),
+    ([[3, 4]], ([[3]], [4])),
+    ([[5, 7], [5, 8], [6, 7], [6, 8]], ([5, 6], [7, 8])),
     ([[5, 6, 10], [5, 6, 7, 8], [9, 10], [9, 7, 8]],
-     [(5, 6), 9], [10, (7, 8)]),
+     ([(5, 6), 9], [10, (7, 8)])),
 ])
 def test_combine_lists(
         expected_result: Iterable[Iterable[object]],
-        one_list: Union[object, Iterable[object]],
-        another_list: Union[object, Iterable[object]]
+        args: Iterable[Union[object, Iterable[object]]]
 ) -> None:
     expected_set = list_list_to_tuple_set(expected_result)
 
-    result_list = combine_lists(one_list, another_list)
+    result_list = combine_lists(*args)
     result_set = list_list_to_tuple_set(result_list)
 
     assert expected_set == result_set
