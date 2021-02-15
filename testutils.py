@@ -1,3 +1,4 @@
+from typing_extensions import Protocol
 import sys
 from typing import (
     Any,
@@ -6,7 +7,6 @@ from typing import (
     Dict,
     Iterable,
     List,
-    Protocol,
     Set,
     Tuple,
     TypeVar,
