@@ -5,8 +5,12 @@ from typing import (
     Union,
 )
 
+from pyexception.exception import RecoveredException
+from pyexception.testutils import raises
+
 from .testutils import (
     combine_lists,
+    EmptyResult,
     included,
     list_list_to_tuple_set,
 )
@@ -54,7 +58,19 @@ def test_combine_lists(
 ) -> None:
     expected_set = list_list_to_tuple_set(expected_result)
 
-    result_list = combine_lists(*args)
-    result_set = list_list_to_tuple_set(result_list)
+    if (len(expected_result) == 0):
+        with raises(RecoveredException, EmptyResult):
+            result_list = combine_lists(*args)
 
-    assert expected_set == result_set
+        with raises(RecoveredException, EmptyResult):
+            result_list = combine_lists(*args, raise_if_empty=True)
+
+    else:
+        for raise_if_empty in [True, False]:
+            result_list = combine_lists(*args, raise_if_empty=raise_if_empty)
+            
+            result_set = list_list_to_tuple_set(result_list)
+
+            assert expected_set == result_set
+
+    return
