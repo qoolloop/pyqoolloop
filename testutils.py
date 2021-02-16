@@ -207,11 +207,11 @@ def combine_lists(
                                   
     result = []
     for another in another_list:
-        if not isinstance(another, (list, tuple)):
+        if not isinstance(another, Iterable):
             another = [another]
             
         for one in one_list:
-            if not isinstance(one, (list, tuple)):
+            if not isinstance(one, Iterable):
                 one = [one]
                 
             else:
