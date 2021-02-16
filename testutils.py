@@ -6,11 +6,15 @@ from typing import (
     Collection,
     Dict,
     Iterable,
-    List,
     Set,
     Tuple,
     TypeVar,
     Union,
+)
+
+from pyexception.exception import (
+    Reason,
+    RecoveredException,
 )
 
 import pylog
@@ -162,10 +166,16 @@ def current_function_name(pop_stack: int = 0) -> str:
     return sys._getframe(pop_stack + 1).f_code.co_name
 
 
+class EmptyResult(Reason):
+    """Result is empty"""
+    pass
+
+
 def combine_lists(
-        *args: Union[_ObjectType, Iterable[_ObjectType]]
-) -> Iterable[Iterable[_ObjectType]]:  #TODO: test
-    """
+        *args: Union[object, Iterable[object]],
+        raise_if_empty: bool = True
+) -> Iterable[object]:  #TODO: test
+    r"""
     Create a list of lists by taking one element from each of the arguments.
     Can be used to create test parameters from combinations.
 
@@ -177,6 +187,15 @@ def combine_lists(
       [[a, c], [a, d], [b, c], [b, d]]
       >>> combline_lists((a, b), c)
       [[a, c], [b, c]]
+
+    :param \*args: Lists to combine
+    :param raise_if_empty: If `True`, raise an exception if the result is
+      empty.
+
+    :return: combined result.
+
+    :raises RecoveredException(EmptyResult): The result is empty and
+      `raise_if_empty` was `True` or omitted.
     """
     assert len(args) >= 1
 
@@ -195,8 +214,8 @@ def combine_lists(
             if not isinstance(one, (list, tuple)):
                 one = [one]
                 
-            elif isinstance(one, tuple):
-                one = list(one)
+            else:
+                one = list(one)  # need to make copy not to modify original
 
             one.extend(another)
 
@@ -204,6 +223,9 @@ def combine_lists(
         # endfor
     # endfor
 
+    if len(result) == 0:
+        raise RecoveredException("Empty result", reason=EmptyResult)
+    
     return result
 
 
