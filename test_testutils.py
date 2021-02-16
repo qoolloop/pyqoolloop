@@ -2,6 +2,7 @@ import pytest
 from typing import (
     Any,
     Iterable,
+    Sequence,
     Union,
 )
 
@@ -44,6 +45,7 @@ def test__included(
 @pytest.mark.parametrize("expected_result, args", [
     ([], ([],)),  # 1 empty argument
     ([1], ([1],)),  # 1 single entity argument
+    ([1], (1,)),  # 1 single entity argument
     ([1, 2], ([1, 2],)),  # 1 two entity argument
     ([], ([], [])),
     ([], ([1], [])),
@@ -56,7 +58,7 @@ def test__included(
      ([(5, 6), 9], [10, (7, 8)])),
 ])
 def test_combine_lists(
-        expected_result: Iterable[Iterable[object]],
+        expected_result: Sequence[Iterable[object]],
         args: Iterable[Union[object, Iterable[object]]]
 ) -> None:
     expected_set = to_set(expected_result)

@@ -7,9 +7,8 @@ from typing import (
     Dict,
     Hashable,
     Iterable,
-    overload,
     Set,
-    Tuple,
+    Sized,
     TypeVar,
     Union,
 )
@@ -174,7 +173,7 @@ class EmptyResult(Reason):
 
 
 def combine_lists(
-        *args: Union[object, Iterable[object]],
+        *args: Union[object, Sized],
         raise_if_empty: bool = True
 ) -> Iterable[object]:  #TODO: test
     r"""
@@ -202,7 +201,11 @@ def combine_lists(
     assert len(args) >= 1
 
     if len(args) == 1:
-        result = args[0]
+        if not isinstance(args[0], Iterable):
+            result = [args[0]]
+
+        else:
+            result = args[0]
 
     else:
         one_list = args[0]
@@ -232,22 +235,10 @@ def combine_lists(
     return result
 
 
-@overload
-def to_set(
-        iterable: Iterable[Iterable[_ObjectType]]
-) -> Set[Tuple[_ObjectType, ...]]:
-    ...
-    
-
-@overload
+#TODO: Do we need this in `testutils`?
 def to_set(
         iterable: Iterable[Hashable]
 ) -> Set[Hashable]:
-    ...
-    
-
-#TODO: Do we need this in `testutils`?
-def to_set(iterable):
     """
     Convert iterable to set.
 
