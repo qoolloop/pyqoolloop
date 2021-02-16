@@ -897,7 +897,7 @@ def test_synchronized_on_function__dont_synchronize() -> None:
         # point to this target function anymore after decoration
         return _inc_dec(variables)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(AssertionError):  # Should raise at least sometimes.
         _test_synchronized(variables, function)
     # endwith
 
