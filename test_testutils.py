@@ -12,7 +12,7 @@ from .testutils import (
     combine_lists,
     EmptyResult,
     included,
-    list_list_to_tuple_set,
+    to_set,
 )
 
 
@@ -42,6 +42,9 @@ def test__included(
 
 
 @pytest.mark.parametrize("expected_result, args", [
+    ([], ([],)),  # 1 empty argument
+    ([1], ([1],)),  # 1 single entity argument
+    ([1, 2], ([1, 2],)),  # 1 two entity argument
     ([], ([], [])),
     ([], ([1], [])),
     ([[1]], ([1], [()])),
@@ -56,7 +59,7 @@ def test_combine_lists(
         expected_result: Iterable[Iterable[object]],
         args: Iterable[Union[object, Iterable[object]]]
 ) -> None:
-    expected_set = list_list_to_tuple_set(expected_result)
+    expected_set = to_set(expected_result)
 
     if (len(expected_result) == 0):
         with raises(RecoveredException, EmptyResult):
@@ -69,7 +72,7 @@ def test_combine_lists(
         for raise_if_empty in [True, False]:
             result_list = combine_lists(*args, raise_if_empty=raise_if_empty)
             
-            result_set = list_list_to_tuple_set(result_list)
+            result_set = to_set(result_list)
 
             assert expected_set == result_set
 

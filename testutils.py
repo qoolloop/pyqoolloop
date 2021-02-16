@@ -5,7 +5,9 @@ from typing import (
     Callable,
     Collection,
     Dict,
+    Hashable,
     Iterable,
+    overload,
     Set,
     Tuple,
     TypeVar,
@@ -200,28 +202,29 @@ def combine_lists(
     assert len(args) >= 1
 
     if len(args) == 1:
-        return args[0]
-    
-    one_list = args[0]
-    another_list = combine_lists(*args[1:])
-                                  
-    result = []
-    for another in another_list:
-        if not isinstance(another, Iterable):
-            another = [another]
-            
-        for one in one_list:
-            if not isinstance(one, Iterable):
-                one = [one]
-                
-            else:
-                one = list(one)  # need to make copy not to modify original
+        result = args[0]
 
-            one.extend(another)
+    else:
+        one_list = args[0]
+        another_list = combine_lists(*args[1:])
 
-            result.append(one)
+        result = []
+        for another in another_list:
+            if not isinstance(another, Iterable):
+                another = [another]
+
+            for one in one_list:
+                if not isinstance(one, Iterable):
+                    one = [one]
+
+                else:
+                    one = list(one)  # need to make copy not to modify original
+
+                one.extend(another)
+
+                result.append(one)
+            # endfor
         # endfor
-    # endfor
 
     if len(result) == 0:
         raise RecoveredException("Empty result", reason=EmptyResult)
@@ -229,18 +232,38 @@ def combine_lists(
     return result
 
 
-def list_list_to_tuple_set(
-        list_list: Iterable[Iterable[_ObjectType]]
+@overload
+def to_set(
+        iterable: Iterable[Iterable[_ObjectType]]
 ) -> Set[Tuple[_ObjectType, ...]]:
+    ...
+    
+
+@overload
+def to_set(
+        iterable: Iterable[Hashable]
+) -> Set[Hashable]:
+    ...
+    
+
+#TODO: Do we need this in `testutils`?
+def to_set(iterable):
     """
-    Convert list of lists to set of tuples.
+    Convert iterable to set.
 
-    :param list_list: List of lists
+    If elements of the iterable are also iterable (may not be hashable),
+    they will be converted to tuples.
 
-    :returns: Set of tuples.
+    :param iterable: Iterable.
+
+    :returns: Resulting set.
     """
     result = set()
-    for each_list in list_list:
-        result.add(tuple(each_list))
+    for each in iterable:
+        if isinstance(each, Hashable):
+            result.add(each)
+
+        else:
+            result.add(tuple(each))
 
     return result
