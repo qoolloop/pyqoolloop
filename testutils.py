@@ -8,7 +8,6 @@ from typing import (
     Hashable,
     Iterable,
     Set,
-    Sized,
     TypeVar,
     Union,
 )
@@ -173,7 +172,7 @@ class EmptyResult(Reason):
 
 
 def combine_lists(
-        *args: Union[object, Sized],
+        *args: Union[object, Collection[object]],
         raise_if_empty: bool = True
 ) -> Iterable[object]:  #TODO: test
     r"""
@@ -200,15 +199,17 @@ def combine_lists(
     """
     assert len(args) >= 1
 
-    if len(args) == 1:
-        if not isinstance(args[0], Iterable):
-            result = [args[0]]
-
-        else:
-            result = args[0]
+    if not isinstance(args[0], Iterable):
+        args0: Iterable[object] = [args[0]]
 
     else:
-        one_list = args[0]
+        args0 = args[0]
+
+    if len(args) == 1:
+        result = args0
+
+    else:
+        one_list = args0
         another_list = combine_lists(*args[1:])
 
         result = []
@@ -229,10 +230,13 @@ def combine_lists(
             # endfor
         # endfor
 
-    if len(result) == 0:
-        raise RecoveredException("Empty result", reason=EmptyResult)
+    if not raise_if_empty:
+        return result
     
-    return result
+    for each in result:
+        return result  # `result` has element
+    
+    raise RecoveredException("Empty result", reason=EmptyResult)
 
 
 #TODO: Do we need this in `testutils`?
