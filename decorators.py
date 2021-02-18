@@ -20,6 +20,8 @@ import time
 from typing import (
     Any,
     Callable,
+    Dict,
+    FrozenSet,
     Iterable,
     Optional,
     overload,
@@ -62,11 +64,14 @@ class FunctionDecorator:
 
     def __init__(self,
                  called_function:
-                 Callable[..., None],
+                 Callable[..., Any],
+                 # Callable[[Callable[..., Any], ...], Any],
                  function_for_staticmethod:
-                 Optional[Callable[..., None]] = None,
+                 Optional[Callable[..., Any]] = None,
+                 # Optional[Callable[[Callable[..., Any], ...], Any]] = None,
                  function_for_classmethod:
-                 Optional[Callable[..., None]] = None
+                 Optional[Callable[..., Any]] = None
+                 # Optional[Callable[[Callable[..., Any], ...], Any]] = None
                  ) -> None:
         r"""
         :param called_function:
@@ -518,16 +523,24 @@ def synchronized_on_class(__target=None, *, lock_field='__lock'):
     ...
 
 
-def _get_args(target, args, kwargs, exclude_kw=()):
+def _get_args(
+        target: Callable[..., Any], args, kwargs, exclude_kw=()
+) -> OrderedDict[str, Any]:
 
-    def _bind_arguments(target, args, kwargs):
+    def _bind_arguments(
+            target: Callable[..., Any],
+            args: Iterable[Any],
+            kwargs: Dict[str, Any]
+    ) -> OrderedDict[str, Any]:
         signature = inspect.signature(target)
         bind = signature.bind(*args, **kwargs)
         bind.apply_defaults()
         return bind.arguments
 
 
-    def _exclude(arguments, exclude_kw):
+    def _exclude(
+            arguments: OrderedDict[str, Any], exclude_kw: Iterable[str]
+    ) -> None:
         for each in exclude_kw:
             del arguments[each]
         # endfor
@@ -586,7 +599,9 @@ def keep_cache(
     """
 
     # holds tuples (<time>, <value>)
-    cache: OrderedDict[frozenset, Tuple] = OrderedDict()
+    cache: OrderedDict[
+        frozenset, Tuple[datetime.datetime, Any]
+    ] = OrderedDict()
 
     
     @synchronized_on_function(dont_synchronize=dont_synchronize)
@@ -661,11 +676,14 @@ def expire_cache(
     """
 
     # holds tuples (<time>, <value>)
-    cache: OrderedDict[frozenset, Tuple] = OrderedDict()
+    cache: OrderedDict[
+        FrozenSet[Tuple[str, Any]], Tuple[datetime.datetime, Any]
+    ] = OrderedDict()
 
     
     @synchronized_on_function(dont_synchronize=dont_synchronize)
-    def _cached_function(target, *args, **kwargs):
+    def _cached_function(
+            target: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
 
         now = datetime.datetime.utcnow()
         
@@ -695,10 +713,6 @@ def expire_cache(
         function_for_staticmethod=_through_classmethod,
         function_for_classmethod=_through_classmethod)
     return decorator.generic_decorator(__target)
-
-
-def _through_function(target, *args, **kwargs):
-    return target(*args, **kwargs)
 
 
 def extend_with_method(
@@ -772,7 +786,9 @@ def extend_with_class_method(
     return _decorator
 
 
-def extension(__extended_class: Type[object]):
+def extension(
+        __extended_class: Type[object]
+) -> Callable[[DecoratedClass], DecoratedClass]:
     """
     Decorator to add all the methods in a class to another class
 
@@ -782,7 +798,7 @@ def extension(__extended_class: Type[object]):
       `@classmethod` and `@staticmethod`.
     """
 
-    def _decorator(extension_class):
+    def _decorator(extension_class: DecoratedClass) -> DecoratedClass:
         assert isinstance(extension_class, type), \
             "@extension is only for decorating classes"
         
