@@ -123,6 +123,13 @@ class FunctionDecorator:
 
     @overload
     def generic_decorator(
+            self, target: None
+    ) -> Callable[[DecoratedFunction], DecoratedFunction]:
+        ...
+        
+
+    @overload
+    def generic_decorator(
             self, target: DecoratedFunction) -> DecoratedFunction:
         ...
         
@@ -576,12 +583,15 @@ def keep_cache(
     
 
 def keep_cache(
-        __target=None,
+        __target: Optional[DecoratedFunction] = None,
         *,
         keep_time_secs: float,
         max_entries: Optional[int] = None,
         dont_synchronize: bool = False,
-        exclude_kw: Iterable[str] = ()):
+        exclude_kw: Iterable[str] = ()
+) -> Union[
+        DecoratedFunction, Callable[[DecoratedFunction], DecoratedFunction]
+]:
     """
     Decorator to cache returned values of a function for at least the time
     specified since the last call
@@ -600,12 +610,14 @@ def keep_cache(
 
     # holds tuples (<time>, <value>)
     cache: OrderedDict[
-        frozenset, Tuple[datetime.datetime, Any]
+        FrozenSet[Tuple[str, Any]], Tuple[datetime.datetime, Any]
     ] = OrderedDict()
 
     
     @synchronized_on_function(dont_synchronize=dont_synchronize)
-    def _cached_function(target, *args, **kwargs):
+    def _cached_function(
+            target: Callable[..., ReturnType], *args: Any, **kwargs: Any
+    ) -> ReturnType:
 
         now = datetime.datetime.utcnow()
         
@@ -613,7 +625,7 @@ def keep_cache(
         # https://stackoverflow.com/a/39440252/2400328
         key = frozenset(arguments.items())
         if key in cache:
-            value = cache[key][1]
+            value: ReturnType = cache[key][1]
 
             del cache[key]
 
@@ -659,11 +671,13 @@ def expire_cache(
 
 
 def expire_cache(
-        __target=None,
+        __target: Optional[DecoratedFunction] = None,
         *,
         expire_time_secs: float,
         max_entries: Optional[int] = None,
-        dont_synchronize: bool = False):  #TODO: exclude_kw
+        dont_synchronize: bool = False
+) -> Union[
+        DecoratedFunction, Callable[[DecoratedFunction], DecoratedFunction]]:  #TODO: exclude_kw
     """
     Decorator to cache returned values of a function that are held for at most
     a specified amount of time since the first call
