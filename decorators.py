@@ -74,36 +74,6 @@ To be used if the wrapped class has the same methods as the target class.
 """
 
 
-# https://stackoverflow.com/a/56635360/2400328
-class GenericDecoratorFunction(Protocol):
-    """
-    Type for `self.generic_decorator` function
-
-    :param TargetFunction: Type for decorated function.
-    :param TargetClass: Type for decorated class.
-    """
-
-    @overload
-    def __call__(
-            self, target: None
-    ) -> Union[
-        FunctionWrapperFunction[TargetFunction],
-        ClassWrapperFunction[TargetClass]
-    ]:
-        ...
-        
-
-    @overload
-    def __call__(
-            self, target: TargetFunction) -> TargetFunction:
-        ...
-        
-
-    @overload
-    def __call__(self, target: TargetClass) -> TargetClass:
-        ...
-
-
 def _through_classmethod(
         target: TargetCallerFunction[TargetReturnType],
         cls: TargetClass,
@@ -121,7 +91,7 @@ def _through_staticmethod(
     return target(*args, **kwargs)
 
 
-class FunctionDecorator:
+class GenericDecorator:
     """
     A convenience class for creating decorators
 
@@ -194,7 +164,7 @@ class FunctionDecorator:
 
 
     @overload
-    def generic_decorator(
+    def __call__(
             self, target: None
     ) -> Union[
         FunctionWrapperFunction[TargetFunction],
@@ -204,17 +174,17 @@ class FunctionDecorator:
         
 
     @overload
-    def generic_decorator(
+    def __call__(
             self, target: TargetFunction) -> TargetFunction:
         ...
         
 
     @overload
-    def generic_decorator(self, target: TargetClass) -> TargetClass:
+    def __call__(self, target: TargetClass) -> TargetClass:
         ...
         
 
-    def generic_decorator(
+    def __call__(
             self,
             target: Any,  # Union[TargetFunction, TargetClass]  #TODO: Unions don't work with `TypeVar` (mypy 0.800) https://github.com/python/mypy/issues/3644
     ) -> Any:
@@ -227,9 +197,9 @@ class FunctionDecorator:
         """
         Function object to use to return from decorator.
 
-        Return this function itself (`self.generic_decorator`) for decorators
+        Return this function itself (`self.__call__`) for decorators
         with arguments.
-        Return `self.generic_decorator(target)` when there are no arguments.
+        Return `self(target)` when there are no arguments.
         """
 
         @wraps(target)
@@ -285,7 +255,7 @@ class FunctionDecorator:
             for name, value in target_class.__dict__.items():
                 if inspect.isfunction(value):  #TODO: why not `ismethod()`?
                     # These are actually methods
-                    setattr(target_class, name, self.generic_decorator(value))
+                    setattr(target_class, name, self(value))
 
                 elif isinstance(value, staticmethod):
                     descriptor_static = DescriptorForStaticmethod(value)
@@ -302,7 +272,7 @@ class FunctionDecorator:
         if target is None:
             # https://stackoverflow.com/q/653368/2400328
             # @synchronized_on_instance(...) with parentheses
-            return self.generic_decorator
+            return self
 
         decorator_self = self
 
@@ -328,7 +298,7 @@ class FunctionDecorator:
 
 def log_calls(
         logger: logging.Logger, log_result: bool = True
-) -> GenericDecoratorFunction:
+) -> GenericDecorator:
     """
     Decorator to log calls to functions
 
@@ -353,13 +323,13 @@ def log_calls(
         return result
 
 
-    decorator = FunctionDecorator(log_function)
-    return decorator.generic_decorator
+    decorator = GenericDecorator(log_function)
+    return decorator
 
 
 def log_calls_on_exception(
         logger: logging.Logger, log_exception: bool = True
-) -> GenericDecoratorFunction:
+) -> GenericDecorator:
     """
     Decorator to log calls to functions, when exceptions are raised
 
@@ -389,8 +359,8 @@ def log_calls_on_exception(
         return result
 
 
-    decorator = FunctionDecorator(log_function)
-    return decorator.generic_decorator
+    decorator = GenericDecorator(log_function)
+    return decorator
 
 
 # Type hint for `kwargs` is not necessary yet with mypy 0.800
@@ -418,8 +388,8 @@ def pass_args(target: TargetFunction) -> TargetFunction:
         return result
 
     
-    decorator = FunctionDecorator(passer_function)
-    return decorator.generic_decorator(target)
+    decorator = GenericDecorator(passer_function)
+    return decorator(target)
 
 
 raise_exception_for_deprecated = False
@@ -460,8 +430,8 @@ def deprecated(
         return result
 
     
-    decorator = FunctionDecorator(log_function)
-    return decorator.generic_decorator
+    decorator = GenericDecorator(log_function)
+    return decorator
 
 
 #TODO: type hint for `retries` argument added to decorated function
@@ -517,8 +487,8 @@ def retry(
         assert False, "Unexpected execution"
 
     
-    decorator = FunctionDecorator(retry_function)
-    return decorator.generic_decorator
+    decorator = GenericDecorator(retry_function)
+    return decorator
 
 
 @overload
@@ -581,12 +551,12 @@ def synchronized_on_function(
         return __target
         
     #TODO: A little inefficient when dont_synchronize=True
-    decorator = FunctionDecorator(
+    decorator = GenericDecorator(
         _call_function
         if not dont_synchronize else _through_staticmethod,  #TODO: `_through_staticmethod` here?
         function_for_staticmethod=_through_classmethod,
         function_for_classmethod=_through_classmethod)
-    return decorator.generic_decorator(__target)
+    return decorator(__target)
 
 
 @overload
@@ -657,11 +627,11 @@ def synchronized_on_instance(
         return result
 
 
-    decorator = FunctionDecorator(
+    decorator = GenericDecorator(
         call_function,
         function_for_staticmethod=_through_classmethod,
         function_for_classmethod=_through_classmethod)
-    return decorator.generic_decorator(__target)
+    return decorator(__target)
 
 
 def synchronized_on_class(
@@ -788,11 +758,11 @@ def keep_cache(
         return value
 
 
-    decorator = FunctionDecorator(
+    decorator = GenericDecorator(
         _cached_function,
         function_for_staticmethod=_through_classmethod,
         function_for_classmethod=_through_classmethod)
-    return decorator.generic_decorator(__target)
+    return decorator(__target)
 
 
 @overload
@@ -873,11 +843,11 @@ def expire_cache(
         return value
 
 
-    decorator = FunctionDecorator(
+    decorator = GenericDecorator(
         _cached_function,
         function_for_staticmethod=_through_classmethod,
         function_for_classmethod=_through_classmethod)
-    return decorator.generic_decorator(__target)
+    return decorator(__target)
 
 
 def extend_with_method(
