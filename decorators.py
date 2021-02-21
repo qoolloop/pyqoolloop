@@ -26,6 +26,7 @@ from typing import (
     Iterable,
     Optional,
     overload,
+    Protocol,
     Union,
     Tuple,
     Type,
@@ -72,21 +73,35 @@ To be used if the wrapped class has the same methods as the target class.
 :param TargetClass: Type for class that is being decorated.
 """
 
-GenericDecoratorFunction = Callable[
-    [Union[TargetFunction, TargetClass]],
-    Union[
-        TargetFunction,
-        TargetClass,
+
+# https://stackoverflow.com/a/56635360/2400328
+class GenericDecoratorFunction(Protocol):
+    """
+    Type for `self.generic_decorator` function
+
+    :param TargetFunction: Type for decorated function.
+    :param TargetClass: Type for decorated class.
+    """
+
+    @overload
+    def __call__(
+            self, target: None
+    ) -> Union[
         FunctionWrapperFunction[TargetFunction],
         ClassWrapperFunction[TargetClass]
-    ]
-]
-"""
-Type for `self.generic_decorator` function
+    ]:
+        ...
+        
 
-:param TargetFunction: Type for decorated function.
-:param TargetClass: Type for decorated class.
-"""
+    @overload
+    def __call__(
+            self, target: TargetFunction) -> TargetFunction:
+        ...
+        
+
+    @overload
+    def __call__(self, target: TargetClass) -> TargetClass:
+        ...
 
 
 def _through_classmethod(
@@ -200,13 +215,15 @@ class FunctionDecorator:
         
 
     def generic_decorator(
-            self, target: Union[TargetFunction, TargetClass]
-    ) -> Union[
-        TargetFunction,
-        TargetClass,
-        FunctionWrapperFunction[TargetFunction],
-        ClassWrapperFunction[TargetClass]
-    ]:
+            self,
+            target: Any,  # Union[TargetFunction, TargetClass]  #TODO: Unions don't work with `TypeVar` (mypy 0.800) https://github.com/python/mypy/issues/3644
+    ) -> Any:
+    # ) -> Union[  #TODO: Unions don't work with `TypeVar` (mypy 0.800) https://github.com/python/mypy/issues/3644
+    #     TargetFunction,
+    #     TargetClass,
+    #     FunctionWrapperFunction[TargetFunction],
+    #     ClassWrapperFunction[TargetClass]
+    # ]:
         """
         Function object to use to return from decorator.
 
@@ -234,9 +251,11 @@ class FunctionDecorator:
                 ) -> TargetCallerFunction[TargetReturnType]:
 
                     def called_function(
-                            *args: Any, **kwargs: Any) -> TargetReturnType:
+                            *args: Any, **kwargs: Any
+                    ) -> Any:  # TargetReturnType:
                         function = self.method.__get__(instance, owner)
                         return decorator_self.function_for_staticmethod(
+                            #TODO: Incompatible return value type (got "TargetReturnType", expected "TargetReturnType")  [return-value]
                             function, owner, *args, **kwargs)
 
                     return called_function
@@ -253,9 +272,11 @@ class FunctionDecorator:
                 ) -> TargetCallerFunction[TargetReturnType]:
 
                     def called_function(
-                            *args: Any, **kwargs: Any) -> TargetReturnType:
+                            *args: Any, **kwargs: Any
+                    ) -> Any:  #TODO: TargetReturnType:
                         function = self.method.__get__(instance, owner)
                         return decorator_self.function_for_classmethod(
+                            #TODO: Incompatible return value type (got "TargetReturnType", expected "TargetReturnType")  [return-value]
                             function, owner, *args, **kwargs)
 
                     return called_function
@@ -286,7 +307,7 @@ class FunctionDecorator:
         decorator_self = self
 
         if isinstance(target, type):  # TargetClass
-            return _make_class_decorator(cast(TargetClass, target))
+            return _make_class_decorator(target)
 
         elif callable(target):
             return called_function
@@ -307,7 +328,7 @@ class FunctionDecorator:
 
 def log_calls(
         logger: logging.Logger, log_result: bool = True
-) -> GenericDecoratorFunction[TargetFunction, TargetClass]:
+) -> GenericDecoratorFunction:
     """
     Decorator to log calls to functions
 
@@ -338,7 +359,7 @@ def log_calls(
 
 def log_calls_on_exception(
         logger: logging.Logger, log_exception: bool = True
-) -> GenericDecoratorFunction[TargetFunction, TargetClass]:
+) -> GenericDecoratorFunction:
     """
     Decorator to log calls to functions, when exceptions are raised
 
