@@ -525,7 +525,8 @@ def synchronized_on_function(
         *,
         lock_field: str = '__lock',
         dont_synchronize: bool = False
-) -> Union[TargetFunction, FunctionWrapperFunction[TargetFunction]]:
+) -> Callable[..., Any]:
+# Union[TargetFunction, FunctionWrapperFunction[TargetFunction]]:  #TODO: doesn't work (mypy 0.800) https://github.com/python/mypy/issues/3644
     """
     Used to decorate function that needs thread locking for access
 
@@ -592,15 +593,17 @@ def synchronized_on_instance(
     
 
 def synchronized_on_instance(
-        __target: Union[None, TargetFunction, TargetClass] = None,
+        __target: Any = None,
+        # __target: Union[None, TargetFunction, TargetClass] = None,  #TODO: Unions don't work with `TypeVar` (mypy 0.800) https://github.com/python/mypy/issues/3644
         *,
         lock_field: str = '__lock'
-) -> Union[
-    TargetFunction,
-    TargetClass,
-    FunctionWrapperFunction[TargetFunction],
-    ClassWrapperFunction[TargetClass]
-]:
+) -> Any:
+# ) -> Union[  #TODO: Unions don't work with `TypeVar` (mypy 0.800) https://github.com/python/mypy/issues/3644
+#     TargetFunction,
+#     TargetClass,
+#     FunctionWrapperFunction[TargetFunction],
+#     ClassWrapperFunction[TargetClass]
+# ]:
     """
     Used to decorate instance methods and classes that need thread locking
     for access
@@ -712,7 +715,7 @@ def keep_cache(
         dont_synchronize: bool = False,
         exclude_kw: Iterable[str] = ()
 ) -> Callable[..., Any]:
-# Union[TargetFunction, FunctionWrapperFunction[TargetFunction]]:  #TODO: doesn't work
+# Union[TargetFunction, FunctionWrapperFunction[TargetFunction]]:  #TODO: Unions don't work with `TypeVar` (mypy 0.800) https://github.com/python/mypy/issues/3644
     """
     Decorator to cache returned values of a function for at least the time
     specified since the last call
@@ -800,7 +803,7 @@ def expire_cache(
     max_entries: Optional[int] = None,
     dont_synchronize: bool = False
 ) -> Callable[..., Any]:
-# Union[TargetFunction, FunctionWrapperFunction[TargetFunction]]:  #TODO: Somehow doesn't work.
+# Union[TargetFunction, FunctionWrapperFunction[TargetFunction]]:  #TODO: Unions don't work with `TypeVar`. (mypy 0.800) https://github.com/python/mypy/issues/3644
     #TODO: exclude_kw
     """
     Decorator to cache returned values of a function that are held for at most
