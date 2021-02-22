@@ -26,7 +26,6 @@ from typing import (
     Iterable,
     Optional,
     overload,
-    Protocol,
     Union,
     Tuple,
     Type,
@@ -54,6 +53,7 @@ Generic type for function that calls the decorated function
 :param TargetReturnType: Return type of the decorated function.
 """
 
+#TODO: Alias currently doesn't work https://github.com/python/mypy/issues/8273
 FunctionWrapperFunction = Callable[[TargetFunction], TargetFunction]
 """
 Type for function that wraps a decorated function
@@ -363,8 +363,20 @@ def log_calls_on_exception(
     return decorator
 
 
-# Type hint for `kwargs` is not necessary yet with mypy 0.800
+@overload
 def pass_args(target: TargetFunction) -> TargetFunction:
+    ...
+
+
+@overload
+def pass_args(target: TargetClass) -> TargetClass:
+    ...
+
+    
+# Type hint for `kwargs` is not necessary yet with mypy 0.800
+def pass_args(
+        target: Any  # Union[TargetFunction, TargetClass]  #TODO: Union doesn't work with `TypeVar` (mypy -0.800)
+) -> Any:  # Union[TargetFunction, TargetClass]:  #TODO: Union doesn't work with `TypeVar` (mypy -0.800)
     """
     Decorator that passes arguments to the function as a dict as an additional
     argument named `kwargs`
@@ -507,7 +519,8 @@ def synchronized_on_function(
         *,
         lock_field: str = '__lock',
         dont_synchronize: bool = False
-) -> FunctionWrapperFunction[TargetFunction]:
+) -> Callable[[TargetFunction], TargetFunction]:
+    # FunctionWrapperFunction[TargetFunction]:
     ...
 
 
@@ -922,7 +935,7 @@ def extend_with_class_method(
 
 
 def extension(
-        __extended_class: TargetClass) -> ClassWrapperFunction[TargetClass]:
+        __extended_class: Type[object]) -> ClassWrapperFunction[TargetClass]:
     """
     Decorator to add all the methods in a class to another class
 
