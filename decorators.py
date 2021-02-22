@@ -33,9 +33,6 @@ from typing import (
 )
 
 
-#TODO: temporary workaround
-Target = TypeVar('Target')
-
 # https://mypy.readthedocs.io/en/stable/generics.html#declaring-decorators
 TargetReturnType = TypeVar('TargetReturnType')
 """Return type"""
@@ -49,6 +46,9 @@ TargetFunction = TypeVar(
 
 TargetClass = TypeVar('TargetClass', bound=Type[object])
 """Type for decorated class"""
+
+Target = TypeVar('Target', Callable[..., Any], Type[object])
+"""Type for decorated function or class"""
 
 TargetCallerFunction = Callable[..., TargetReturnType]  #TODO: Callable[[TargetFunction, ...], TargetReturnType]
 """
@@ -367,20 +367,10 @@ def log_calls_on_exception(
     return decorator
 
 
-@overload
-def pass_args(target: TargetFunction) -> TargetFunction:
-    ...
-
-
-@overload
-def pass_args(target: TargetClass) -> TargetClass:
-    ...
-
-    
 # Type hint for `kwargs` is not necessary yet with mypy 0.800
 def pass_args(
-        target: Union[TargetFunction, TargetClass]
-) -> Any:  # Union[TargetFunction, TargetClass]:  #TODO: Union doesn't work with `TypeVar` (mypy -0.800)
+        target: Target
+) -> Target:
     """
     Decorator that passes arguments to the function as a dict as an additional
     argument named `kwargs`
@@ -610,7 +600,7 @@ def synchronized_on_instance(
     
 
 def synchronized_on_instance(
-        __target: Union[None, TargetFunction, TargetClass] = None,
+        __target: Any = None,  # Union[None, TargetFunction, TargetClass] = None,  #TODO: Unions don't work with `TypeVar` (mypy 0.800) https://github.com/python/mypy/issues/3644
         *,
         lock_field: str = '__lock'
 ) -> Any:
