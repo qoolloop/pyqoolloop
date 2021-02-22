@@ -411,7 +411,8 @@ def deprecated(
         logger: logging.Logger,
         message: Optional[str] = None,
         raise_exception: Optional[bool] = None
-) -> FunctionWrapperFunction[TargetFunction]:
+) -> Callable[[TargetFunction], TargetFunction]:
+    # FunctionWrapperFunction[TargetFunction]:
     """
     Used to decorate deprecated functions and classes
 
@@ -455,7 +456,8 @@ def retry(
             Type[BaseException], Tuple[Type[BaseException], ...]],
         interval_secs: float = 0.0,
         extra_argument: bool = False
-) -> FunctionWrapperFunction[TargetFunction]:
+) -> Callable[[TargetFunction], TargetFunction]:
+    # FunctionWrapperFunction[TargetFunction]:
     """
     Used to decorate functions that should be retried if certain exceptions are
     raised
@@ -576,8 +578,10 @@ def synchronized_on_function(
 def synchronized_on_instance(
         __target: None = None, *, lock_field: str = '__lock'
 ) -> Union[
-    FunctionWrapperFunction[TargetFunction],
-    ClassWrapperFunction[TargetClass]
+    Callable[[TargetFunction], TargetFunction],
+    # FunctionWrapperFunction[TargetFunction],
+    Callable[[TargetClass], TargetClass],
+    # ClassWrapperFunction[TargetClass]
 ]:
     ...
     
@@ -707,7 +711,8 @@ def keep_cache(
         max_entries: Optional[int] = None,
         dont_synchronize: bool = False,
         exclude_kw: Iterable[str] = ()
-) -> FunctionWrapperFunction[TargetFunction]:
+) -> Callable[[TargetFunction], TargetFunction]:
+    # FunctionWrapperFunction[TargetFunction]:
     ...
     
 
@@ -796,7 +801,8 @@ def expire_cache(
         expire_time_secs: float,
         max_entries: Optional[int] = None,
         dont_synchronize: bool = False
-) -> FunctionWrapperFunction[TargetFunction]:
+) -> Callable[[TargetFunction], TargetFunction]:
+    # FunctionWrapperFunction[TargetFunction]:
     ...
 
 
@@ -865,7 +871,8 @@ def expire_cache(
 
 def extend_with_method(
         __extended_class: TargetClass
-) -> FunctionWrapperFunction[TargetFunction]:
+) -> Callable[[TargetFunction], TargetFunction]:
+    # FunctionWrapperFunction[TargetFunction]:
     """
     Decorator to add a global function as a method to a class
 
@@ -888,7 +895,8 @@ def extend_with_method(
 
 def extend_with_static_method(
         __extended_class: TargetClass
-) -> FunctionWrapperFunction[TargetFunction]:
+) -> Callable[[TargetFunction], TargetFunction]:
+    # FunctionWrapperFunction[TargetFunction]:
     """
     Decorator to add a global function as a static method to a class
 
@@ -912,7 +920,8 @@ def extend_with_static_method(
 
 def extend_with_class_method(
         __extended_class: TargetClass
-) -> FunctionWrapperFunction[TargetFunction]:
+) -> Callable[[TargetFunction], TargetFunction]:
+    # FunctionWrapperFunction[TargetFunction]:
     """
     Decorator to add a function as a class method to a class
 
@@ -935,7 +944,9 @@ def extend_with_class_method(
 
 
 def extension(
-        __extended_class: Type[object]) -> ClassWrapperFunction[TargetClass]:
+        __extended_class: Type[object]
+) -> Callable[[TargetClass], TargetClass]:
+    # ClassWrapperFunction[TargetClass]:
     """
     Decorator to add all the methods in a class to another class
 
