@@ -77,6 +77,8 @@ To be used if the wrapped class has the same methods as the target class.
 :param TargetClass: Type for class that is being decorated.
 """
 
+#TODO: ? WrapperFunction = Callable[[Target], Target]
+
 
 def _through_classmethod(
         target: TargetCallerFunction[TargetReturnType],
@@ -179,18 +181,13 @@ class GenericDecorator:
 
     @overload
     def __call__(
-            self, target: TargetFunction) -> TargetFunction:
-        ...
-        
-
-    @overload
-    def __call__(self, target: TargetClass) -> TargetClass:
+            self, target: Target) -> Target:
         ...
         
 
     def __call__(
             self,
-            target: Union[TargetFunction, TargetClass]
+            target: Optional[Target] = None
     ) -> Any:
     # ) -> Union[  #TODO: Unions don't work with `TypeVar` (mypy 0.800) https://github.com/python/mypy/issues/3644
     #     TargetFunction,
@@ -405,8 +402,7 @@ def deprecated(
         logger: logging.Logger,
         message: Optional[str] = None,
         raise_exception: Optional[bool] = None
-) -> Callable[[TargetFunction], TargetFunction]:
-    # FunctionWrapperFunction[TargetFunction]:
+) -> GenericDecorator:
     """
     Used to decorate deprecated functions and classes
 
@@ -585,22 +581,15 @@ def synchronized_on_instance(
 
 @overload
 def synchronized_on_instance(
-        __target: TargetFunction,
+        __target: Target,
         *,
         lock_field: str = '__lock'
-) -> TargetFunction:
-    ...
-
-
-@overload
-def synchronized_on_instance(
-        __target: TargetClass, *, lock_field: str = '__lock'
-) -> TargetClass:
+) -> Target:
     ...
     
 
 def synchronized_on_instance(
-        __target: Any = None,  # Union[None, TargetFunction, TargetClass] = None,  #TODO: Unions don't work with `TypeVar` (mypy 0.800) https://github.com/python/mypy/issues/3644
+        __target: Optional[Target] = None,
         *,
         lock_field: str = '__lock'
 ) -> Any:
