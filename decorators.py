@@ -33,11 +33,15 @@ from typing import (
 )
 
 
+#TODO: temporary workaround
+Target = TypeVar('Target')
+
 # https://mypy.readthedocs.io/en/stable/generics.html#declaring-decorators
 TargetReturnType = TypeVar('TargetReturnType')
+"""Return type"""
 
 TargetFunction = TypeVar(
-    'TargetFunction', bound=Callable[..., TargetReturnType])
+    'TargetFunction', bound=Callable[..., Any])  # TargetReturnType])
 """Type for decorated function"""
 #TODO: Currently (mypy 0.800) not possible to declare generic TypeVar
 # https://github.com/python/mypy/issues/8278
@@ -186,7 +190,7 @@ class GenericDecorator:
 
     def __call__(
             self,
-            target: Any,  # Union[TargetFunction, TargetClass]  #TODO: Unions don't work with `TypeVar` (mypy 0.800) https://github.com/python/mypy/issues/3644
+            target: Union[TargetFunction, TargetClass]
     ) -> Any:
     # ) -> Union[  #TODO: Unions don't work with `TypeVar` (mypy 0.800) https://github.com/python/mypy/issues/3644
     #     TargetFunction,
@@ -375,7 +379,7 @@ def pass_args(target: TargetClass) -> TargetClass:
     
 # Type hint for `kwargs` is not necessary yet with mypy 0.800
 def pass_args(
-        target: Any  # Union[TargetFunction, TargetClass]  #TODO: Union doesn't work with `TypeVar` (mypy -0.800)
+        target: Union[TargetFunction, TargetClass]
 ) -> Any:  # Union[TargetFunction, TargetClass]:  #TODO: Union doesn't work with `TypeVar` (mypy -0.800)
     """
     Decorator that passes arguments to the function as a dict as an additional
@@ -456,8 +460,10 @@ def retry(
             Type[BaseException], Tuple[Type[BaseException], ...]],
         interval_secs: float = 0.0,
         extra_argument: bool = False
-) -> Callable[[TargetFunction], TargetFunction]:
-    # FunctionWrapperFunction[TargetFunction]:
+) -> Callable[
+    [Callable[..., TargetReturnType]],
+    Callable[..., TargetReturnType]
+]:  # extra argument may be added to signature
     """
     Used to decorate functions that should be retried if certain exceptions are
     raised
@@ -577,18 +583,21 @@ def synchronized_on_function(
 @overload
 def synchronized_on_instance(
         __target: None = None, *, lock_field: str = '__lock'
-) -> Union[
-    Callable[[TargetFunction], TargetFunction],
-    # FunctionWrapperFunction[TargetFunction],
-    Callable[[TargetClass], TargetClass],
-    # ClassWrapperFunction[TargetClass]
-]:
+) -> Callable[[Target], Target]:
+    # Union[
+    #     Callable[[TargetFunction], TargetFunction],
+    #     # FunctionWrapperFunction[TargetFunction],
+    #     Callable[[TargetClass], TargetClass],
+    #     # ClassWrapperFunction[TargetClass]
+    # ]:
     ...
     
 
 @overload
 def synchronized_on_instance(
-        __target: TargetFunction, *, lock_field: str = '__lock'
+        __target: TargetFunction,
+        *,
+        lock_field: str = '__lock'
 ) -> TargetFunction:
     ...
 
@@ -601,8 +610,7 @@ def synchronized_on_instance(
     
 
 def synchronized_on_instance(
-        __target: Any = None,
-        # __target: Union[None, TargetFunction, TargetClass] = None,  #TODO: Unions don't work with `TypeVar` (mypy 0.800) https://github.com/python/mypy/issues/3644
+        __target: Union[None, TargetFunction, TargetClass] = None,
         *,
         lock_field: str = '__lock'
 ) -> Any:
