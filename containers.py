@@ -1,3 +1,4 @@
+from typing import Any
 
 
 class NamedFields:
@@ -5,7 +6,7 @@ class NamedFields:
     A class that can have its fields initialized
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any):
         """
         Initializer
 
