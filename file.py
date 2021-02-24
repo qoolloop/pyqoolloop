@@ -56,7 +56,7 @@ def load_pickle(
     # endtry
 
 
-def _check_overwrite(full_filename, overwrite):
+def _check_overwrite(full_filename: str, overwrite: bool) -> None:
     #TODO: Do something about race conditions with os.path.exists()=>Use 'x' for file mode. See encrypt
 
     if not overwrite and os.path.exists(full_filename):
@@ -65,7 +65,8 @@ def _check_overwrite(full_filename, overwrite):
     
 
 def dump_pickle(
-        file_path: str, filename: str, value: object, overwrite: bool = False):
+        file_path: str, filename: str, value: object, overwrite: bool = False
+) -> None:
     """
     Save to pickle file.
 
@@ -107,7 +108,7 @@ def load_text(
             return f.read()
         # endwith
 
-    except:
+    except:  # noqa:E722
         if raise_exception:
             # Python 3 raises FileNotFoundError
             # https://stackoverflow.com/a/15032444/2400328
@@ -117,12 +118,15 @@ def load_text(
     # endtry
 
 
-def dump_text(file_path, filename, value, overwrite=False):
+def dump_text(
+        file_path: str, filename: str, value: str, overwrite: bool = False
+) -> None:
     """
     Save text to file.
 
     :param file_path: Path to directory.
     :param filename: Name of file in `file_path`.
+    :param value: Text to save.
     :param overwrite: `True` to write over existing file.
 
     :raises FileExistsError: Raised when file already exists and
