@@ -203,11 +203,6 @@ class GenericDecorator:
         Return `self(target)` when there are no arguments.
         """
 
-        @wraps(target)
-        def called_function(*args: Any, **kwargs: Any) -> TargetReturnType:
-            return decorator_self.called_function(target, *args, **kwargs)
-
-
         def _make_class_decorator(
                 target_class: TargetClass) -> TargetClass:
 
@@ -269,6 +264,11 @@ class GenericDecorator:
 
             return target_class
             
+
+        @wraps(cast(Target, target))
+        def called_function(*args: Any, **kwargs: Any) -> TargetReturnType:
+            return decorator_self.called_function(target, *args, **kwargs)
+
 
         if target is None:
             # https://stackoverflow.com/q/653368/2400328
