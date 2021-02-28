@@ -31,6 +31,7 @@ from typing import (
     Iterable,
     Optional,
     overload,
+    Protocol,
     Union,
     Tuple,
     Type,
@@ -242,11 +243,18 @@ class GenericDecorator:
         def _make_class_decorator(
                 target_class: Type[TargetClass]) -> Type[TargetClass]:
 
+            class Descriptor(Protocol):
+                def __get__(
+                        self, instance: TargetClass, owner: Type[TargetClass]
+                ) -> TargetCallerFunction[TargetReturnType]:
+                    ...
+                
+
             class DescriptorForAllMethods(object):
 
                 def __init__(
                         self,
-                        method: Callable[..., TargetReturnType],
+                        method: Descriptor,
                         wrapper: TargetMethodWrapper[
                             TargetReturnType, TargetClass]
                 ) -> None:
@@ -261,7 +269,10 @@ class GenericDecorator:
                     def call_wrapper(
                             *args: Any, **kwargs: Any
                     ) -> Any:  # TargetReturnType:
-                        function = self.method.__get__(instance, owner)  #TODO: move outside to `__get__()`?
+                        
+                        # TargetFunction[TargetReturnType]
+                        function: Callable[..., TargetReturnType] \
+                            = self.method.__get__(instance, owner)  #TODO: move outside to `__get__()`?
                         return self.wrapper(
                             #TODO: Incompatible return value type (got "TargetReturnType", expected "TargetReturnType")  [return-value]
                             # if `TargetReturnType` is specified for return type
@@ -272,7 +283,7 @@ class GenericDecorator:
 
             class DescriptorForInstanceMethod(DescriptorForAllMethods):
                 def __init__(
-                        self, method: Callable[..., TargetReturnType]
+                        self, method: Descriptor,
                 ) -> None:
                     super().__init__(
                         method, decorator_self.wrapper_for_instancemethod)
