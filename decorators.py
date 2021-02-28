@@ -64,7 +64,7 @@ Generic type for function that calls the decorated function
 :param TargetReturnType: Return type of the decorated function.
 """
 
-TargetMethodCallerFunction = Callable[
+TargetMethodWrapper = Callable[
     [
         Arg(Callable[..., TargetReturnType], 'target'),
         Arg(Type[TargetClass], 'cls'),
@@ -102,7 +102,7 @@ To be used if the wrapped class has the same methods as the target class.
 
 def _through_method(
         target: Callable[..., TargetReturnType],  # TargetFunction,
-        cls: Type[TargetClass],
+        cls: Type[TargetClass],  #TODO: Invert with `instance` to match descriptor
         instance: TargetClass,
         *args: Any,
         **kwargs: Any
@@ -132,36 +132,44 @@ class GenericDecorator:
 
     #TODO: Type hints probably aren't what they're supposed to be, especially with the use of `TypeVar`
     def __init__(self,
-                 factory_for_function: TargetCallerFunction[TargetReturnType],
-                 #TODO: Add function for instance method
-                 factory_for_staticmethod: Optional[
-                     TargetMethodCallerFunction[
+                 wrapper_for_function: TargetCallerFunction[TargetReturnType],
+                 wrapper_for_instancemethod: Optional[
+                     TargetMethodWrapper[
                          TargetReturnType, TargetClass]] = None,
-                 factory_for_classmethod: Optional[
-                     TargetMethodCallerFunction[
+                 wrapper_for_staticmethod: Optional[
+                     TargetMethodWrapper[
+                         TargetReturnType, TargetClass]] = None,
+                 wrapper_for_classmethod: Optional[
+                     TargetMethodWrapper[
                          TargetReturnType, TargetClass]] = None
                  ) -> None:
         r"""
-        :param factory_for_function:
+        :param wrapper_for_function:
           |   (callable(target, \*args, \**kwargs))
           | Function to be called when decorating a regular function or method.
           | `target` will have the following signature:
           |   callable(\*args, \**kwargs)
         
-        :param factory_for_staticmethod:
+        :param wrapper_for_instancemethod:
+          |   (callable(target, cls, instance, \*args, \**kwargs))
+          | Function to be called when decorating an instance method.
+          | `target` will have the following signature:
+          |   callable(\*args, \**kwargs)
+        
+        :param wrapper_for_staticmethod:
           |   (callable(target, cls, instance, \*args, \**kwargs))
           | Function to be called when decorating a static method.
           | `target` will have the following signature:
           |   callable(\*args, \**kwargs)
         
-        :param factory_for_classmethod:
+        :param wrapper_for_classmethod:
           |   (callable(target, cls, instance, \*args, \**kwargs))
           | Function to be called when decorating a class method.
           | `target` will have the following signature:
           |   callable(\*args, \**kwargs)
 
         .. note::
-          `factory_for_staticmethod` and `factory_for_classmethod` are only
+          `wrapper_for_staticmethod` and `wrapper_for_classmethod` are only
           used for class decorators
         
         """
@@ -178,21 +186,23 @@ class GenericDecorator:
         #   but the boilerplate is cumbersome, and can be concisely written
         #   by extracting a function and decorating it.
 
-        def default_factory(
+        def default_wrapper(
                 target: Callable[..., TargetReturnType],  # TargetFunction,
                 cls: Type[TargetClass],
                 instance: TargetClass,
                 *args: Any,
                 **kwargs: Any
         ) -> TargetReturnType:
-            return factory_for_function(target, *args, **kwargs)
+            return wrapper_for_function(target, *args, **kwargs)
 
         
-        self.factory_for_function = factory_for_function
-        self.factory_for_staticmethod = factory_for_staticmethod or \
-            default_factory
-        self.factory_for_classmethod = factory_for_classmethod or \
-            default_factory
+        self.wrapper_for_function = wrapper_for_function
+        self.wrapper_for_instancemethod = wrapper_for_instancemethod or \
+            default_wrapper
+        self.wrapper_for_staticmethod = wrapper_for_staticmethod or \
+            default_wrapper
+        self.wrapper_for_classmethod = wrapper_for_classmethod or \
+            default_wrapper
 
 
     @overload
@@ -232,54 +242,60 @@ class GenericDecorator:
         def _make_class_decorator(
                 target_class: Type[TargetClass]) -> Type[TargetClass]:
 
-            class DescriptorForStaticmethod(object):
+            class DescriptorForAllMethods(object):
+
+                def __init__(
+                        self,
+                        method: Callable[..., TargetReturnType],
+                        wrapper: TargetMethodWrapper[
+                            TargetReturnType, TargetClass]
+                ) -> None:
+                    self.method = method
+                    self.wrapper = wrapper
+
+
+                def __get__(
+                        self, instance: TargetClass, owner: Type[TargetClass]
+                ) -> TargetCallerFunction[TargetReturnType]:
+
+                    def call_wrapper(
+                            *args: Any, **kwargs: Any
+                    ) -> Any:  # TargetReturnType:
+                        function = self.method.__get__(instance, owner)  #TODO: move outside to `__get__()`?
+                        return self.wrapper(
+                            #TODO: Incompatible return value type (got "TargetReturnType", expected "TargetReturnType")  [return-value]
+                            # if `TargetReturnType` is specified for return type
+                            function, owner, instance, *args, **kwargs)
+
+                    return call_wrapper
+
+
+            class DescriptorForInstanceMethod(DescriptorForAllMethods):
+                def __init__(
+                        self, method: Callable[..., TargetReturnType]
+                ) -> None:
+                    super().__init__(
+                        method, decorator_self.wrapper_for_instancemethod)
+                    
+
+            class DescriptorForStaticmethod(DescriptorForAllMethods):
 
                 def __init__(self, method: staticmethod) -> None:
-                    self.method = method
+                    super().__init__(
+                        method, decorator_self.wrapper_for_staticmethod)
 
 
-                def __get__(
-                        self, instance: TargetClass, owner: Type[TargetClass]
-                ) -> TargetCallerFunction[TargetReturnType]:
-
-                    def call_factory(
-                            *args: Any, **kwargs: Any
-                    ) -> Any:  # TargetReturnType:
-                        function = self.method.__get__(instance, owner)
-                        return decorator_self.factory_for_staticmethod(
-                            #TODO: Incompatible return value type (got "TargetReturnType", expected "TargetReturnType")  [return-value]
-                            # if `TargetReturnType` is specified for return type
-                            function, owner, instance, *args, **kwargs)
-
-                    return call_factory
-
-
-            class DescriptorForClassmethod(object):
+            class DescriptorForClassmethod(DescriptorForAllMethods):
 
                 def __init__(self, method: classmethod) -> None:
-                    self.method = method
-
-
-                def __get__(
-                        self, instance: TargetClass, owner: Type[TargetClass]
-                ) -> TargetCallerFunction[TargetReturnType]:
-
-                    def call_factory(
-                            *args: Any, **kwargs: Any
-                    ) -> Any:  # TargetReturnType:
-                        function = self.method.__get__(instance, owner)
-                        return decorator_self.factory_for_classmethod(
-                            #TODO: Incompatible return value type (got "TargetReturnType", expected "TargetReturnType")  [return-value]
-                            # if `TargetReturnType` is specified for return type
-                            function, owner, instance, *args, **kwargs)
-
-                    return call_factory
+                    super().__init__(
+                        method, decorator_self.wrapper_for_classmethod)
 
 
             for name, value in target_class.__dict__.items():
                 if inspect.isfunction(value):  #TODO: why not `ismethod()`?
-                    # These are actually methods
-                    setattr(target_class, name, self(value))  #TODO: Pass `cls`, `instance` to methods
+                    descriptor_method = DescriptorForInstanceMethod(value)
+                    setattr(target_class, name, descriptor_method)
 
                 elif isinstance(value, staticmethod):
                     descriptor_static = DescriptorForStaticmethod(value)
@@ -297,7 +313,7 @@ class GenericDecorator:
         def factory_for_target(*args: Any, **kwargs: Any) -> TargetReturnType:
             return cast(  # cast from another TargetReturnType
                 TargetReturnType,
-                decorator_self.factory_for_function(
+                decorator_self.wrapper_for_function(
                     cast(Any, target),  # cast to another TargetReturnType
                     *args,
                     **kwargs)
@@ -315,6 +331,7 @@ class GenericDecorator:
             return _make_class_decorator(target)
 
         elif callable(target):
+            #TODO: Pass `cls` and `instance`?
             return factory_for_target
 
         elif isinstance(target, staticmethod):
@@ -489,7 +506,6 @@ def retry(
     raised
 
     :param attempts: Maximum number of times the function should be run
-      #TODO: Should be named `tries`?
     :param exceptions: Rerun the function if these exceptions are raised
     :param interval_secs: Interval between attempts in seconds.
     :param extra_argument: If `True`, an argument named `attempts` is added to
@@ -556,7 +572,7 @@ def synchronized_on_function(
         __target: Optional[Callable[..., TargetReturnType]] = None,  # Optional[TargetFunction]
         *,
         lock_field: str = '__lock',
-        dont_synchronize: bool = False
+        dont_synchronize: bool = False  #TODO: Why necessary?
 ) -> Callable[..., Any]:
 # Union[TargetFunction, FunctionWrapperFactory[TargetFunction]]:  #TODO: doesn't work (mypy 0.800) https://github.com/python/mypy/issues/3644
     """
@@ -591,7 +607,6 @@ def synchronized_on_function(
     if __target and not dont_synchronize:
         return __target
         
-    #TODOO: TargetCallerFunction[TargetReturnType]
     call_function: TargetCallerFunction[TargetReturnType] = (
         _call_function if not dont_synchronize
         else _through_function)
@@ -599,8 +614,8 @@ def synchronized_on_function(
     #TODO: A little inefficient when dont_synchronize=True
     decorator = GenericDecorator(
         call_function,
-        factory_for_staticmethod=_through_method,
-        factory_for_classmethod=_through_method)
+        wrapper_for_staticmethod=_through_method,
+        wrapper_for_classmethod=_through_method)
     return decorator(__target)
 
 
@@ -651,12 +666,33 @@ def synchronized_on_instance(
       `@staticmethod` and `@classmethod` not supported. If put on classes,
       `@staticmethod` and `@classmethod` will be ignored.
     """
-    def call_function(
+    def _call_function(
             target: Any,  # TargetFunction,
             *args: Any,
             **kwargs: Any
     ) -> Any:  # TargetReturnType:
-        lock_holder = args[0]
+        lock_holder = args[0]  # `self`
+
+        lock = getattr(lock_holder, lock_field, None)
+        if lock is None:
+            lock = threading.RLock()
+            setattr(lock_holder, lock_field, lock)
+
+        with lock:
+            result = target(*args, **kwargs)
+
+        return result
+
+
+    def _call_method(
+            target: Any,  # TargetFunction,
+            cls: Type[TargetClass],
+            instance: TargetClass,
+            *args: Any,
+            **kwargs: Any
+    ) -> Any:  # TargetReturnType:
+        lock_holder = instance
+        print("Yo!")  #TODO: remove
 
         lock = getattr(lock_holder, lock_field, None)
         if lock is None:
@@ -670,9 +706,10 @@ def synchronized_on_instance(
 
 
     decorator = GenericDecorator(
-        call_function,
-        factory_for_staticmethod=_through_method,
-        factory_for_classmethod=_through_method)
+        _call_function,
+        wrapper_for_instancemethod=_call_method,
+        wrapper_for_staticmethod=_through_method,
+        wrapper_for_classmethod=_through_method)
     return decorator(__target)
 
 
@@ -805,8 +842,8 @@ def keep_cache(
 
     decorator = GenericDecorator(
         _cached_function,
-        factory_for_staticmethod=_through_method,
-        factory_for_classmethod=_through_method)
+        wrapper_for_staticmethod=_through_method,
+        wrapper_for_classmethod=_through_method)
     return decorator(__target)
 
 
@@ -898,7 +935,7 @@ def expire_cache(
 
     def _through_function(
             target: Callable[..., TargetReturnType],  # TargetFunction,
-            cls: Type[TargetClass],  #TODO: Add instance as well  -> #TODO: Merge with `_cached_function()`
+            cls: Type[TargetClass],  #TODO: Merge with `_cached_function()`
             instance: TargetClass,
             *args: Any,
             **kwargs: Any
@@ -908,8 +945,8 @@ def expire_cache(
 
     decorator = GenericDecorator(
         _cached_function,
-        factory_for_staticmethod=_through_function,
-        factory_for_classmethod=_through_function)
+        wrapper_for_staticmethod=_through_function,
+        wrapper_for_classmethod=_through_function)
     return decorator(__target)
 
 
