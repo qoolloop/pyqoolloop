@@ -56,7 +56,7 @@ Target = TypeVar('Target', Callable[..., Any], Type[object])
 """Type for decorated function or class"""
 
 TargetCallerFunction = Callable[
-    [Arg(Callable[..., TargetReturnType], 'target'), VarArg(), KwArg()],
+    [Arg(Callable[..., TargetReturnType], 'target'), VarArg(), KwArg()],  #TODO: Add `cls`, `instance` arguments?
     TargetReturnType]  #TODO: Callable[[TargetFunction, ...], TargetReturnType]
 """
 Generic type for function that calls the decorated function
@@ -89,7 +89,8 @@ To be used if the wrapped class has the same methods as the target class.
 
 def _through_classmethod(  #TODO: rename _through_function
         target: Callable[..., TargetReturnType],  # TargetFunction,
-        cls: Type[TargetClass],  #TODO: Add instance as well
+        cls: Type[TargetClass],
+        instance: TargetClass,
         *args: Any,
         **kwargs: Any
 ) -> TargetReturnType:
@@ -124,6 +125,7 @@ class GenericDecorator:
                  function_for_classmethod: Optional[
                      TargetCallerFunction[TargetReturnType]] = None
                  ) -> None:
+        #TODO: `called_function()` to have same arguments as `_through_function()`
         r"""
         :param called_function:
           |   (callable(target, \*args, \**kwargs))
@@ -132,13 +134,13 @@ class GenericDecorator:
           |   callable(\*args, \**kwargs)
         
         :param function_for_staticmethod:
-          |   (callable(target, cls, \*args, \**kwargs))
+          |   (callable(target, cls, instance, \*args, \**kwargs))
           | Function to be called when decorating a static method.
           | `target` will have the following signature:
           |   callable(\*args, \**kwargs)
         
         :param function_for_classmethod:
-          |   (callable(target, cls, \*args, \**kwargs))
+          |   (callable(target, cls, instance, \*args, \**kwargs))
           | Function to be called when decorating a class method.
           | `target` will have the following signature:
           |   callable(\*args, \**kwargs)
@@ -164,6 +166,7 @@ class GenericDecorator:
         def default_function(
                 target: Callable[..., TargetReturnType],  # TargetFunction,
                 cls: Type[TargetClass],
+                instance: TargetClass,
                 *args: Any,
                 **kwargs: Any
         ) -> TargetReturnType:
@@ -230,7 +233,7 @@ class GenericDecorator:
                         function = self.method.__get__(instance, owner)
                         return decorator_self.function_for_staticmethod(
                             #TODO: Incompatible return value type (got "TargetReturnType", expected "TargetReturnType")  [return-value]
-                            function, owner, *args, **kwargs)
+                            function, owner, instance, *args, **kwargs)
 
                     return called_function
 
@@ -251,7 +254,7 @@ class GenericDecorator:
                         function = self.method.__get__(instance, owner)
                         return decorator_self.function_for_classmethod(
                             #TODO: Incompatible return value type (got "TargetReturnType", expected "TargetReturnType")  [return-value]
-                            function, owner, *args, **kwargs)
+                            function, owner, instance, *args, **kwargs)
 
                     return called_function
 
@@ -873,6 +876,7 @@ def expire_cache(
     def _through_function(
             target: Callable[..., TargetReturnType],  # TargetFunction,
             cls: Type[TargetClass],  #TODO: Add instance as well  -> #TODO: Merge with `_cached_function()`
+            instance: TargetClass,
             *args: Any,
             **kwargs: Any
     ) -> TargetReturnType:
