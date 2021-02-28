@@ -652,10 +652,10 @@ def synchronized_on_instance(
       `@staticmethod` and `@classmethod` will be ignored.
     """
     def call_function(
-            target: Callable[..., TargetReturnType],  # TargetFunction,
+            target: Any,  # TargetFunction,
             *args: Any,
             **kwargs: Any
-    ) -> TargetReturnType:
+    ) -> Any:  # TargetReturnType:
         lock_holder = args[0]
 
         lock = getattr(lock_holder, lock_field, None)
@@ -776,7 +776,9 @@ def keep_cache(
     
     @synchronized_on_function(dont_synchronize=dont_synchronize)
     def _cached_function(
-            target: TargetFunction, *args: Any, **kwargs: Any
+            target: Callable[..., TargetReturnType],  # TargetFunction,
+            *args: Any,
+            **kwargs: Any
     ) -> TargetReturnType:
 
         now = datetime.datetime.utcnow()
