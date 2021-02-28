@@ -49,7 +49,7 @@ TargetFunction = TypeVar(
 # https://github.com/python/mypy/issues/8278
 # Would need to use Callable[..., TargetReturnType] directly.
 
-TargetClass = TypeVar('TargetClass', bound=Type[object])
+TargetClass = TypeVar('TargetClass', bound=object)
 """Type for decorated class"""
 
 Target = TypeVar('Target', Callable[..., Any], Type[object])
@@ -75,7 +75,7 @@ function.
 :param TargetFunction: Type for function that is being decorated.
 """
 
-ClassWrapperFunction = Callable[[TargetClass], TargetClass]
+ClassWrapperFunction = Callable[[Type[TargetClass]], Type[TargetClass]]
 """
 Type for function that wraps a decorated class
 
@@ -89,7 +89,7 @@ To be used if the wrapped class has the same methods as the target class.
 
 def _through_classmethod(  #TODO: rename _through_function
         target: Callable[..., TargetReturnType],  # TargetFunction,
-        cls: TargetClass,  #TODO: Add instance as well
+        cls: Type[TargetClass],  #TODO: Add instance as well
         *args: Any,
         **kwargs: Any
 ) -> TargetReturnType:
@@ -163,7 +163,7 @@ class GenericDecorator:
 
         def default_function(
                 target: Callable[..., TargetReturnType],  # TargetFunction,
-                cls: TargetClass,
+                cls: Type[TargetClass],
                 *args: Any,
                 **kwargs: Any
         ) -> TargetReturnType:
@@ -172,9 +172,9 @@ class GenericDecorator:
         
         self.called_function = called_function
         self.function_for_staticmethod = function_for_staticmethod or \
-            default_function
+            default_function  #TODO: `called_function` instead of `default_function`
         self.function_for_classmethod = function_for_classmethod or \
-            default_function
+            default_function  #TODO: `called_function` instead of `default_function`
 
 
     @overload
@@ -199,7 +199,7 @@ class GenericDecorator:
     ) -> Any:
     # ) -> Union[  #TODO: Unions don't work with `TypeVar` (mypy 0.800) https://github.com/python/mypy/issues/3644
     #     TargetFunction,
-    #     TargetClass,
+    #     Type[TargetClass],
     #     FunctionWrapperFunction[TargetFunction],
     #     ClassWrapperFunction[TargetClass]
     # ]:
@@ -212,7 +212,7 @@ class GenericDecorator:
         """
 
         def _make_class_decorator(
-                target_class: TargetClass) -> TargetClass:
+                target_class: Type[TargetClass]) -> Type[TargetClass]:
 
             class DescriptorForStaticmethod(object):
 
@@ -221,7 +221,7 @@ class GenericDecorator:
 
 
                 def __get__(
-                        self, instance: object, owner: TargetClass
+                        self, instance: object, owner: Type[TargetClass]
                 ) -> TargetCallerFunction[TargetReturnType]:
 
                     def called_function(
@@ -242,7 +242,7 @@ class GenericDecorator:
 
 
                 def __get__(
-                        self, instance: object, owner: TargetClass
+                        self, instance: object, owner: Type[TargetClass]
                 ) -> TargetCallerFunction[TargetReturnType]:
 
                     def called_function(
@@ -291,7 +291,7 @@ class GenericDecorator:
 
         decorator_self = self
 
-        if isinstance(target, type):  # TargetClass
+        if isinstance(target, type):  # Type[TargetClass]
             return _make_class_decorator(target)
 
         elif callable(target):
@@ -587,7 +587,7 @@ def synchronized_on_instance(
     # Union[
     #     Callable[[TargetFunction], TargetFunction],
     #     # FunctionWrapperFunction[TargetFunction],
-    #     Callable[[TargetClass], TargetClass],
+    #     Callable[[Type[TargetClass]], Type[TargetClass]],
     #     # ClassWrapperFunction[TargetClass]
     # ]:
     ...
@@ -609,7 +609,7 @@ def synchronized_on_instance(
 ) -> Any:
 # ) -> Union[  #TODO: Unions don't work with `TypeVar` (mypy 0.800) https://github.com/python/mypy/issues/3644
 #     TargetFunction,
-#     TargetClass,
+#     Type[TargetClass],
 #     FunctionWrapperFunction[TargetFunction],
 #     ClassWrapperFunction[TargetClass]
 # ]:
@@ -653,10 +653,10 @@ def synchronized_on_instance(
 
 
 def synchronized_on_class(
-        __target: Optional[TargetClass] = None,
+        __target: Optional[Type[TargetClass]] = None,
         *,
         lock_field: str = '__lock'
-) -> Union[TargetClass, ClassWrapperFunction[TargetClass]]:
+) -> Union[Type[TargetClass], ClassWrapperFunction[TargetClass]]:
     #TODO: Not sure whether locks should be on each subclass or use one for all subclasses
     ...
 
@@ -872,7 +872,7 @@ def expire_cache(
 
     def _through_function(
             target: Callable[..., TargetReturnType],  # TargetFunction,
-            cls: TargetClass,  #TODO: Add instance as well  -> #TODO: Merge with `_cached_function()`
+            cls: Type[TargetClass],  #TODO: Add instance as well  -> #TODO: Merge with `_cached_function()`
             *args: Any,
             **kwargs: Any
     ) -> TargetReturnType:
@@ -887,7 +887,7 @@ def expire_cache(
 
 
 def extend_with_method(
-        __extended_class: TargetClass
+        __extended_class: Type[TargetClass]
 ) -> Callable[[TargetFunction], TargetFunction]:
     # FunctionWrapperFunction[TargetFunction]:
     """
@@ -911,7 +911,7 @@ def extend_with_method(
 
 
 def extend_with_static_method(
-        __extended_class: TargetClass
+        __extended_class: Type[TargetClass]
 ) -> Callable[[TargetFunction], TargetFunction]:
     # FunctionWrapperFunction[TargetFunction]:
     """
@@ -936,7 +936,7 @@ def extend_with_static_method(
 
 
 def extend_with_class_method(
-        __extended_class: TargetClass
+        __extended_class: Type[TargetClass]
 ) -> Callable[[TargetFunction], TargetFunction]:
     # FunctionWrapperFunction[TargetFunction]:
     """
@@ -962,7 +962,7 @@ def extend_with_class_method(
 
 def extension(
         __extended_class: Type[object]
-) -> Callable[[TargetClass], TargetClass]:
+) -> Callable[[Type[TargetClass]], Type[TargetClass]]:
     # ClassWrapperFunction[TargetClass]:
     """
     Decorator to add all the methods in a class to another class
@@ -973,7 +973,7 @@ def extension(
       `@classmethod` and `@staticmethod`.
     """
 
-    def _decorator(extension_class: TargetClass) -> TargetClass:
+    def _decorator(extension_class: Type[TargetClass]) -> Type[TargetClass]:
         assert isinstance(extension_class, type), \
             "@extension is only for decorating classes"
         
