@@ -134,7 +134,7 @@ class GenericDecorator:
 
     #TODO: Type hints probably aren't what they're supposed to be, especially with the use of `TypeVar`
     def __init__(self,
-                 called_function: TargetCallerFunction[TargetReturnType],
+                 factory_for_function: TargetCallerFunction[TargetReturnType],
                  #TODO: Add function for instance method
                  factory_for_staticmethod: Optional[
                      TargetMethodCallerFunction[
@@ -144,7 +144,7 @@ class GenericDecorator:
                          TargetReturnType, TargetClass]] = None
                  ) -> None:
         r"""
-        :param called_function:
+        :param factory_for_function:
           |   (callable(target, \*args, \**kwargs))
           | Function to be called when decorating a regular function or method.
           | `target` will have the following signature:
@@ -180,21 +180,21 @@ class GenericDecorator:
         #   but the boilerplate is cumbersome, and can be concisely written
         #   by extracting a function and decorating it.
 
-        def default_function(
+        def default_factory(
                 target: Callable[..., TargetReturnType],  # TargetFunction,
                 cls: Type[TargetClass],
                 instance: TargetClass,
                 *args: Any,
                 **kwargs: Any
         ) -> TargetReturnType:
-            return called_function(target, *args, **kwargs)
+            return factory_for_function(target, *args, **kwargs)
 
         
-        self.called_function = called_function
+        self.factory_for_function = factory_for_function
         self.factory_for_staticmethod = factory_for_staticmethod or \
-            default_function  #TODO: `called_function` instead of `default_function`
+            default_factory
         self.factory_for_classmethod = factory_for_classmethod or \
-            default_function  #TODO: `called_function` instead of `default_function`
+            default_factory
 
 
     @overload
@@ -244,7 +244,7 @@ class GenericDecorator:
                         self, instance: TargetClass, owner: Type[TargetClass]
                 ) -> TargetCallerFunction[TargetReturnType]:
 
-                    def called_function(
+                    def call_factory(
                             *args: Any, **kwargs: Any
                     ) -> Any:  # TargetReturnType:
                         function = self.method.__get__(instance, owner)
@@ -252,7 +252,7 @@ class GenericDecorator:
                             #TODO: Incompatible return value type (got "TargetReturnType", expected "TargetReturnType")  [return-value]
                             function, owner, instance, *args, **kwargs)
 
-                    return called_function
+                    return call_factory
 
 
             class DescriptorForClassmethod(object):
@@ -265,7 +265,7 @@ class GenericDecorator:
                         self, instance: TargetClass, owner: Type[TargetClass]
                 ) -> TargetCallerFunction[TargetReturnType]:
 
-                    def called_function(
+                    def call_factory(
                             *args: Any, **kwargs: Any
                     ) -> Any:  #TODO: TargetReturnType:
                         function = self.method.__get__(instance, owner)
@@ -273,7 +273,7 @@ class GenericDecorator:
                             #TODO: Incompatible return value type (got "TargetReturnType", expected "TargetReturnType")  [return-value]
                             function, owner, instance, *args, **kwargs)
 
-                    return called_function
+                    return call_factory
 
 
             for name, value in target_class.__dict__.items():
@@ -294,10 +294,10 @@ class GenericDecorator:
             
 
         @wraps(cast(Callable[..., TargetReturnType], target))
-        def called_function(*args: Any, **kwargs: Any) -> TargetReturnType:
+        def factory_for_target(*args: Any, **kwargs: Any) -> TargetReturnType:
             return cast(  # cast from another TargetReturnType
                 TargetReturnType,
-                decorator_self.called_function(
+                decorator_self.factory_for_function(
                     cast(Any, target),  # cast to another TargetReturnType
                     *args,
                     **kwargs)
@@ -315,7 +315,7 @@ class GenericDecorator:
             return _make_class_decorator(target)
 
         elif callable(target):
-            return called_function
+            return factory_for_target
 
         elif isinstance(target, staticmethod):
             # https://stackoverflow.com/a/5345526/2400328
