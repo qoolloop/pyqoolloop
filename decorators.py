@@ -56,12 +56,27 @@ Target = TypeVar('Target', Callable[..., Any], Type[object])
 """Type for decorated function or class"""
 
 TargetCallerFunction = Callable[
-    [Arg(Callable[..., TargetReturnType], 'target'), VarArg(), KwArg()],  #TODO: Add `cls`, `instance` arguments?
+    [Arg(Callable[..., TargetReturnType], 'target'), VarArg(), KwArg()],
     TargetReturnType]  #TODO: Callable[[TargetFunction, ...], TargetReturnType]
 """
 Generic type for function that calls the decorated function
 
 :param TargetReturnType: Return type of the decorated function.
+"""
+
+TargetMethodCallerFunction = Callable[
+    [
+        Arg(Callable[..., TargetReturnType], 'target'),
+        Arg(Type[TargetClass], 'cls'),
+        Arg(TargetClass, 'instance'),
+        VarArg(),
+        KwArg()
+    ],
+    TargetReturnType]  #TODO: Callable[[TargetFunction, ...], TargetReturnType]
+"""
+Generic type for function that calls the decorated method
+
+:param TargetReturnType: Return type of the decorated method.
 """
 
 #TODO: Alias currently doesn't work https://github.com/python/mypy/issues/8273
@@ -87,7 +102,7 @@ To be used if the wrapped class has the same methods as the target class.
 #TODO: ? WrapperFunction = Callable[[Target], Target]
 
 
-def _through_classmethod(  #TODO: rename _through_function
+def _through_method(
         target: Callable[..., TargetReturnType],  # TargetFunction,
         cls: Type[TargetClass],
         instance: TargetClass,
@@ -97,7 +112,7 @@ def _through_classmethod(  #TODO: rename _through_function
     return target(*args, **kwargs)
 
 
-def _through_staticmethod(  #TODO: remove
+def _through_function(
         target: Callable[..., TargetReturnType],  # TargetFunction,
         *args: Any,
         **kwargs: Any
@@ -120,12 +135,14 @@ class GenericDecorator:
     #TODO: Type hints probably aren't what they're supposed to be, especially with the use of `TypeVar`
     def __init__(self,
                  called_function: TargetCallerFunction[TargetReturnType],
+                 #TODO: Add function for instance method
                  function_for_staticmethod: Optional[
-                     TargetCallerFunction[TargetReturnType]] = None,
+                     TargetMethodCallerFunction[
+                         TargetReturnType, TargetClass]] = None,
                  function_for_classmethod: Optional[
-                     TargetCallerFunction[TargetReturnType]] = None
+                     TargetMethodCallerFunction[
+                         TargetReturnType, TargetClass]] = None
                  ) -> None:
-        #TODO: `called_function()` to have same arguments as `_through_function()`
         r"""
         :param called_function:
           |   (callable(target, \*args, \**kwargs))
@@ -224,7 +241,7 @@ class GenericDecorator:
 
 
                 def __get__(
-                        self, instance: object, owner: Type[TargetClass]
+                        self, instance: TargetClass, owner: Type[TargetClass]
                 ) -> TargetCallerFunction[TargetReturnType]:
 
                     def called_function(
@@ -245,7 +262,7 @@ class GenericDecorator:
 
 
                 def __get__(
-                        self, instance: object, owner: Type[TargetClass]
+                        self, instance: TargetClass, owner: Type[TargetClass]
                 ) -> TargetCallerFunction[TargetReturnType]:
 
                     def called_function(
@@ -262,7 +279,7 @@ class GenericDecorator:
             for name, value in target_class.__dict__.items():
                 if inspect.isfunction(value):  #TODO: why not `ismethod()`?
                     # These are actually methods
-                    setattr(target_class, name, self(value))
+                    setattr(target_class, name, self(value))  #TODO: Pass `cls`, `instance` to methods
 
                 elif isinstance(value, staticmethod):
                     descriptor_static = DescriptorForStaticmethod(value)
@@ -536,7 +553,7 @@ def synchronized_on_function(
 
 
 def synchronized_on_function(
-        __target: Optional[TargetFunction] = None,
+        __target: Optional[Callable[..., TargetReturnType]] = None,  # Optional[TargetFunction]
         *,
         lock_field: str = '__lock',
         dont_synchronize: bool = False
@@ -574,12 +591,16 @@ def synchronized_on_function(
     if __target and not dont_synchronize:
         return __target
         
+    #TODOO: TargetCallerFunction[TargetReturnType]
+    call_function: TargetCallerFunction[TargetReturnType] = (
+        _call_function if not dont_synchronize
+        else _through_function)
+
     #TODO: A little inefficient when dont_synchronize=True
     decorator = GenericDecorator(
-        _call_function
-        if not dont_synchronize else _through_staticmethod,  #TODO: `_through_staticmethod` here?
-        function_for_staticmethod=_through_classmethod,
-        function_for_classmethod=_through_classmethod)
+        call_function,
+        function_for_staticmethod=_through_method,
+        function_for_classmethod=_through_method)
     return decorator(__target)
 
 
@@ -650,8 +671,8 @@ def synchronized_on_instance(
 
     decorator = GenericDecorator(
         call_function,
-        function_for_staticmethod=_through_classmethod,
-        function_for_classmethod=_through_classmethod)
+        function_for_staticmethod=_through_method,
+        function_for_classmethod=_through_method)
     return decorator(__target)
 
 
@@ -721,7 +742,7 @@ def keep_cache(
     
 
 def keep_cache(
-        __target: Optional[TargetFunction] = None,
+        __target: Optional[Callable[..., TargetReturnType]] = None,  # Optional[TargetFunction]
         *,
         keep_time_secs: float,
         max_entries: Optional[int] = None,
@@ -782,8 +803,8 @@ def keep_cache(
 
     decorator = GenericDecorator(
         _cached_function,
-        function_for_staticmethod=_through_classmethod,
-        function_for_classmethod=_through_classmethod)
+        function_for_staticmethod=_through_method,
+        function_for_classmethod=_through_method)
     return decorator(__target)
 
 
