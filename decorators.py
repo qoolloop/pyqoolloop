@@ -15,6 +15,11 @@ from functools import (
 )
 import inspect
 import logging
+from mypy_extensions import (
+    Arg,
+    KwArg,
+    VarArg,
+)
 import threading
 import time
 from typing import (
@@ -50,7 +55,9 @@ TargetClass = TypeVar('TargetClass', bound=Type[object])
 Target = TypeVar('Target', Callable[..., Any], Type[object])
 """Type for decorated function or class"""
 
-TargetCallerFunction = Callable[..., TargetReturnType]  #TODO: Callable[[TargetFunction, ...], TargetReturnType]
+TargetCallerFunction = Callable[
+    [Arg(Callable[..., TargetReturnType], 'target'), VarArg(), KwArg()],
+    TargetReturnType]  #TODO: Callable[[TargetFunction, ...], TargetReturnType]
 """
 Generic type for function that calls the decorated function
 
@@ -80,17 +87,17 @@ To be used if the wrapped class has the same methods as the target class.
 #TODO: ? WrapperFunction = Callable[[Target], Target]
 
 
-def _through_classmethod(
-        target: TargetCallerFunction[TargetReturnType],
-        cls: TargetClass,
+def _through_classmethod(  #TODO: rename _through_function
+        target: Callable[..., TargetReturnType],  # TargetFunction,
+        cls: TargetClass,  #TODO: Add instance as well
         *args: Any,
         **kwargs: Any
-) -> TargetReturnType:  #TODO: What happens with `cls`?
+) -> TargetReturnType:
     return target(*args, **kwargs)
 
 
-def _through_staticmethod(
-        target: TargetCallerFunction[TargetReturnType],
+def _through_staticmethod(  #TODO: remove
+        target: Callable[..., TargetReturnType],  # TargetFunction,
         *args: Any,
         **kwargs: Any
 ) -> TargetReturnType:
@@ -109,6 +116,7 @@ class GenericDecorator:
     See implementation of decorators in this module.
     """
 
+    #TODO: Type hints probably aren't what they're supposed to be, especially with the use of `TypeVar`
     def __init__(self,
                  called_function: TargetCallerFunction[TargetReturnType],
                  function_for_staticmethod: Optional[
@@ -265,9 +273,15 @@ class GenericDecorator:
             return target_class
             
 
-        @wraps(cast(Target, target))
+        @wraps(cast(Callable[..., TargetReturnType], target))
         def called_function(*args: Any, **kwargs: Any) -> TargetReturnType:
-            return decorator_self.called_function(target, *args, **kwargs)
+            return cast(  # cast from another TargetReturnType
+                TargetReturnType,
+                decorator_self.called_function(
+                    cast(Any, target),  # cast to another TargetReturnType
+                    *args,
+                    **kwargs)
+            )
 
 
         if target is None:
@@ -819,6 +833,13 @@ def expire_cache(
     ] = OrderedDict()
 
     
+    # Note that synchronization is on `_cached_function()`, not each target
+    # function. This is necessary for guarding the cache, but is too much
+    # for each target function. More concretely, if `expire_cache` decorates
+    # a class, one `cache` is used for all the methods.
+    #TODOO: Should not collide with different methods!
+    #TODOO: Should also check arguments, just in case hash collides
+    #TODOO: Same with other cache decorators.
     @synchronized_on_function(dont_synchronize=dont_synchronize)
     def _cached_function(
             target: Callable[..., TargetReturnType],  # TargetFunction,
@@ -849,10 +870,19 @@ def expire_cache(
         return value
 
 
+    def _through_function(
+            target: Callable[..., TargetReturnType],  # TargetFunction,
+            cls: TargetClass,  #TODO: Add instance as well  -> #TODO: Merge with `_cached_function()`
+            *args: Any,
+            **kwargs: Any
+    ) -> TargetReturnType:
+        return _cached_function(target, *args, **kwargs)
+
+
     decorator = GenericDecorator(
         _cached_function,
-        function_for_staticmethod=_through_classmethod,
-        function_for_classmethod=_through_classmethod)
+        function_for_staticmethod=_through_function,
+        function_for_classmethod=_through_function)
     return decorator(__target)
 
 

@@ -814,6 +814,11 @@ def _create_variables() -> Dict[str, Union[int, bool]]:
     return variables
 
 
+def _reset_variables(variables: Dict[str, Union[int, bool]]) -> None:
+    original_values = _create_variables()
+    variables.update(original_values)
+
+
 def _inc_dec(variables: Dict[str, Union[int, bool]]) -> str:
     variables['called'] = True
 
@@ -1205,11 +1210,35 @@ def test_expire_cache__no_args() -> None:
         return _counter_function()
 
 
-    first = _function()
-    
-    second = _function()
+    @expire_cache(expire_time_secs=10)
+    class _Class:
+        def a_method(self) -> int:
+            return _counter_function()
 
-    assert first == second
+
+        @staticmethod
+        def a_staticmethod() -> int:
+            return _counter_function()
+
+
+        @classmethod
+        def a_classmethod(cls) -> int:
+            return _counter_function()
+
+
+    instance = _Class()
+
+    for each in (
+            _function,
+            instance.a_method,
+            instance.a_staticmethod,
+            instance.a_classmethod
+    ):
+        first = each()
+
+        second = each()
+
+        assert first == second
 
 
 def test_expire_cache__no_args__expire() -> None:
@@ -1219,11 +1248,35 @@ def test_expire_cache__no_args__expire() -> None:
         return _counter_function()
 
 
-    first = _function()
-    
-    second = _function()
+    @expire_cache(expire_time_secs=0)
+    class _Class:
+        def a_method(self) -> int:
+            return _counter_function()
 
-    assert first < second
+
+        @staticmethod
+        def a_staticmethod() -> int:
+            return _counter_function()
+
+
+        @classmethod
+        def a_classmethod(cls) -> int:
+            return _counter_function()
+
+
+    instance = _Class()
+
+    for each in (
+            _function,
+            instance.a_method,
+            instance.a_staticmethod,
+            instance.a_classmethod
+    ):
+        first = each()
+
+        second = each()
+
+        assert first < second
 
 
 def test_expire_cache__args() -> None:
@@ -1233,14 +1286,38 @@ def test_expire_cache__args() -> None:
         return arg1 + arg2 + _counter_function()
 
 
-    first = _function(1, 1)
-    
-    different = _function(1, 2)
-    assert different != first
+    @expire_cache(expire_time_secs=0.1)
+    class _Class:
+        def a_method(self, arg1: int, arg2: int) -> int:
+            return arg1 + arg2 + _counter_function()
 
-    second = _function(1, 1)
 
-    assert first == second
+        @staticmethod
+        def a_staticmethod(arg1: int, arg2: int) -> int:
+            return arg1 + arg2 + _counter_function()
+
+
+        @classmethod
+        def a_classmethod(cls, arg1: int, arg2: int) -> int:
+            return arg1 + arg2 + _counter_function()
+
+
+    instance = _Class()
+
+    for each in (
+            _function,
+            instance.a_method,
+            instance.a_staticmethod,
+            instance.a_classmethod
+    ):
+        first = each(1, 1)
+
+        different = each(1, 2)
+        assert different != first
+
+        second = each(1, 1)
+
+        assert first == second
 
 
 def test_expire_cache__kwargs() -> None:
@@ -1250,14 +1327,39 @@ def test_expire_cache__kwargs() -> None:
         return arg1 + arg2 + _counter_function()
 
 
-    first = _function(1, arg2=1)
-    
-    different = _function(1, arg2=2)
-    assert different != first
+    @expire_cache(expire_time_secs=10)
+    class _Class:
+        def a_method(self, arg0: int, arg1: int = 0, arg2: int = 3) -> int:
+            return arg1 + arg2 + _counter_function()
 
-    second = _function(1, arg2=1)
 
-    assert first == second
+        @staticmethod
+        def a_staticmethod(arg0: int, arg1: int = 0, arg2: int = 3) -> int:
+            return arg1 + arg2 + _counter_function()
+
+
+        @classmethod
+        def a_classmethod(
+                cls, arg0: int, arg1: int = 0, arg2: int = 3) -> int:
+            return arg1 + arg2 + _counter_function()
+
+
+    instance = _Class()
+
+    for each in (
+            _function,
+            instance.a_method,
+            instance.a_staticmethod,
+            instance.a_classmethod
+    ):
+        first = each(1, arg2=1)
+
+        different = each(1, arg2=2)
+        assert different != first
+
+        second = each(1, arg2=1)
+
+        assert first == second
 
 
 def test_expire_cache__default_kwargs() -> None:
@@ -1267,14 +1369,39 @@ def test_expire_cache__default_kwargs() -> None:
         return arg1 + arg2 + _counter_function()
 
 
-    first = _function(1)
-    
-    different = _function(1, arg2=4)
-    assert different != first
+    @expire_cache(expire_time_secs=10)
+    class _Class():
+        def a_method(self, arg0: int, arg1: int = 0, arg2: int = 3) -> int:
+            return arg1 + arg2 + _counter_function()
 
-    second = _function(1, arg1=0)
 
-    assert first == second
+        @staticmethod
+        def a_staticmethod(arg0: int, arg1: int = 0, arg2: int = 3) -> int:
+            return arg1 + arg2 + _counter_function()
+
+
+        @classmethod
+        def a_classmethod(
+                cls, arg0: int, arg1: int = 0, arg2: int = 3) -> int:
+            return arg1 + arg2 + _counter_function()
+
+
+    instance = _Class()
+
+    for each in (
+            _function,
+            instance.a_method,
+            instance.a_staticmethod,
+            instance.a_classmethod
+    ):
+        first = each(1)
+
+        different = each(1, arg2=4)
+        assert different != first
+
+        second = each(1, arg1=0)
+
+        assert first == second
 
 
 def test_expire_cache__max_entries() -> None:
@@ -1286,10 +1413,34 @@ def test_expire_cache__max_entries() -> None:
         return arg
 
 
-    for index in range(max_entries + 1):
-        value = _function(index)
-        assert value == index
-    # endfor
+    @expire_cache(expire_time_secs=10, max_entries=max_entries)
+    class _Class:
+        def a_method(self, arg: int) -> int:
+            return arg
+
+
+        @staticmethod
+        def a_staticmethod(arg: int) -> int:
+            return arg
+
+
+        @expire_cache(expire_time_secs=10, max_entries=max_entries)
+        def a_classmethod(cls, arg: int) -> int:
+            return arg
+
+
+    instance = _Class()
+
+    for each in (
+            _function,
+            instance.a_method,
+            instance.a_staticmethod,
+            instance.a_classmethod
+    ):
+        for index in range(max_entries + 1):
+            value = each(index)
+            assert value == index
+        # endfor
 
 
 def test_expire_cache__max_entries__same_args() -> None:
@@ -1301,10 +1452,34 @@ def test_expire_cache__max_entries__same_args() -> None:
         return arg
 
 
-    for index in range(max_entries + 1):
-        value = _function(0)
-        assert value == 0
-    # endfor
+    @expire_cache(expire_time_secs=10, max_entries=max_entries)
+    class _Class:
+        def a_method(self, arg: int) -> int:
+            return arg
+
+
+        @staticmethod
+        def a_staticmethod(arg: int) -> int:
+            return arg
+
+
+        @expire_cache(expire_time_secs=10, max_entries=max_entries)
+        def a_classmethod(cls, arg: int) -> int:
+            return arg
+
+
+    instance = _Class()
+
+    for each in (
+            _function,
+            instance.a_method,
+            instance.a_staticmethod,
+            instance.a_classmethod
+    ):
+        for index in range(max_entries + 1):
+            value = each(0)
+            assert value == 0
+        # endfor
 
 
 def test_expire_cache__max_entries__refresh() -> None:
@@ -1316,14 +1491,38 @@ def test_expire_cache__max_entries__refresh() -> None:
         return arg + _counter_function()
 
 
-    first = _function(0)
+    @expire_cache(expire_time_secs=10, max_entries=max_entries)
+    class _Class:
+        def a_method(self, arg: int) -> int:
+            return arg + _counter_function()
 
-    for index in range(max_entries):
-        _function(index + 1)
 
-    second = _function(0)
+        @staticmethod
+        def a_staticmethod(arg: int) -> int:
+            return arg + _counter_function()
 
-    assert first < second
+
+        @classmethod
+        def a_classmethod(cls, arg: int) -> int:
+            return arg + _counter_function()
+
+
+    instance = _Class()
+
+    for each in (
+            _function,
+            instance.a_method,
+            instance.a_staticmethod,
+            instance.a_classmethod
+    ):
+        first = each(0)
+
+        for index in range(max_entries):
+            each(index + 1)
+
+        second = each(0)
+
+        assert first < second
 
 
 def test_expire_cache__synchronize() -> None:
@@ -1337,7 +1536,33 @@ def test_expire_cache__synchronize() -> None:
         return _inc_dec(variables)
 
 
-    _test_synchronized(variables, _function)
+    @expire_cache(expire_time_secs=0.0, max_entries=max_entries)
+    class _Class:
+        def a_method(self) -> str:
+            return _inc_dec(variables)
+
+
+        @staticmethod
+        def a_staticmethod() -> str:
+            return _inc_dec(variables)
+
+
+        @classmethod
+        def a_classmethod(cls) -> str:
+            return _inc_dec(variables)
+
+
+    instance = _Class()
+
+    for each in (
+            _function,
+            instance.a_method,
+            instance.a_staticmethod,
+            instance.a_classmethod
+    ):
+        _reset_variables(variables)
+
+        _test_synchronized(variables, each)
 
 
 # extend_with_method ##
