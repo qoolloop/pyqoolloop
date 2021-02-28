@@ -683,7 +683,7 @@ def synchronized_on_instance(
         return result
 
 
-    def _call_when_decorating_method(
+    def _call_when_decorating_method(  #TODO: Somehow merge with _call_when_decorating_class()
             target: Any,  # TargetFunction,
             *args: Any,
             **kwargs: Any
