@@ -683,7 +683,7 @@ def synchronized_on_instance(
         return result
 
 
-    def _call_function(
+    def _call_when_decorating_method(
             target: Any,  # TargetFunction,
             *args: Any,
             **kwargs: Any
@@ -692,7 +692,7 @@ def synchronized_on_instance(
         return _call(target, lock_holder, *args, **kwargs)
     
 
-    def _call_method(
+    def _call_when_decorating_class(
             target: Any,  # TargetFunction,
             cls: Type[TargetClass],
             instance: TargetClass,
@@ -704,8 +704,8 @@ def synchronized_on_instance(
 
 
     decorator = GenericDecorator(
-        _call_function,  #TODO: necessary?
-        wrapper_for_instancemethod=_call_method,
+        _call_when_decorating_method,
+        wrapper_for_instancemethod=_call_when_decorating_class,
         wrapper_for_staticmethod=_through_method,
         wrapper_for_classmethod=_through_method)
     return decorator(__target)
