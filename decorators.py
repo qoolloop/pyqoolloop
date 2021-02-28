@@ -80,9 +80,9 @@ Generic type for function that calls the decorated method
 """
 
 #TODO: Alias currently doesn't work https://github.com/python/mypy/issues/8273
-FunctionWrapperFunction = Callable[[TargetFunction], TargetFunction]
+FunctionWrapperFactory = Callable[[TargetFunction], TargetFunction]
 """
-Type for function that wraps a decorated function
+Type for function that returns a wrapper for a decorated function.
 
 To be used if the wrapped function has the same signature as the target
 function.
@@ -90,9 +90,9 @@ function.
 :param TargetFunction: Type for function that is being decorated.
 """
 
-ClassWrapperFunction = Callable[[Type[TargetClass]], Type[TargetClass]]
+ClassWrapperFactory = Callable[[Type[TargetClass]], Type[TargetClass]]
 """
-Type for function that wraps a decorated class
+Type for function that returns a wrapper for a decorated class.
 
 To be used if the wrapped class has the same methods as the target class.
 
@@ -136,10 +136,10 @@ class GenericDecorator:
     def __init__(self,
                  called_function: TargetCallerFunction[TargetReturnType],
                  #TODO: Add function for instance method
-                 function_for_staticmethod: Optional[
+                 factory_for_staticmethod: Optional[
                      TargetMethodCallerFunction[
                          TargetReturnType, TargetClass]] = None,
-                 function_for_classmethod: Optional[
+                 factory_for_classmethod: Optional[
                      TargetMethodCallerFunction[
                          TargetReturnType, TargetClass]] = None
                  ) -> None:
@@ -150,20 +150,20 @@ class GenericDecorator:
           | `target` will have the following signature:
           |   callable(\*args, \**kwargs)
         
-        :param function_for_staticmethod:
+        :param factory_for_staticmethod:
           |   (callable(target, cls, instance, \*args, \**kwargs))
           | Function to be called when decorating a static method.
           | `target` will have the following signature:
           |   callable(\*args, \**kwargs)
         
-        :param function_for_classmethod:
+        :param factory_for_classmethod:
           |   (callable(target, cls, instance, \*args, \**kwargs))
           | Function to be called when decorating a class method.
           | `target` will have the following signature:
           |   callable(\*args, \**kwargs)
 
         .. note::
-          `function_for_staticmethod` and `function_for_classmethod` are only
+          `factory_for_staticmethod` and `factory_for_classmethod` are only
           used for class decorators
         
         """
@@ -191,9 +191,9 @@ class GenericDecorator:
 
         
         self.called_function = called_function
-        self.function_for_staticmethod = function_for_staticmethod or \
+        self.factory_for_staticmethod = factory_for_staticmethod or \
             default_function  #TODO: `called_function` instead of `default_function`
-        self.function_for_classmethod = function_for_classmethod or \
+        self.factory_for_classmethod = factory_for_classmethod or \
             default_function  #TODO: `called_function` instead of `default_function`
 
 
@@ -201,8 +201,8 @@ class GenericDecorator:
     def __call__(
             self, target: None
     ) -> Union[
-        FunctionWrapperFunction[TargetFunction],
-        ClassWrapperFunction[TargetClass]
+        FunctionWrapperFactory[TargetFunction],
+        ClassWrapperFactory[TargetClass]
     ]:
         ...
         
@@ -220,8 +220,8 @@ class GenericDecorator:
     # ) -> Union[  #TODO: Unions don't work with `TypeVar` (mypy 0.800) https://github.com/python/mypy/issues/3644
     #     TargetFunction,
     #     Type[TargetClass],
-    #     FunctionWrapperFunction[TargetFunction],
-    #     ClassWrapperFunction[TargetClass]
+    #     FunctionWrapperFactory[TargetFunction],
+    #     ClassWrapperFactory[TargetClass]
     # ]:
         """
         Function object to use to return from decorator.
@@ -248,7 +248,7 @@ class GenericDecorator:
                             *args: Any, **kwargs: Any
                     ) -> Any:  # TargetReturnType:
                         function = self.method.__get__(instance, owner)
-                        return decorator_self.function_for_staticmethod(
+                        return decorator_self.factory_for_staticmethod(
                             #TODO: Incompatible return value type (got "TargetReturnType", expected "TargetReturnType")  [return-value]
                             function, owner, instance, *args, **kwargs)
 
@@ -269,7 +269,7 @@ class GenericDecorator:
                             *args: Any, **kwargs: Any
                     ) -> Any:  #TODO: TargetReturnType:
                         function = self.method.__get__(instance, owner)
-                        return decorator_self.function_for_classmethod(
+                        return decorator_self.factory_for_classmethod(
                             #TODO: Incompatible return value type (got "TargetReturnType", expected "TargetReturnType")  [return-value]
                             function, owner, instance, *args, **kwargs)
 
@@ -548,7 +548,7 @@ def synchronized_on_function(
         lock_field: str = '__lock',
         dont_synchronize: bool = False
 ) -> Callable[[TargetFunction], TargetFunction]:
-    # FunctionWrapperFunction[TargetFunction]:
+    # FunctionWrapperFactory[TargetFunction]:
     ...
 
 
@@ -558,7 +558,7 @@ def synchronized_on_function(
         lock_field: str = '__lock',
         dont_synchronize: bool = False
 ) -> Callable[..., Any]:
-# Union[TargetFunction, FunctionWrapperFunction[TargetFunction]]:  #TODO: doesn't work (mypy 0.800) https://github.com/python/mypy/issues/3644
+# Union[TargetFunction, FunctionWrapperFactory[TargetFunction]]:  #TODO: doesn't work (mypy 0.800) https://github.com/python/mypy/issues/3644
     """
     Used to decorate function that needs thread locking for access
 
@@ -599,8 +599,8 @@ def synchronized_on_function(
     #TODO: A little inefficient when dont_synchronize=True
     decorator = GenericDecorator(
         call_function,
-        function_for_staticmethod=_through_method,
-        function_for_classmethod=_through_method)
+        factory_for_staticmethod=_through_method,
+        factory_for_classmethod=_through_method)
     return decorator(__target)
 
 
@@ -610,9 +610,9 @@ def synchronized_on_instance(
 ) -> Callable[[Target], Target]:
     # Union[
     #     Callable[[TargetFunction], TargetFunction],
-    #     # FunctionWrapperFunction[TargetFunction],
+    #     # FunctionWrapperFactory[TargetFunction],
     #     Callable[[Type[TargetClass]], Type[TargetClass]],
-    #     # ClassWrapperFunction[TargetClass]
+    #     # ClassWrapperFactory[TargetClass]
     # ]:
     ...
     
@@ -634,8 +634,8 @@ def synchronized_on_instance(
 # ) -> Union[  #TODO: Unions don't work with `TypeVar` (mypy 0.800) https://github.com/python/mypy/issues/3644
 #     TargetFunction,
 #     Type[TargetClass],
-#     FunctionWrapperFunction[TargetFunction],
-#     ClassWrapperFunction[TargetClass]
+#     FunctionWrapperFactory[TargetFunction],
+#     ClassWrapperFactory[TargetClass]
 # ]:
     """
     Used to decorate instance methods and classes that need thread locking
@@ -671,8 +671,8 @@ def synchronized_on_instance(
 
     decorator = GenericDecorator(
         call_function,
-        function_for_staticmethod=_through_method,
-        function_for_classmethod=_through_method)
+        factory_for_staticmethod=_through_method,
+        factory_for_classmethod=_through_method)
     return decorator(__target)
 
 
@@ -680,7 +680,7 @@ def synchronized_on_class(
         __target: Optional[Type[TargetClass]] = None,
         *,
         lock_field: str = '__lock'
-) -> Union[Type[TargetClass], ClassWrapperFunction[TargetClass]]:
+) -> Union[Type[TargetClass], ClassWrapperFactory[TargetClass]]:
     #TODO: Not sure whether locks should be on each subclass or use one for all subclasses
     ...
 
@@ -737,7 +737,7 @@ def keep_cache(
         dont_synchronize: bool = False,
         exclude_kw: Iterable[str] = ()
 ) -> Callable[[TargetFunction], TargetFunction]:
-    # FunctionWrapperFunction[TargetFunction]:
+    # FunctionWrapperFactory[TargetFunction]:
     ...
     
 
@@ -749,7 +749,7 @@ def keep_cache(
         dont_synchronize: bool = False,
         exclude_kw: Iterable[str] = ()
 ) -> Callable[..., Any]:
-# Union[TargetFunction, FunctionWrapperFunction[TargetFunction]]:  #TODO: Unions don't work with `TypeVar` (mypy 0.800) https://github.com/python/mypy/issues/3644
+# Union[TargetFunction, FunctionWrapperFactory[TargetFunction]]:  #TODO: Unions don't work with `TypeVar` (mypy 0.800) https://github.com/python/mypy/issues/3644
     """
     Decorator to cache returned values of a function for at least the time
     specified since the last call
@@ -805,8 +805,8 @@ def keep_cache(
 
     decorator = GenericDecorator(
         _cached_function,
-        function_for_staticmethod=_through_method,
-        function_for_classmethod=_through_method)
+        factory_for_staticmethod=_through_method,
+        factory_for_classmethod=_through_method)
     return decorator(__target)
 
 
@@ -829,7 +829,7 @@ def expire_cache(
         max_entries: Optional[int] = None,
         dont_synchronize: bool = False
 ) -> Callable[[TargetFunction], TargetFunction]:
-    # FunctionWrapperFunction[TargetFunction]:
+    # FunctionWrapperFactory[TargetFunction]:
     ...
 
 
@@ -840,7 +840,7 @@ def expire_cache(
     max_entries: Optional[int] = None,
     dont_synchronize: bool = False
 ) -> Callable[..., Any]:
-# Union[TargetFunction, FunctionWrapperFunction[TargetFunction]]:  #TODO: Unions don't work with `TypeVar`. (mypy 0.800) https://github.com/python/mypy/issues/3644
+# Union[TargetFunction, FunctionWrapperFactory[TargetFunction]]:  #TODO: Unions don't work with `TypeVar`. (mypy 0.800) https://github.com/python/mypy/issues/3644
     #TODO: exclude_kw
     """
     Decorator to cache returned values of a function that are held for at most
@@ -908,15 +908,15 @@ def expire_cache(
 
     decorator = GenericDecorator(
         _cached_function,
-        function_for_staticmethod=_through_function,
-        function_for_classmethod=_through_function)
+        factory_for_staticmethod=_through_function,
+        factory_for_classmethod=_through_function)
     return decorator(__target)
 
 
 def extend_with_method(
         __extended_class: Type[TargetClass]
 ) -> Callable[[TargetFunction], TargetFunction]:
-    # FunctionWrapperFunction[TargetFunction]:
+    # FunctionWrapperFactory[TargetFunction]:
     """
     Decorator to add a global function as a method to a class
 
@@ -940,7 +940,7 @@ def extend_with_method(
 def extend_with_static_method(
         __extended_class: Type[TargetClass]
 ) -> Callable[[TargetFunction], TargetFunction]:
-    # FunctionWrapperFunction[TargetFunction]:
+    # FunctionWrapperFactory[TargetFunction]:
     """
     Decorator to add a global function as a static method to a class
 
@@ -965,7 +965,7 @@ def extend_with_static_method(
 def extend_with_class_method(
         __extended_class: Type[TargetClass]
 ) -> Callable[[TargetFunction], TargetFunction]:
-    # FunctionWrapperFunction[TargetFunction]:
+    # FunctionWrapperFactory[TargetFunction]:
     """
     Decorator to add a function as a class method to a class
 
@@ -990,7 +990,7 @@ def extend_with_class_method(
 def extension(
         __extended_class: Type[object]
 ) -> Callable[[Type[TargetClass]], Type[TargetClass]]:
-    # ClassWrapperFunction[TargetClass]:
+    # ClassWrapperFactory[TargetClass]:
     """
     Decorator to add all the methods in a class to another class
 
