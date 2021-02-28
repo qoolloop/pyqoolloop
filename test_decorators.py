@@ -508,19 +508,19 @@ class UnhandledException(Exception):
     pass
 
 
-@pytest.mark.parametrize('retries, exceptions', (
+@pytest.mark.parametrize('attempts, exceptions', (
     (1, AnException),
     (2, (AnException, RuntimeError)),
     (3, (TypeError, AnException)),
 ))
 def test_retry__with_exceptions(
-        retries: int,
+        attempts: int,
         exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]]
 ) -> None:
 
     result = {'count': 0}
 
-    @retry(retries, exceptions)
+    @retry(attempts, exceptions)
     def func(
             arg1: str,
             arg2: str,
@@ -539,21 +539,21 @@ def test_retry__with_exceptions(
     with pytest.raises(AnException):
         func('arg1', 'arg2', 'kwarg1', 'kwarg2')
 
-    assert result['count'] == retries
+    assert result['count'] == attempts
 
 
-@pytest.mark.parametrize('retries, exceptions', (
+@pytest.mark.parametrize('attempts, exceptions', (
     (1, AnException),
     (2, (AnException, RuntimeError)),
     (3, (TypeError, AnException)),
 ))
 def test_retry__with_unhandled_exceptions(
-        retries: int,
+        attempts: int,
         exceptions: Union[Type[Exception], Tuple[Type[Exception]]]) -> None:
 
     result = {'count': 0}
 
-    @retry(retries, exceptions)
+    @retry(attempts, exceptions)
     def func(
             arg1: str,
             arg2: str,
@@ -575,19 +575,19 @@ def test_retry__with_unhandled_exceptions(
     assert result['count'] == 1
 
 
-@pytest.mark.parametrize('retries, exceptions', (
+@pytest.mark.parametrize('attempts, exceptions', (
     (1, AnException),
     (2, (AnException, RuntimeError)),
     (3, (TypeError, AnException)),
 ))
 def test_retry__with_no_exceptions(
-        retries: int,
+        attempts: int,
         exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]]
 ) -> None:
 
     result = {'count': 0}
 
-    @retry(retries, exceptions)
+    @retry(attempts, exceptions)
     def func(
             arg1: str,
             arg2: str,
@@ -610,12 +610,12 @@ def test_retry__with_no_exceptions(
     assert result['count'] == 1
 
     
-@pytest.mark.parametrize('retries', (
+@pytest.mark.parametrize('attempts', (
     1,
     2,
     3,
 ))
-def test_retry__with_extra_argument(retries: int) -> None:
+def test_retry__with_extra_argument(attempts: int) -> None:
 
     result = {'count': 0}
 
@@ -641,17 +641,17 @@ def test_retry__with_extra_argument(retries: int) -> None:
 
     with pytest.raises(AnException):
         func(
-            'arg1', 'arg2', kwarg2='kwarg2', kwarg1='kwarg1', retries=retries)
+            'arg1', 'arg2', kwarg2='kwarg2', kwarg1='kwarg1', attempts=attempts)
 
-    assert result['count'] == retries
+    assert result['count'] == attempts
 
 
-@pytest.mark.parametrize('retries_value', (
+@pytest.mark.parametrize('attempts_value', (
     1,
     2,
     3,
 ))
-def test_retry__without_extra_argument(retries_value: int) -> None:
+def test_retry__without_extra_argument(attempts_value: int) -> None:
 
     result = {'count': 0}
 
@@ -664,12 +664,12 @@ def test_retry__without_extra_argument(retries_value: int) -> None:
             arg2: str,
             kwarg1: Optional[str] = None,
             kwarg2: Optional[str] = None,
-            retries: Optional[int] = None) -> None:
+            attempts: Optional[int] = None) -> None:
         assert arg1 == 'arg1'
         assert arg2 == 'arg2'
         assert kwarg1 == 'kwarg1'
         assert kwarg2 == 'kwarg2'
-        assert retries == retries_value
+        assert attempts == attempts_value
 
         result['count'] += 1
 
@@ -678,18 +678,18 @@ def test_retry__without_extra_argument(retries_value: int) -> None:
 
     with pytest.raises(AnException):
         func('arg1', 'arg2', kwarg2='kwarg2', kwarg1='kwarg1',
-             retries=retries_value)
+             attempts=attempts_value)
 
     assert result['count'] == 1
 
 
-@pytest.mark.parametrize('retries, exceptions', (
+@pytest.mark.parametrize('attempts, exceptions', (
     (1, AnException),
     (2, (AnException, RuntimeError)),
     (3, (TypeError, AnException)),
 ))
 def test_retry__method(
-        retries: int,
+        attempts: int,
         exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]]
 ) -> None:
 
@@ -697,7 +697,7 @@ def test_retry__method(
 
     class A:
 
-        @retry(retries, exceptions)
+        @retry(attempts, exceptions)
         def func(
                 self,
                 arg1: str,
@@ -718,16 +718,16 @@ def test_retry__method(
     with pytest.raises(AnException):
         a.func('arg1', 'arg2', 'kwarg1', 'kwarg2')
 
-    assert result['count'] == retries
+    assert result['count'] == attempts
     
 
-@pytest.mark.parametrize('retries, exceptions', (
+@pytest.mark.parametrize('attempts, exceptions', (
     (1, AnException),
     (2, (AnException, RuntimeError)),
     (3, (TypeError, AnException)),
 ))
 def test_retry__staticmethod(
-        retries: int,
+        attempts: int,
         exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]]
 ) -> None:
 
@@ -736,7 +736,7 @@ def test_retry__staticmethod(
     class A:
 
         @staticmethod
-        @retry(retries, exceptions)
+        @retry(attempts, exceptions)
         def func(
                 arg1: str,
                 arg2: str,
@@ -755,22 +755,22 @@ def test_retry__staticmethod(
     with pytest.raises(AnException):
         A.func('arg1', 'arg2', 'kwarg1', 'kwarg2')
 
-    assert result['count'] == retries
+    assert result['count'] == attempts
 
     a = A()
     with pytest.raises(AnException):
         a.func('arg1', 'arg2', 'kwarg1', 'kwarg2')
 
-    assert result['count'] == retries * 2
+    assert result['count'] == attempts * 2
     
 
-@pytest.mark.parametrize('retries, exceptions', (
+@pytest.mark.parametrize('attempts, exceptions', (
     (1, AnException),
     (2, (AnException, RuntimeError)),
     (3, (TypeError, AnException)),
 ))
 def test_retry__classmethod(
-        retries: int,
+        attempts: int,
         exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]]
 ) -> None:
     result = {'count': 0}
@@ -778,7 +778,7 @@ def test_retry__classmethod(
     class A:
 
         @classmethod
-        @retry(retries, exceptions)
+        @retry(attempts, exceptions)
         def func(
                 cls,
                 arg1: str,
@@ -798,13 +798,13 @@ def test_retry__classmethod(
     with pytest.raises(AnException):
         A.func('arg1', 'arg2', 'kwarg1', 'kwarg2')
 
-    assert result['count'] == retries
+    assert result['count'] == attempts
 
     a = A()
     with pytest.raises(AnException):
         a.func('arg1', 'arg2', 'kwarg1', 'kwarg2')
 
-    assert result['count'] == retries * 2
+    assert result['count'] == attempts * 2
     
 
 # common functions ###

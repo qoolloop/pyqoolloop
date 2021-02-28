@@ -57,7 +57,7 @@ Target = TypeVar('Target', Callable[..., Any], Type[object])
 
 TargetCallerFunction = Callable[
     [Arg(Callable[..., TargetReturnType], 'target'), VarArg(), KwArg()],
-    TargetReturnType]  #TODO: Callable[[TargetFunction, ...], TargetReturnType]
+    TargetReturnType]  # Callable[[TargetFunction, ...], TargetReturnType]
 """
 Generic type for function that calls the decorated function
 
@@ -72,14 +72,14 @@ TargetMethodCallerFunction = Callable[
         VarArg(),
         KwArg()
     ],
-    TargetReturnType]  #TODO: Callable[[TargetFunction, ...], TargetReturnType]
+    TargetReturnType]  # Callable[[TargetFunction, ...], TargetReturnType]
 """
 Generic type for function that calls the decorated method
 
 :param TargetReturnType: Return type of the decorated method.
 """
 
-#TODO: Alias currently doesn't work https://github.com/python/mypy/issues/8273
+# Alias currently doesn't work https://github.com/python/mypy/issues/8273
 FunctionWrapperFactory = Callable[[TargetFunction], TargetFunction]
 """
 Type for function that returns a wrapper for a decorated function.
@@ -98,8 +98,6 @@ To be used if the wrapped class has the same methods as the target class.
 
 :param TargetClass: Type for class that is being decorated.
 """
-
-#TODO: ? WrapperFunction = Callable[[Target], Target]
 
 
 def _through_method(
@@ -250,6 +248,7 @@ class GenericDecorator:
                         function = self.method.__get__(instance, owner)
                         return decorator_self.factory_for_staticmethod(
                             #TODO: Incompatible return value type (got "TargetReturnType", expected "TargetReturnType")  [return-value]
+                            # if `TargetReturnType` is specified for return type
                             function, owner, instance, *args, **kwargs)
 
                     return call_factory
@@ -267,10 +266,11 @@ class GenericDecorator:
 
                     def call_factory(
                             *args: Any, **kwargs: Any
-                    ) -> Any:  #TODO: TargetReturnType:
+                    ) -> Any:  # TargetReturnType:
                         function = self.method.__get__(instance, owner)
                         return decorator_self.factory_for_classmethod(
                             #TODO: Incompatible return value type (got "TargetReturnType", expected "TargetReturnType")  [return-value]
+                            # if `TargetReturnType` is specified for return type
                             function, owner, instance, *args, **kwargs)
 
                     return call_factory
@@ -471,11 +471,11 @@ def deprecated(
     return decorator
 
 
-#TODO: type hint for `retries` argument added to decorated function
+#TODO: type hint for `attempts` argument added to decorated function
 # c.f. https://stackoverflow.com/a/47060298/2400328
 # c.f. https://www.python.org/dev/peps/pep-0612/
 def retry(
-        retries: int,
+        attempts: int,
         exceptions: Union[
             Type[BaseException], Tuple[Type[BaseException], ...]],
         interval_secs: float = 0.0,
@@ -488,12 +488,12 @@ def retry(
     Used to decorate functions that should be retried if certain exceptions are
     raised
 
-    :param retries: Maximum number of times the function should be run
+    :param attempts: Maximum number of times the function should be run
       #TODO: Should be named `tries`?
     :param exceptions: Rerun the function if these exceptions are raised
-    :param interval_secs: Interval between retries in seconds.
-    :param extra_argument: If `True`, an argument named `retries` is added to
-      the function, which overrides the `retries` value specified by the
+    :param interval_secs: Interval between attempts in seconds.
+    :param extra_argument: If `True`, an argument named `attempts` is added to
+      the function, which overrides the `attempts` value specified by the
       decorator
     """
 
@@ -502,19 +502,19 @@ def retry(
             *args: Any,
             **kwargs: Any) -> TargetReturnType:
 
-        if extra_argument and ('retries' in kwargs):
-            actual_retries = kwargs['retries']
-            del kwargs['retries']
+        if extra_argument and ('attempts' in kwargs):
+            actual_attempts = kwargs['attempts']
+            del kwargs['attempts']
 
         else:
-            actual_retries = retries
+            actual_attempts = attempts
         
-        for iteration in range(actual_retries):
+        for iteration in range(actual_attempts):
             try:
                 return target(*args, **kwargs)
 
             except exceptions:
-                if iteration < actual_retries - 1:
+                if iteration < actual_attempts - 1:
                     time.sleep(interval_secs)
 
                 else:
