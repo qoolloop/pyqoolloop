@@ -666,13 +666,12 @@ def synchronized_on_instance(
       `@staticmethod` and `@classmethod` not supported. If put on classes,
       `@staticmethod` and `@classmethod` will be ignored.
     """
-    def _call_function(
+    def _call(
             target: Any,  # TargetFunction,
+            lock_holder: TargetClass,
             *args: Any,
             **kwargs: Any
     ) -> Any:  # TargetReturnType:
-        lock_holder = args[0]  # `self`
-
         lock = getattr(lock_holder, lock_field, None)
         if lock is None:
             lock = threading.RLock()
@@ -683,6 +682,15 @@ def synchronized_on_instance(
 
         return result
 
+
+    def _call_function(
+            target: Any,  # TargetFunction,
+            *args: Any,
+            **kwargs: Any
+    ) -> Any:  # TargetReturnType:
+        lock_holder = args[0]  # `self`
+        return _call(target, lock_holder, *args, **kwargs)
+    
 
     def _call_method(
             target: Any,  # TargetFunction,
@@ -692,21 +700,11 @@ def synchronized_on_instance(
             **kwargs: Any
     ) -> Any:  # TargetReturnType:
         lock_holder = instance
-        print("Yo!")  #TODO: remove
-
-        lock = getattr(lock_holder, lock_field, None)
-        if lock is None:
-            lock = threading.RLock()
-            setattr(lock_holder, lock_field, lock)
-
-        with lock:
-            result = target(*args, **kwargs)
-
-        return result
+        return _call(target, lock_holder, *args, **kwargs)
 
 
     decorator = GenericDecorator(
-        _call_function,
+        _call_function,  #TODO: necessary?
         wrapper_for_instancemethod=_call_method,
         wrapper_for_staticmethod=_through_method,
         wrapper_for_classmethod=_through_method)
