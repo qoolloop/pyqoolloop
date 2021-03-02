@@ -277,7 +277,7 @@ class GenericDecorator:
 
                     # TargetFunction[TargetReturnType]
                     function: Callable[..., TargetReturnType] \
-                        = self.method.__get__(instance, owner)  #TODO: move outside to `__get__()`?
+                        = self.method.__get__(instance, owner)
                     return call_wrapper
 
 
@@ -304,7 +304,8 @@ class GenericDecorator:
 
 
             for name, value in target_class.__dict__.items():
-                if inspect.isfunction(value):  #TODO: why not `ismethod()`?
+                # not `ismethod()` because not bound
+                if inspect.isfunction(value):
                     descriptor_method = DescriptorForInstanceMethod(value)
                     setattr(target_class, name, descriptor_method)
 
@@ -342,7 +343,6 @@ class GenericDecorator:
             return _make_class_decorator(target)
 
         elif callable(target):
-            #TODO: Pass `cls` and `instance`?
             return factory_for_target
 
         elif isinstance(target, staticmethod):
@@ -694,7 +694,7 @@ def synchronized_on_instance(
         return result
 
 
-    def _call_when_decorating_method(  #TODO: Somehow merge with _call_when_decorating_class()
+    def _call_when_decorating_method(
             target: Any,  # TargetFunction,
             *args: Any,
             **kwargs: Any
@@ -727,7 +727,7 @@ def synchronized_on_class(
         *,
         lock_field: str = '__lock'
 ) -> Union[Type[TargetClass], ClassWrapperFactory[TargetClass]]:
-    #TODO: Not sure whether locks should be on each subclass or use one for all subclasses
+    #TODO: Not sure whether locks should be on each subclass or use one for all subclasses -> Should be one for all subclasses, because of how the topmost class needs synchronization.
     ...
 
 
