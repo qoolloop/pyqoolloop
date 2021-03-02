@@ -68,8 +68,8 @@ Generic type for function that calls the decorated function
 TargetMethodWrapper = Callable[
     [
         Arg(Callable[..., TargetReturnType], 'target'),
-        Arg(Type[TargetClass], 'cls'),
         Arg(TargetClass, 'instance'),
+        Arg(Type[TargetClass], 'cls'),
         VarArg(),
         KwArg()
     ],
@@ -103,8 +103,8 @@ To be used if the wrapped class has the same methods as the target class.
 
 def _through_method(
         target: Callable[..., TargetReturnType],  # TargetFunction,
-        cls: Type[TargetClass],  #TODO: Invert with `instance` to match descriptor
         instance: TargetClass,
+        cls: Type[TargetClass],
         *args: Any,
         **kwargs: Any
 ) -> TargetReturnType:
@@ -152,26 +152,26 @@ class GenericDecorator:
           |   callable(\*args, \**kwargs)
         
         :param wrapper_for_instancemethod:
-          |   (callable(target, cls, instance, \*args, \**kwargs))
+          |   (callable(target, instance, cls, \*args, \**kwargs))
           | Function to be called when decorating an instance method.
           | `target` will have the following signature:
           |   callable(\*args, \**kwargs)
         
         :param wrapper_for_staticmethod:
-          |   (callable(target, cls, instance, \*args, \**kwargs))
+          |   (callable(target, instance, cls, \*args, \**kwargs))
           | Function to be called when decorating a static method.
           | `target` will have the following signature:
           |   callable(\*args, \**kwargs)
         
         :param wrapper_for_classmethod:
-          |   (callable(target, cls, instance, \*args, \**kwargs))
+          |   (callable(target, instance, cls, \*args, \**kwargs))
           | Function to be called when decorating a class method.
           | `target` will have the following signature:
           |   callable(\*args, \**kwargs)
 
         .. note::
-          `wrapper_for_staticmethod` and `wrapper_for_classmethod` are only
-          used for class decorators
+          `wrapper_for_instancemethod`, `wrapper_for_staticmethod` and
+          `wrapper_for_classmethod` are only used for class decorators.
         
         """
         # Attempt to use this class also as a context manager (for use with
@@ -189,8 +189,8 @@ class GenericDecorator:
 
         def default_wrapper(
                 target: Callable[..., TargetReturnType],  # TargetFunction,
-                cls: Type[TargetClass],
                 instance: TargetClass,
+                cls: Type[TargetClass],
                 *args: Any,
                 **kwargs: Any
         ) -> TargetReturnType:
@@ -276,7 +276,7 @@ class GenericDecorator:
                         return self.wrapper(
                             #TODO: Incompatible return value type (got "TargetReturnType", expected "TargetReturnType")  [return-value]
                             # if `TargetReturnType` is specified for return type
-                            function, owner, instance, *args, **kwargs)
+                            function, instance, owner, *args, **kwargs)
 
                     return call_wrapper
 
@@ -705,8 +705,8 @@ def synchronized_on_instance(
 
     def _call_when_decorating_class(
             target: Any,  # TargetFunction,
-            cls: Type[TargetClass],
             instance: TargetClass,
+            cls: Type[TargetClass],
             *args: Any,
             **kwargs: Any
     ) -> Any:  # TargetReturnType:
@@ -944,8 +944,8 @@ def expire_cache(
 
     def _through_function(
             target: Callable[..., TargetReturnType],  # TargetFunction,
-            cls: Type[TargetClass],  #TODO: Merge with `_cached_function()`
             instance: TargetClass,
+            cls: Type[TargetClass],  #TODO: Merge with `_cached_function()`
             *args: Any,
             **kwargs: Any
     ) -> TargetReturnType:
