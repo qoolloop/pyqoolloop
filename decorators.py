@@ -270,14 +270,14 @@ class GenericDecorator:
                             *args: Any, **kwargs: Any
                     ) -> Any:  # TargetReturnType:
                         
-                        # TargetFunction[TargetReturnType]
-                        function: Callable[..., TargetReturnType] \
-                            = self.method.__get__(instance, owner)  #TODO: move outside to `__get__()`?
                         return self.wrapper(
                             #TODO: Incompatible return value type (got "TargetReturnType", expected "TargetReturnType")  [return-value]
                             # if `TargetReturnType` is specified for return type
                             function, instance, owner, *args, **kwargs)
 
+                    # TargetFunction[TargetReturnType]
+                    function: Callable[..., TargetReturnType] \
+                        = self.method.__get__(instance, owner)  #TODO: move outside to `__get__()`?
                     return call_wrapper
 
 
