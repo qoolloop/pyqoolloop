@@ -56,7 +56,7 @@ TargetClass = TypeVar('TargetClass', bound=object)
 Target = TypeVar('Target', Callable[..., Any], Type[object])
 """Type for decorated function or class"""
 
-TargetCallerFunction = Callable[
+TargetFunctionWrapper = Callable[
     [Arg(Callable[..., TargetReturnType], 'target'), VarArg(), KwArg()],
     TargetReturnType]  # Callable[[TargetFunction, ...], TargetReturnType]
 """
@@ -133,7 +133,7 @@ class GenericDecorator:
 
     #TODO: Type hints probably aren't what they're supposed to be, especially with the use of `TypeVar`
     def __init__(self,
-                 wrapper_for_function: TargetCallerFunction[TargetReturnType],
+                 wrapper_for_function: TargetFunctionWrapper[TargetReturnType],
                  wrapper_for_instancemethod: Optional[
                      TargetMethodWrapper[
                          TargetReturnType, TargetClass]] = None,
@@ -156,18 +156,24 @@ class GenericDecorator:
           | Function to be called when decorating an instance method.
           | `target` will have the following signature:
           |   callable(\*args, \**kwargs)
+          | If `None`, `wrapper_for_function()` will be called with
+          | appropriate arguments.
         
         :param wrapper_for_staticmethod:
           |   (callable(target, instance, cls, \*args, \**kwargs))
           | Function to be called when decorating a static method.
           | `target` will have the following signature:
           |   callable(\*args, \**kwargs)
+          | If `None`, `wrapper_for_function()` will be called with
+          | appropriate arguments.
         
         :param wrapper_for_classmethod:
           |   (callable(target, instance, cls, \*args, \**kwargs))
           | Function to be called when decorating a class method.
           | `target` will have the following signature:
           |   callable(\*args, \**kwargs)
+          | If `None`, `wrapper_for_function()` will be called with
+          | appropriate arguments.
 
         .. note::
           `wrapper_for_instancemethod`, `wrapper_for_staticmethod` and
@@ -246,7 +252,7 @@ class GenericDecorator:
             class Descriptor(Protocol):
                 def __get__(
                         self, instance: TargetClass, owner: Type[TargetClass]
-                ) -> TargetCallerFunction[TargetReturnType]:
+                ) -> TargetFunctionWrapper[TargetReturnType]:
                     ...
                 
 
@@ -264,7 +270,7 @@ class GenericDecorator:
 
                 def __get__(
                         self, instance: TargetClass, owner: Type[TargetClass]
-                ) -> TargetCallerFunction[TargetReturnType]:
+                ) -> TargetFunctionWrapper[TargetReturnType]:
 
                     def call_wrapper(
                             *args: Any, **kwargs: Any
@@ -618,7 +624,7 @@ def synchronized_on_function(
     if __target and not dont_synchronize:
         return __target
         
-    call_function: TargetCallerFunction[TargetReturnType] = (
+    call_function: TargetFunctionWrapper[TargetReturnType] = (
         _call_function if not dont_synchronize
         else _through_function)
 
@@ -849,10 +855,7 @@ def keep_cache(
         return value
 
 
-    decorator = GenericDecorator(
-        _cached_function,
-        wrapper_for_staticmethod=_through_method,
-        wrapper_for_classmethod=_through_method)
+    decorator = GenericDecorator(_cached_function)
     return decorator(__target)
 
 
@@ -942,20 +945,7 @@ def expire_cache(
         return value
 
 
-    def _through_function(
-            target: Callable[..., TargetReturnType],  # TargetFunction,
-            instance: TargetClass,
-            cls: Type[TargetClass],  #TODO: Merge with `_cached_function()`
-            *args: Any,
-            **kwargs: Any
-    ) -> TargetReturnType:
-        return _cached_function(target, *args, **kwargs)
-
-
-    decorator = GenericDecorator(
-        _cached_function,
-        wrapper_for_staticmethod=_through_function,
-        wrapper_for_classmethod=_through_function)
+    decorator = GenericDecorator(_cached_function)
     return decorator(__target)
 
 

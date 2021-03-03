@@ -1,17 +1,3 @@
-from . import decorators
-from .decorators import (
-    deprecated,
-    expire_cache,
-    extend_with_method,
-    extend_with_class_method,
-    extend_with_static_method,
-    extension,
-    keep_cache,
-    pass_args,
-    retry,
-    synchronized_on_function,
-    synchronized_on_instance,
-)
 import inspect
 from mypy_extensions import (
     DefaultArg,
@@ -31,6 +17,22 @@ from typing import (
     Type,
     Tuple,
     Union,
+)
+
+from . import decorators
+from .decorators import (
+    deprecated,
+    expire_cache,
+    extend_with_method,
+    extend_with_class_method,
+    extend_with_static_method,
+    extension,
+    keep_cache,
+    pass_args,
+    retry,
+    synchronized_on_function,
+    synchronized_on_instance,
+    Target,
 )
 
 import pylog
@@ -1025,21 +1027,56 @@ def test_synchronized_on_instance__class__no_parentheses() -> None:
     _test_synchronized(variables, a.method, (variables,))
 
 
-# keep_cache ###
+# common cache ###
 
-def test_keep_cache__no_args() -> None:
+CACHE_DECORATORS = (
+    (keep_cache, dict(keep_time_secs=0.1)),
+    (expire_cache, dict(expire_time_secs=10)),
+)
     
-    @keep_cache(keep_time_secs=0.1)
+
+@pytest.mark.parametrize('decorator, kwargs',
+                         CACHE_DECORATORS)
+def test_cache__no_args(
+        decorator, kwargs: Any) -> None:
+    
+    @decorator(**kwargs)
     def _function() -> int:
         return _counter_function()
 
 
-    first = _function()
-    
-    second = _function()
+    @decorator(**kwargs)
+    class _Class:
+        def a_method(self) -> int:
+            return _counter_function()
 
-    assert first == second
 
+        @staticmethod
+        def a_staticmethod() -> int:
+            return _counter_function()
+
+
+        @classmethod
+        def a_classmethod(cls) -> int:
+            return _counter_function()
+
+
+    instance = _Class()
+
+    for each in (
+            _function,
+            instance.a_method,
+            instance.a_staticmethod,
+            instance.a_classmethod
+    ):
+        first = each()
+
+        second = each()
+
+        assert first == second
+
+
+# keep_cache ###
 
 def test_keep_cache__args() -> None:
 
@@ -1202,44 +1239,6 @@ def test_keep_cache__exclude_kw() -> None:
 
 
 # expire_cache ###
-
-def test_expire_cache__no_args() -> None:
-    
-    @expire_cache(expire_time_secs=10)
-    def _function() -> int:
-        return _counter_function()
-
-
-    @expire_cache(expire_time_secs=10)
-    class _Class:
-        def a_method(self) -> int:
-            return _counter_function()
-
-
-        @staticmethod
-        def a_staticmethod() -> int:
-            return _counter_function()
-
-
-        @classmethod
-        def a_classmethod(cls) -> int:
-            return _counter_function()
-
-
-    instance = _Class()
-
-    for each in (
-            _function,
-            instance.a_method,
-            instance.a_staticmethod,
-            instance.a_classmethod
-    ):
-        first = each()
-
-        second = each()
-
-        assert first == second
-
 
 def test_expire_cache__no_args__expire() -> None:
 
