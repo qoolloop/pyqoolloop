@@ -32,7 +32,6 @@ from .decorators import (
     retry,
     synchronized_on_function,
     synchronized_on_instance,
-    Target,
 )
 
 import pylog
@@ -1038,7 +1037,9 @@ CACHE_DECORATORS = (
 @pytest.mark.parametrize('decorator, kwargs',
                          CACHE_DECORATORS)
 def test_cache__no_args(
-        decorator, kwargs: Any) -> None:
+        decorator: Callable[..., Callable[..., Any]],  #TODO: ?
+        kwargs: Any
+) -> None:
     
     @decorator(**kwargs)
     def _function() -> int:
@@ -1076,24 +1077,53 @@ def test_cache__no_args(
         assert first == second
 
 
-# keep_cache ###
+@pytest.mark.parametrize('decorator, kwargs',
+                         CACHE_DECORATORS)
+def test_cache__args(
+        decorator: Callable[..., Callable[..., Any]],  #TODO: ?
+        kwargs: Any
+) -> None:
 
-def test_keep_cache__args() -> None:
-
-    @keep_cache(keep_time_secs=0.1)
+    @decorator(**kwargs)
     def _function(arg1: int, arg2: int) -> int:
         return arg1 + arg2 + _counter_function()
 
 
-    first = _function(1, 1)
-    
-    different = _function(1, 2)
-    assert different != first
+    @decorator(**kwargs)
+    class _Class:
+        def a_method(self, arg1: int, arg2: int) -> int:
+            return arg1 + arg2 + _counter_function()
 
-    second = _function(1, 1)
 
-    assert first == second
+        @staticmethod
+        def a_staticmethod(arg1: int, arg2: int) -> int:
+            return arg1 + arg2 + _counter_function()
 
+
+        @classmethod
+        def a_classmethod(cls, arg1: int, arg2: int) -> int:
+            return arg1 + arg2 + _counter_function()
+
+
+    instance = _Class()
+
+    for each in (
+            _function,
+            instance.a_method,
+            instance.a_staticmethod,
+            instance.a_classmethod
+    ):
+        first = each(1, 1)
+
+        different = each(1, 2)
+        assert different != first
+
+        second = each(1, 1)
+
+        assert first == second
+
+
+# keep_cache ###
 
 def test_keep_cache__kwargs() -> None:
 
@@ -1276,47 +1306,6 @@ def test_expire_cache__no_args__expire() -> None:
         second = each()
 
         assert first < second
-
-
-def test_expire_cache__args() -> None:
-
-    @expire_cache(expire_time_secs=0.1)
-    def _function(arg1: int, arg2: int) -> int:
-        return arg1 + arg2 + _counter_function()
-
-
-    @expire_cache(expire_time_secs=0.1)
-    class _Class:
-        def a_method(self, arg1: int, arg2: int) -> int:
-            return arg1 + arg2 + _counter_function()
-
-
-        @staticmethod
-        def a_staticmethod(arg1: int, arg2: int) -> int:
-            return arg1 + arg2 + _counter_function()
-
-
-        @classmethod
-        def a_classmethod(cls, arg1: int, arg2: int) -> int:
-            return arg1 + arg2 + _counter_function()
-
-
-    instance = _Class()
-
-    for each in (
-            _function,
-            instance.a_method,
-            instance.a_staticmethod,
-            instance.a_classmethod
-    ):
-        first = each(1, 1)
-
-        different = each(1, 2)
-        assert different != first
-
-        second = each(1, 1)
-
-        assert first == second
 
 
 def test_expire_cache__kwargs() -> None:
