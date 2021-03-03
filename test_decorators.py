@@ -1205,7 +1205,9 @@ def test_cache__default_kwargs(
             _function,
             instance.a_method,
             instance.a_staticmethod,
-            instance.a_classmethod
+            instance.a_classmethod,
+            _Class.a_staticmethod,
+            _Class.a_classmethod,
     ):
         first = each(1)
 
@@ -1228,17 +1230,41 @@ def test_keep_cache__max_entries() -> None:
         return arg
 
 
-    for index in range(max_entries + 1):
-        if index == max_entries:
-            with pytest.raises(AssertionError):
-                _ = _function(index)
-            # endwith
+    @keep_cache(keep_time_secs=10, max_entries=max_entries)
+    class _Class():
+        def a_method(arg: int) -> int:
+            return arg
 
-        else:
-            value = _function(index)
-            assert value == index
-        # endif
-    # endfor
+        @staticmethod
+        def a_staticmethod(arg: int) -> int:
+            return arg
+
+        @classmethod
+        def a_classmethod(arg: int) -> int:
+            return arg
+
+
+    instance = _Class()
+
+    for each in (
+            _function,
+            instance.a_method,
+            instance.a_staticmethod,
+            instance.a_classmethod,
+            _Class.a_staticmethod,
+            _Class.a_classmethod,
+    ):
+        for index in range(max_entries + 1):
+            if index == max_entries:
+                with pytest.raises(AssertionError):
+                    _ = _function(index)
+                # endwith
+
+            else:
+                value = _function(index)
+                assert value == index
+            # endif
+        # endfor
 
 
 def test_keep_cache__max_entries__same_args() -> None:
@@ -1388,7 +1414,7 @@ def test_expire_cache__max_entries() -> None:
             return arg
 
 
-        @expire_cache(expire_time_secs=10, max_entries=max_entries)
+        @classmethod
         def a_classmethod(cls, arg: int) -> int:
             return arg
 
@@ -1399,7 +1425,9 @@ def test_expire_cache__max_entries() -> None:
             _function,
             instance.a_method,
             instance.a_staticmethod,
-            instance.a_classmethod
+            instance.a_classmethod,
+            _Class.a_staticmethod,  #TODO: for other tests too
+            _Class.a_classmethod,
     ):
         for index in range(max_entries + 1):
             value = each(index)
