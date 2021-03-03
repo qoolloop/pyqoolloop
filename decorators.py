@@ -826,6 +826,11 @@ def keep_cache(
     ] = OrderedDict()
 
     
+    #TODO: Document or change implementation
+    # Note that synchronization is on `_cached_function()`, not each target
+    # function. This is necessary for guarding the cache, but is too much
+    # for each target function. More concretely, if `expire_cache` decorates
+    # a class, one `cache` is used for all the methods.
     @synchronized_on_function(dont_synchronize=dont_synchronize)
     def _cached_function(
             target: Callable[..., TargetReturnType],  # TargetFunction,
@@ -907,7 +912,8 @@ def expire_cache(
         FrozenSet[Tuple[str, Any]], Tuple[datetime.datetime, Any]
     ] = OrderedDict()
 
-    
+
+    #TODO: Document or change implementation
     # Note that synchronization is on `_cached_function()`, not each target
     # function. This is necessary for guarding the cache, but is too much
     # for each target function. More concretely, if `expire_cache` decorates

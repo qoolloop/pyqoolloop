@@ -1232,7 +1232,7 @@ def test_keep_cache__max_entries() -> None:
 
     @keep_cache(keep_time_secs=10, max_entries=max_entries)
     class _Class():
-        def a_method(arg: int) -> int:
+        def a_method(self, arg: int) -> int:
             return arg
 
         @staticmethod
@@ -1240,7 +1240,7 @@ def test_keep_cache__max_entries() -> None:
             return arg
 
         @classmethod
-        def a_classmethod(arg: int) -> int:
+        def a_classmethod(cls, arg: int) -> int:
             return arg
 
 
@@ -1265,21 +1265,6 @@ def test_keep_cache__max_entries() -> None:
                 assert value == index
             # endif
         # endfor
-
-
-def test_keep_cache__max_entries__same_args() -> None:
-
-    max_entries = 3
-
-    @keep_cache(keep_time_secs=10, max_entries=max_entries)
-    def _function(arg: int) -> int:
-        return arg
-
-
-    for index in range(max_entries + 1):
-        value = _function(0)
-        assert value == 0
-    # endfor
 
 
 def test_keep_cache__max_entries__expire() -> None:
@@ -1435,7 +1420,12 @@ def test_expire_cache__max_entries() -> None:
         # endfor
 
 
-def test_expire_cache__max_entries__same_args() -> None:
+@pytest.mark.parametrize('decorator, kwargs',
+                         CACHE_DECORATORS)
+def test_expire_cache__max_entries__same_args(
+        decorator: Callable[..., Callable[..., Any]],  #TODO: ?
+        kwargs: Any
+) -> None:
 
     max_entries = 3
 
@@ -1455,7 +1445,7 @@ def test_expire_cache__max_entries__same_args() -> None:
             return arg
 
 
-        @expire_cache(expire_time_secs=10, max_entries=max_entries)
+        @classmethod
         def a_classmethod(cls, arg: int) -> int:
             return arg
 
@@ -1466,7 +1456,9 @@ def test_expire_cache__max_entries__same_args() -> None:
             _function,
             instance.a_method,
             instance.a_staticmethod,
-            instance.a_classmethod
+            instance.a_classmethod,
+            _Class.a_staticmethod,
+            _Class.a_classmethod,
     ):
         for index in range(max_entries + 1):
             value = each(0)
@@ -1505,7 +1497,9 @@ def test_expire_cache__max_entries__refresh() -> None:
             _function,
             instance.a_method,
             instance.a_staticmethod,
-            instance.a_classmethod
+            instance.a_classmethod,
+            _Class.a_staticmethod,
+            _Class.a_classmethod,
     ):
         first = each(0)
 
