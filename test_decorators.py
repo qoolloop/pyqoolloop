@@ -13,6 +13,7 @@ from typing import (
     cast,
     ClassVar,
     Dict,
+    Iterable,
     Optional,
     Type,
     Tuple,
@@ -840,7 +841,7 @@ def _inc_dec(variables: Dict[str, Union[int, bool]]) -> str:
 
 def _test_synchronized(
         variables: Dict[str, Union[int, bool]],
-        function: Callable[..., str],
+        function: Union[Callable[..., str], Iterable[Callable[..., str]]],
         args: Tuple[Any, ...] = (),
         kwargs: Dict[str, Any] = dict(),
         expected_count: Optional[int] = None
@@ -852,14 +853,23 @@ def _test_synchronized(
 
     class _Thread(threading.Thread):
 
+        def __init__(self, function, *arg, **kwargs):
+            super().__init__(*arg, **kwargs)
+            self.function = function
+
         def run(self) -> None:
             for iteration in range(NUM_ITERATIONS):
-                result = function(*args, **kwargs)
+                result = self.function(*args, **kwargs)
                 assert result == "result"
             # endfor
 
 
-    threads = [_Thread() for count in range(NUM_THREADS)]
+    if not isinstance(function, Iterable):
+        function = (function,)
+
+    threads = []
+    for each in function:
+        threads.extend([_Thread(each) for count in range(NUM_THREADS)])
 
     for each in threads:
         each.start()
@@ -872,7 +882,7 @@ def _test_synchronized(
     assert not variables['failure']
 
     if expected_count is None:
-        expected_count = NUM_THREADS * NUM_ITERATIONS
+        expected_count = len(threads) * NUM_ITERATIONS
         
     assert variables['count'] == expected_count
 
@@ -1543,12 +1553,9 @@ def test_expire_cache__synchronize() -> None:
     for each in (
             _function,
             instance.a_method,
-            instance.a_staticmethod,
-            instance.a_classmethod,
-            _Class.a_staticmethod,
-            _Class.a_classmethod,
+            (_Class.a_staticmethod, instance.a_staticmethod),
+            (_Class.a_classmethod, instance.a_classmethod),
     ):
-        print(each)  #TODO: remove
         
         _reset_variables(variables)
 
