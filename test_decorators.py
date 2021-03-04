@@ -1319,20 +1319,6 @@ def test_keep_cache__max_entries__refresh() -> None:
     # endfor
 
 
-def test_keep_cache__synchronize() -> None:
-
-    max_entries = 1
-
-    variables = _create_variables()
-
-    @keep_cache(keep_time_secs=0, max_entries=max_entries)
-    def _function() -> str:
-        return _inc_dec(variables)
-
-
-    _test_synchronized(variables, _function, expected_count=1)
-
-
 def test_keep_cache__exclude_kw() -> None:
     
     @keep_cache(keep_time_secs=0, exclude_kw=['extra'])
@@ -1439,12 +1425,12 @@ def test_expire_cache__max_entries__same_args(
 
     max_entries = 3
 
-    @expire_cache(expire_time_secs=10, max_entries=max_entries)
+    @decorator(max_entries=max_entries, **kwargs)
     def _function(arg: int) -> int:
         return arg
 
 
-    @expire_cache(expire_time_secs=10, max_entries=max_entries)
+    @decorator(max_entries=max_entries, **kwargs)
     class _Class:
         def a_method(self, arg: int) -> int:
             return arg
@@ -1521,18 +1507,23 @@ def test_expire_cache__max_entries__refresh() -> None:
         assert first < second
 
 
-def test_expire_cache__synchronize() -> None:
+@pytest.mark.parametrize('decorator, kwargs',
+                         CACHE_DECORATORS)
+def test_cache__synchronize(
+        decorator: Callable[..., Callable[..., Any]],  #TODO: ?
+        kwargs: Any
+) -> None:
 
     max_entries = 1
 
     variables = _create_variables()
 
-    @expire_cache(expire_time_secs=1.0, max_entries=max_entries)
+    @decorator(max_entries=max_entries, **kwargs)
     def _function() -> str:
         return _inc_dec(variables)
 
 
-    @expire_cache(expire_time_secs=1.0, max_entries=max_entries)
+    @decorator(max_entries=max_entries, **kwargs)
     class _Class:
         def a_method(self) -> str:
             return _inc_dec(variables)
