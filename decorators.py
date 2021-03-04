@@ -764,6 +764,7 @@ def _get_args(
         
 
     arguments = _bind_arguments(target, args, kwargs)
+    arguments[''] = hash(target)
     _exclude(arguments, exclude_kw)
     return arguments
 
@@ -918,7 +919,6 @@ def expire_cache(
     # function. This is necessary for guarding the cache, but is too much
     # for each target function. More concretely, if `expire_cache` decorates
     # a class, one `cache` is used for all the methods.
-    #TODOO: Should not collide with different methods!
     #TODOO: Should also check arguments, just in case hash collides
     #TODOO: Same with other cache decorators.
     @synchronized_on_function(dont_synchronize=dont_synchronize)

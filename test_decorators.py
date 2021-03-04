@@ -859,6 +859,8 @@ def _test_synchronized(
             # endfor
 
 
+    original_count = variables['count']
+
     threads = [_Thread() for count in range(NUM_THREADS)]
 
     for each in threads:
@@ -874,7 +876,7 @@ def _test_synchronized(
     if expected_count is None:
         expected_count = NUM_THREADS * NUM_ITERATIONS
         
-    assert variables['count'] == expected_count
+    assert variables['count'] == expected_count + original_count
 
 
 # synchronized_on_function ###
@@ -1517,12 +1519,12 @@ def test_expire_cache__synchronize() -> None:
 
     variables = _create_variables()
 
-    @expire_cache(expire_time_secs=0.0, max_entries=max_entries)
+    @expire_cache(expire_time_secs=1.0, max_entries=max_entries)
     def _function() -> str:
         return _inc_dec(variables)
 
 
-    @expire_cache(expire_time_secs=0.0, max_entries=max_entries)
+    @expire_cache(expire_time_secs=1.0, max_entries=max_entries)
     class _Class:
         def a_method(self) -> str:
             return _inc_dec(variables)
@@ -1544,11 +1546,15 @@ def test_expire_cache__synchronize() -> None:
             _function,
             instance.a_method,
             instance.a_staticmethod,
-            instance.a_classmethod
+            instance.a_classmethod,
+            _Class.a_staticmethod,
+            _Class.a_classmethod,
     ):
+        print(each)  #TODO: remove
+        
         _reset_variables(variables)
 
-        _test_synchronized(variables, each)
+        _test_synchronized(variables, each, expected_count=1)
 
 
 # extend_with_method ##
