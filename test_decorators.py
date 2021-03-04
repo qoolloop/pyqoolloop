@@ -853,7 +853,9 @@ def _test_synchronized(
 
     class _Thread(threading.Thread):
 
-        def __init__(self, function, *arg, **kwargs):
+        def __init__(
+                self, function: Callable[..., str], *arg: Any, **kwargs: Any
+        ) -> None:
             super().__init__(*arg, **kwargs)
             self.function = function
 
@@ -868,14 +870,16 @@ def _test_synchronized(
         function = (function,)
 
     threads = []
-    for each in function:
-        threads.extend([_Thread(each) for count in range(NUM_THREADS)])
+    for each_function in function:
+        threads.extend(
+            [_Thread(each_function) for count in range(NUM_THREADS)]
+        )
 
-    for each in threads:
-        each.start()
+    for each_thread in threads:
+        each_thread.start()
 
-    for each in threads:
-        each.join()
+    for each_thread in threads:
+        each_thread.join()
 
     assert variables['called']
 
