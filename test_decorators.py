@@ -859,8 +859,6 @@ def _test_synchronized(
             # endfor
 
 
-    original_count = variables['count']
-
     threads = [_Thread() for count in range(NUM_THREADS)]
 
     for each in threads:
@@ -876,7 +874,7 @@ def _test_synchronized(
     if expected_count is None:
         expected_count = NUM_THREADS * NUM_ITERATIONS
         
-    assert variables['count'] == expected_count + original_count
+    assert variables['count'] == expected_count
 
 
 # synchronized_on_function ###
