@@ -871,7 +871,8 @@ def expire_cache(
         *,
         expire_time_secs: float,
         max_entries: Optional[int] = None,
-        dont_synchronize: bool = False
+        dont_synchronize: bool = False,
+        #TODO: exclude_kw
 ) -> TargetFunction:
     ...
 
@@ -914,12 +915,11 @@ def expire_cache(
     ] = OrderedDict()
 
 
-    #TODO: Document or change implementation
+    #TODO: Document or change implementation. Could create cache for each target function.
     # Note that synchronization is on `_cached_function()`, not each target
     # function. This is necessary for guarding the cache, but is too much
     # for each target function. More concretely, if `expire_cache` decorates
     # a class, one `cache` is used for all the methods.
-    #TODOO: Should also check arguments, just in case hash collides
     #TODOO: Same with other cache decorators.
     @synchronized_on_function(dont_synchronize=dont_synchronize)
     def _cached_function(

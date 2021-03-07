@@ -1233,6 +1233,52 @@ def test_cache__default_kwargs(
         assert first == second
 
 
+@pytest.mark.parametrize('decorator, kwargs',
+                         CACHE_DECORATORS)
+def test_cache__synchronize(
+        decorator: Callable[..., Callable[..., Any]],  #TODO: ?
+        kwargs: Any
+) -> None:
+
+    max_entries = 1
+
+    variables = _create_variables()
+
+    @decorator(max_entries=max_entries, **kwargs)
+    def _function() -> str:
+        return _inc_dec(variables)
+
+
+    @decorator(max_entries=max_entries, **kwargs)
+    class _Class:
+        def a_method(self) -> str:
+            return _inc_dec(variables)
+
+
+        @staticmethod
+        def a_staticmethod() -> str:
+            return _inc_dec(variables)
+
+
+        @classmethod
+        def a_classmethod(cls) -> str:
+            return _inc_dec(variables)
+
+
+    instance = _Class()
+
+    for each in (
+            _function,
+            instance.a_method,
+            (_Class.a_staticmethod, instance.a_staticmethod),
+            (_Class.a_classmethod, instance.a_classmethod),
+    ):
+        
+        _reset_variables(variables)
+
+        _test_synchronized(variables, each, expected_count=1)
+
+
 # keep_cache ###
 
 def test_keep_cache__max_entries() -> None:
@@ -1509,52 +1555,6 @@ def test_expire_cache__max_entries__refresh() -> None:
         second = each(0)
 
         assert first < second
-
-
-@pytest.mark.parametrize('decorator, kwargs',
-                         CACHE_DECORATORS)
-def test_cache__synchronize(
-        decorator: Callable[..., Callable[..., Any]],  #TODO: ?
-        kwargs: Any
-) -> None:
-
-    max_entries = 1
-
-    variables = _create_variables()
-
-    @decorator(max_entries=max_entries, **kwargs)
-    def _function() -> str:
-        return _inc_dec(variables)
-
-
-    @decorator(max_entries=max_entries, **kwargs)
-    class _Class:
-        def a_method(self) -> str:
-            return _inc_dec(variables)
-
-
-        @staticmethod
-        def a_staticmethod() -> str:
-            return _inc_dec(variables)
-
-
-        @classmethod
-        def a_classmethod(cls) -> str:
-            return _inc_dec(variables)
-
-
-    instance = _Class()
-
-    for each in (
-            _function,
-            instance.a_method,
-            (_Class.a_staticmethod, instance.a_staticmethod),
-            (_Class.a_classmethod, instance.a_classmethod),
-    ):
-        
-        _reset_variables(variables)
-
-        _test_synchronized(variables, each, expected_count=1)
 
 
 # extend_with_method ##
