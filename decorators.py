@@ -809,6 +809,7 @@ def keep_cache(
     
     :param keep_time_secs: Keep value longer than this period (seconds).
     :param max_entries: Don't keep more than this number of entries.
+      If a class is decorated, one cache is held for all methods in the class.
     :param dont_synchronize: True, if thread safety is not necessary.
     :param exclude_kw: Iterable of argument names to exclude from arguments
       to identify cache data. Cached data is retrieved by taking the previous
@@ -819,6 +820,7 @@ def keep_cache(
       `keep_time_secs`
 
     .. note::: Argument values for the target function must be hashable.
+      Decorate each method, if a separate cache is needed for each method.
     """
 
     # holds tuples (<time>, <value>)
@@ -827,7 +829,6 @@ def keep_cache(
     ] = OrderedDict()
 
     
-    #TODO: Document or change implementation
     # Note that synchronization is on `_cached_function()`, not each target
     # function. This is necessary for guarding the cache, but is too much
     # for each target function. More concretely, if `expire_cache` decorates
@@ -904,9 +905,11 @@ def expire_cache(
     
     :param expire_time_secs: Keep value for less than this period (seconds)
     :param max_entries: Don't keep more than this number of entries
+      If a class is decorated, one cache is held for all methods in the class.
     :param dont_synchronize: `True`, if thread safety is not necessary
 
     .. note:: Argument values for the target function must be hashable.
+      Decorate each method, if a separate cache is needed for each method.
     """
 
     # holds tuples (<time>, <value>)
@@ -915,7 +918,6 @@ def expire_cache(
     ] = OrderedDict()
 
 
-    #TODO: Document or change implementation. Could create cache for each target function.
     # Note that synchronization is on `_cached_function()`, not each target
     # function. This is necessary for guarding the cache, but is too much
     # for each target function. More concretely, if `expire_cache` decorates

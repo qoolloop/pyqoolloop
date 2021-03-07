@@ -1290,7 +1290,63 @@ def test_keep_cache__max_entries() -> None:
         return arg
 
 
-    @keep_cache(keep_time_secs=10, max_entries=max_entries)
+    NUM_CALLABLES = 6
+    for index in range(NUM_CALLABLES):
+
+        @keep_cache(keep_time_secs=10, max_entries=max_entries)  #TODO: No mypy warning even though `@keep_cache` isn't declared for classes.
+        class _Class():
+            def a_method(self, arg: int) -> int:
+                return arg
+
+            @staticmethod
+            def a_staticmethod(arg: int) -> int:
+                return arg
+
+            @classmethod
+            def a_classmethod(cls, arg: int) -> int:
+                return arg
+
+
+        instance = _Class()
+
+        CALLABLES = (
+            _function,
+            instance.a_method,
+            instance.a_staticmethod,
+            instance.a_classmethod,
+            _Class.a_staticmethod,
+            _Class.a_classmethod,
+        )
+        assert len(CALLABLES) == NUM_CALLABLES
+
+        each = CALLABLES[index]
+        
+        for index in range(max_entries + 1):
+            if index == max_entries:
+                with pytest.raises(AssertionError):
+                    _ = each(index)
+                # endwith
+
+            else:
+                value = each(index)
+                assert value == index
+            # endif
+        # endfor
+    # endfor
+
+
+def test_keep_cache__max_entries__expire() -> None:
+
+    max_entries = 3
+
+    keep_time_secs = 0.01
+
+    @keep_cache(keep_time_secs=keep_time_secs, max_entries=max_entries)
+    def _function(arg: int) -> int:
+        return arg
+
+
+    @keep_cache(keep_time_secs=keep_time_secs, max_entries=max_entries)
     class _Class():
         def a_method(self, arg: int) -> int:
             return arg
@@ -1314,36 +1370,13 @@ def test_keep_cache__max_entries() -> None:
             _Class.a_staticmethod,
             _Class.a_classmethod,
     ):
-        for index in range(max_entries + 1):
-            if index == max_entries:
-                with pytest.raises(AssertionError):
-                    _ = _function(index)
-                # endwith
+        for index in range(max_entries):
+            if index == max_entries - 1:
+                time.sleep(keep_time_secs)
 
-            else:
-                value = _function(index)
-                assert value == index
-            # endif
+            value = each(index)
+            assert value == index
         # endfor
-
-
-def test_keep_cache__max_entries__expire() -> None:
-
-    max_entries = 3
-
-    keep_time_secs = 0.01
-
-    @keep_cache(keep_time_secs=keep_time_secs, max_entries=max_entries)
-    def _function(arg: int) -> int:
-        return arg
-
-
-    for index in range(max_entries):
-        if index == max_entries - 1:
-            time.sleep(keep_time_secs)
-            
-        value = _function(index)
-        assert value == index
     # endfor
 
 
@@ -1357,15 +1390,47 @@ def test_keep_cache__max_entries__refresh() -> None:
     def _function(arg: int) -> int:
         return arg
 
+    
+    NUM_CALLABLES = 6
+    for index in range(NUM_CALLABLES):
 
-    for index in range(max_entries):
-        value = _function(index)
-        assert value == index
+        @keep_cache(keep_time_secs=keep_time_secs, max_entries=max_entries)
+        class _Class():
+            def a_method(self, arg: int) -> int:
+                return arg
 
-    for index in range(5):
-        time.sleep(keep_time_secs / 2)
-        value = _function(0)
-        assert value == 0
+            @staticmethod
+            def a_staticmethod(arg: int) -> int:
+                return arg
+
+            @classmethod
+            def a_classmethod(cls, arg: int) -> int:
+                return arg
+
+
+        instance = _Class()
+
+        CALLABLES = (
+            _function,
+            instance.a_method,
+            instance.a_staticmethod,
+            instance.a_classmethod,
+            _Class.a_staticmethod,
+            _Class.a_classmethod,
+        )
+        assert len(CALLABLES) == NUM_CALLABLES
+
+        each = CALLABLES[index]
+        
+        for index in range(max_entries):
+            value = each(index)
+            assert value == index
+
+        for index in range(5):
+            time.sleep(keep_time_secs / 2)
+            value = each(0)
+            assert value == 0
+        # endfor
     # endfor
 
 
@@ -1376,13 +1441,38 @@ def test_keep_cache__exclude_kw() -> None:
         return arg + extra
 
 
-    first = _function(1, 1)
+    @keep_cache(keep_time_secs=0, exclude_kw=['extra'])
+    class _Class():
+        def a_method(self, arg: int, extra: int) -> int:
+            return arg + extra
 
-    different = _function(2, 1)
-    assert different != first
+        @staticmethod
+        def a_staticmethod(arg: int, extra: int) -> int:
+            return arg + extra
 
-    second = _function(1, 2)
-    assert first == second
+        @classmethod
+        def a_classmethod(cls, arg: int, extra: int) -> int:
+            return arg + extra
+
+
+    instance = _Class()
+
+    for each in (
+            _function,
+            instance.a_method,
+            instance.a_staticmethod,
+            instance.a_classmethod,
+            _Class.a_staticmethod,
+            _Class.a_classmethod,
+    ):
+        first = each(1, 1)
+
+        different = each(2, 1)
+        assert different != first
+
+        second = each(1, 2)
+        assert first == second
+    # endfor
 
 
 # expire_cache ###
