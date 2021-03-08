@@ -1082,7 +1082,9 @@ def test_cache__no_args(
             _function,
             instance.a_method,
             instance.a_staticmethod,
-            instance.a_classmethod
+            instance.a_classmethod,
+            _Class.a_staticmethod,
+            _Class.a_classmethod,
     ):
         first = each()
 
@@ -1125,7 +1127,9 @@ def test_cache__args(
             _function,
             instance.a_method,
             instance.a_staticmethod,
-            instance.a_classmethod
+            instance.a_classmethod,
+            _Class.a_staticmethod,
+            _Class.a_classmethod,
     ):
         first = each(1, 1)
 
@@ -1172,7 +1176,9 @@ def test_cache__kwargs(
             _function,
             instance.a_method,
             instance.a_staticmethod,
-            instance.a_classmethod
+            instance.a_classmethod,
+            _Class.a_staticmethod,
+            _Class.a_classmethod,
     ):
         first = each(1, arg2=1)
 
@@ -1506,7 +1512,9 @@ def test_expire_cache__no_args__expire() -> None:
             _function,
             instance.a_method,
             instance.a_staticmethod,
-            instance.a_classmethod
+            instance.a_classmethod,
+            _Class.a_staticmethod,
+            _Class.a_classmethod,
     ):
         first = each()
 
@@ -1547,7 +1555,7 @@ def test_expire_cache__max_entries() -> None:
             instance.a_method,
             instance.a_staticmethod,
             instance.a_classmethod,
-            _Class.a_staticmethod,  #TODO: for other tests too
+            _Class.a_staticmethod,
             _Class.a_classmethod,
     ):
         for index in range(max_entries + 1):
