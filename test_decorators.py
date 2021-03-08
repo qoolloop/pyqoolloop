@@ -208,7 +208,7 @@ class PassArgsClassWithMandatoryKeyword(object):
     ) -> None:
         _pass_args_function(arg0, kwargs=kwargs)
 
-        PassArgsClass.static_func_call_count += 1
+        PassArgsClassWithMandatoryKeyword.static_func_call_count += 1
 
 
     @classmethod
@@ -276,9 +276,7 @@ def test_pass_args_to_class(Klass: Type[DifferentFunctions]) -> None:
     instance.func()
     assert instance.func_call_count == 3
 
-    previous_count = PassArgsClass.static_func_call_count  #TODO: remove
     Klass.static_func()
-    assert PassArgsClass.static_func_call_count == previous_count + 1  #TODO: remove
     assert Klass.static_func_call_count == 1
 
     Klass.static_func(arg0="O")
