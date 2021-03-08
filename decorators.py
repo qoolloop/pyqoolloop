@@ -794,6 +794,7 @@ def keep_cache(
     ...
     
 
+#TODO: Deprecate. `@keep_cache` probably isn't necessary. We only need `max_entries`, which is available with `@expire_cache`.
 def keep_cache(
         __target: Optional[Callable[..., TargetReturnType]] = None,  # Optional[TargetFunction]
         *,
@@ -873,7 +874,6 @@ def expire_cache(
         expire_time_secs: float,
         max_entries: Optional[int] = None,
         dont_synchronize: bool = False,
-        #TODO: exclude_kw
 ) -> TargetFunction:
     ...
 
@@ -890,15 +890,16 @@ def expire_cache(
     ...
 
 
+#TODO: rename `cache`?
 def expire_cache(
     __target: Optional[TargetFunction] = None,
     *,
     expire_time_secs: float,
     max_entries: Optional[int] = None,
     dont_synchronize: bool = False
+    #TODO: exclude_kw
 ) -> Callable[..., Any]:
 # Union[TargetFunction, FunctionWrapperFactory[TargetFunction]]:  #TODO: Unions don't work with `TypeVar`. (mypy 0.800) https://github.com/python/mypy/issues/3644
-    #TODO: exclude_kw
     """
     Decorator to cache returned values of a function that are held for at most
     a specified amount of time since the first call
@@ -922,7 +923,6 @@ def expire_cache(
     # function. This is necessary for guarding the cache, but is too much
     # for each target function. More concretely, if `expire_cache` decorates
     # a class, one `cache` is used for all the methods.
-    #TODOO: Same with other cache decorators.
     @synchronized_on_function(dont_synchronize=dont_synchronize)
     def _cached_function(
             target: Callable[..., TargetReturnType],  # TargetFunction,
