@@ -132,18 +132,19 @@ class GenericDecorator:
     """
 
     #TODO: Type hints probably aren't what they're supposed to be, especially with the use of `TypeVar`
-    def __init__(self,
-                 wrapper_for_function: TargetFunctionWrapper[TargetReturnType],
-                 wrapper_for_instancemethod: Optional[
-                     TargetMethodWrapper[
-                         TargetReturnType, TargetClass]] = None,
-                 wrapper_for_staticmethod: Optional[
-                     TargetMethodWrapper[
-                         TargetReturnType, TargetClass]] = None,
-                 wrapper_for_classmethod: Optional[
-                     TargetMethodWrapper[
-                         TargetReturnType, TargetClass]] = None
-                 ) -> None:
+    def __init__(
+            self,
+            wrapper_for_function: TargetFunctionWrapper[TargetReturnType],
+            wrapper_for_instancemethod: Optional[
+                TargetMethodWrapper[
+                    TargetReturnType, TargetClass]] = None,
+            wrapper_for_staticmethod: Optional[
+                TargetMethodWrapper[
+                    TargetReturnType, TargetClass]] = None,
+            wrapper_for_classmethod: Optional[
+                TargetMethodWrapper[
+                    TargetReturnType, TargetClass]] = None
+    ) -> None:
         r"""
         :param wrapper_for_function:
           |   (callable(target, \*args, \**kwargs))
@@ -274,11 +275,9 @@ class GenericDecorator:
 
                     def call_wrapper(
                             *args: Any, **kwargs: Any
-                    ) -> Any:  # TargetReturnType:
+                    ) -> TargetReturnType:
                         
                         return self.wrapper(
-                            #TODO: Incompatible return value type (got "TargetReturnType", expected "TargetReturnType")  [return-value]
-                            # if `TargetReturnType` is specified for return type
                             function, instance, owner, *args, **kwargs)
 
                     # TargetFunction[TargetReturnType]
