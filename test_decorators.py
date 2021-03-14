@@ -39,7 +39,7 @@ import pylog
 logger = pylog.getLogger(__name__)
 
 
-# Common Functions ###
+# Common ###
 
 _counter = 0
 
@@ -48,6 +48,9 @@ def _counter_function() -> int:
     global _counter
     _counter += 1
     return _counter
+
+
+DecoratorType = Callable[..., Callable[..., Any]]  #TODO: ?
     
 
 # FunctionDecorator ###
@@ -1049,7 +1052,7 @@ CACHE_DECORATORS = (
 @pytest.mark.parametrize('decorator, kwargs',
                          CACHE_DECORATORS)
 def test_cache__no_args(
-        decorator: Callable[..., Callable[..., Any]],  #TODO: ?
+        decorator: DecoratorType,
         kwargs: Any
 ) -> None:
     
@@ -1094,7 +1097,7 @@ def test_cache__no_args(
 @pytest.mark.parametrize('decorator, kwargs',
                          CACHE_DECORATORS)
 def test_cache__args(
-        decorator: Callable[..., Callable[..., Any]],  #TODO: ?
+        decorator: DecoratorType,
         kwargs: Any
 ) -> None:
 
@@ -1142,7 +1145,7 @@ def test_cache__args(
 @pytest.mark.parametrize('decorator, kwargs',
                          CACHE_DECORATORS)
 def test_cache__kwargs(
-        decorator: Callable[..., Callable[..., Any]],  #TODO: ?
+        decorator: DecoratorType,
         kwargs: Any
 ) -> None:
 
@@ -1191,7 +1194,7 @@ def test_cache__kwargs(
 @pytest.mark.parametrize('decorator, kwargs',
                          CACHE_DECORATORS)
 def test_cache__default_kwargs(
-        decorator: Callable[..., Callable[..., Any]],  #TODO: ?
+        decorator: DecoratorType,
         kwargs: Any
 ) -> None:
 
@@ -1240,7 +1243,7 @@ def test_cache__default_kwargs(
 @pytest.mark.parametrize('decorator, kwargs',
                          CACHE_DECORATORS)
 def test_cache__synchronize(
-        decorator: Callable[..., Callable[..., Any]],  #TODO: ?
+        decorator: DecoratorType,
         kwargs: Any
 ) -> None:
 
@@ -1565,7 +1568,7 @@ def test_expire_cache__max_entries() -> None:
 @pytest.mark.parametrize('decorator, kwargs',
                          CACHE_DECORATORS)
 def test_expire_cache__max_entries__same_args(
-        decorator: Callable[..., Callable[..., Any]],  #TODO: ?
+        decorator: DecoratorType,
         kwargs: Any
 ) -> None:
 
