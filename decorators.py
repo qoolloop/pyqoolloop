@@ -736,8 +736,7 @@ def synchronized_on_class(
     ...
 
 
-#TODO: rename `_get_signature_values()`
-def _get_args(
+def _get_signature_values(
         target: Callable[..., TargetReturnType],  # TargetFunction
         args: Iterable[Any],
         kwargs: Dict[str, Any],
@@ -843,7 +842,7 @@ def keep_cache(
 
         now = datetime.datetime.utcnow()
         
-        arguments = _get_args(target, args, kwargs, exclude_kw)
+        arguments = _get_signature_values(target, args, kwargs, exclude_kw)
         # https://stackoverflow.com/a/39440252/2400328
         key = frozenset(arguments.items())
         if key in cache:
@@ -932,7 +931,7 @@ def expire_cache(
 
         now = datetime.datetime.utcnow()
         
-        arguments = _get_args(target, args, kwargs)
+        arguments = _get_signature_values(target, args, kwargs)
         # https://stackoverflow.com/a/39440252/2400328
         key = frozenset(arguments.items())
         if key in cache:
