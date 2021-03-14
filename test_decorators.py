@@ -1049,8 +1049,10 @@ CACHE_DECORATORS = (
 )
     
 
-@pytest.mark.parametrize('decorator, kwargs',
-                         CACHE_DECORATORS)
+@pytest.mark.parametrize(
+    'decorator, kwargs',
+    CACHE_DECORATORS
+)
 def test_cache__no_args(
         decorator: DecoratorType,
         kwargs: Any
@@ -1094,8 +1096,10 @@ def test_cache__no_args(
         assert first == second
 
 
-@pytest.mark.parametrize('decorator, kwargs',
-                         CACHE_DECORATORS)
+@pytest.mark.parametrize(
+    'decorator, kwargs',
+    CACHE_DECORATORS
+)
 def test_cache__args(
         decorator: DecoratorType,
         kwargs: Any
@@ -1142,8 +1146,10 @@ def test_cache__args(
         assert first == second
 
 
-@pytest.mark.parametrize('decorator, kwargs',
-                         CACHE_DECORATORS)
+@pytest.mark.parametrize(
+    'decorator, kwargs',
+    CACHE_DECORATORS
+)
 def test_cache__kwargs(
         decorator: DecoratorType,
         kwargs: Any
@@ -1191,8 +1197,10 @@ def test_cache__kwargs(
         assert first == second
 
 
-@pytest.mark.parametrize('decorator, kwargs',
-                         CACHE_DECORATORS)
+@pytest.mark.parametrize(
+    'decorator, kwargs',
+    CACHE_DECORATORS
+)
 def test_cache__default_kwargs(
         decorator: DecoratorType,
         kwargs: Any
@@ -1240,8 +1248,10 @@ def test_cache__default_kwargs(
         assert first == second
 
 
-@pytest.mark.parametrize('decorator, kwargs',
-                         CACHE_DECORATORS)
+@pytest.mark.parametrize(
+    'decorator, kwargs',
+    CACHE_DECORATORS
+)
 def test_cache__synchronize(
         decorator: DecoratorType,
         kwargs: Any
@@ -1441,14 +1451,21 @@ def test_keep_cache__max_entries__refresh() -> None:
     # endfor
 
 
-def test_keep_cache__exclude_kw() -> None:
+@pytest.mark.parametrize(
+    'decorator, kwargs',
+    CACHE_DECORATORS
+)
+def test_keep_cache__exclude_kw(
+        decorator: DecoratorType,
+        kwargs: Any
+) -> None:
     
-    @keep_cache(keep_time_secs=0, exclude_kw=['extra'])
+    @decorator(exclude_kw=['extra'], **kwargs)
     def _function(arg: int, extra: int) -> int:
         return arg + extra
 
 
-    @keep_cache(keep_time_secs=0, exclude_kw=['extra'])
+    @decorator(exclude_kw=['extra'], **kwargs)
     class _Class():
         def a_method(self, arg: int, extra: int) -> int:
             return arg + extra
@@ -1565,8 +1582,10 @@ def test_expire_cache__max_entries() -> None:
         # endfor
 
 
-@pytest.mark.parametrize('decorator, kwargs',
-                         CACHE_DECORATORS)
+@pytest.mark.parametrize(
+    'decorator, kwargs',
+    CACHE_DECORATORS
+)
 def test_expire_cache__max_entries__same_args(
         decorator: DecoratorType,
         kwargs: Any

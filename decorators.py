@@ -795,7 +795,7 @@ def keep_cache(
 
 #TODO: Deprecate. `@keep_cache` probably isn't necessary. We only need `max_entries`, which is available with `@expire_cache`.
 def keep_cache(
-        __target: Optional[Callable[..., TargetReturnType]] = None,  # Optional[TargetFunction]
+        __target: Optional[TargetFunction] = None,
         *,
         keep_time_secs: float,
         max_entries: Optional[int] = None,
@@ -819,7 +819,7 @@ def keep_cache(
     :raises AssertionError: There are more than `max_entries` values within
       `keep_time_secs`
 
-    .. note::: Argument values for the target function must be hashable.
+    .. note:: Argument values for the target function must be hashable.
       Decorate each method, if a separate cache is needed for each method.
     """
 
@@ -873,6 +873,7 @@ def expire_cache(
         expire_time_secs: float,
         max_entries: Optional[int] = None,
         dont_synchronize: bool = False,
+        exclude_kw: Iterable[str] = ()
 ) -> TargetFunction:
     ...
 
@@ -883,7 +884,8 @@ def expire_cache(
         *,
         expire_time_secs: float,
         max_entries: Optional[int] = None,
-        dont_synchronize: bool = False
+        dont_synchronize: bool = False,
+        exclude_kw: Iterable[str] = ()
 ) -> Callable[[TargetFunction], TargetFunction]:
     # FunctionWrapperFactory[TargetFunction]:
     ...
@@ -895,8 +897,8 @@ def expire_cache(
     *,
     expire_time_secs: float,
     max_entries: Optional[int] = None,
-    dont_synchronize: bool = False
-    #TODO: exclude_kw
+    dont_synchronize: bool = False,
+    exclude_kw: Iterable[str] = ()
 ) -> Callable[..., Any]:
 # Union[TargetFunction, FunctionWrapperFactory[TargetFunction]]:  #TODO: Unions don't work with `TypeVar`. (mypy 0.800) https://github.com/python/mypy/issues/3644
     """
@@ -907,6 +909,10 @@ def expire_cache(
     :param max_entries: Don't keep more than this number of entries
       If a class is decorated, one cache is held for all methods in the class.
     :param dont_synchronize: `True`, if thread safety is not necessary
+    :param exclude_kw: Iterable of argument names to exclude from arguments
+      to identify cache data. Cached data is retrieved by taking the previous
+      return value from a call to the target function with the same argument
+      values except those assigned to argument names in `exclude_kw`.
 
     .. note:: Argument values for the target function must be hashable.
       Decorate each method, if a separate cache is needed for each method.
@@ -931,7 +937,7 @@ def expire_cache(
 
         now = datetime.datetime.utcnow()
         
-        arguments = _get_signature_values(target, args, kwargs)
+        arguments = _get_signature_values(target, args, kwargs, exclude_kw)
         # https://stackoverflow.com/a/39440252/2400328
         key = frozenset(arguments.items())
         if key in cache:
@@ -940,7 +946,7 @@ def expire_cache(
             if (now - stored_time).total_seconds() < expire_time_secs:
                 return cast(TargetReturnType, stored_value)
 
-            del cache[key]
+            del cache[key]  #TODO: just replace time
 
         if max_entries and (len(cache) >= max_entries):
             cache.popitem(last=False)
