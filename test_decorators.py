@@ -1244,7 +1244,7 @@ def test_cache__synchronize(
         kwargs: Any
 ) -> None:
 
-    max_entries = 1
+    max_entries = 3
 
     variables = _create_variables()
 
