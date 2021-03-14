@@ -1054,7 +1054,7 @@ def extension(
             "@extension is only for decorating classes"
         
         for name, value in extension_class.__dict__.items():
-            #TODO: why not `ismethod()`?
+            # not `ismethod()` because not bound
             if inspect.isfunction(value) \
                or isinstance(value, staticmethod) \
                or isinstance(value, classmethod):
