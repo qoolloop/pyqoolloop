@@ -1,6 +1,15 @@
+## pyqoolloop
 cryptography
 funcsigs
 future
 msgpack
+
 # pylog
 pytest
+pytest-cov
+pytest-mypy
+pytest-pylint
+
+# documentation
+sphinx
+sphinx_rtd_theme
