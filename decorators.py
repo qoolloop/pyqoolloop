@@ -737,6 +737,7 @@ def synchronized_on_class(
     ...
 
 
+#TODO: rename `_get_signature_values()`
 def _get_args(
         target: Callable[..., TargetReturnType],  # TargetFunction
         args: Iterable[Any],
@@ -849,7 +850,7 @@ def keep_cache(
         if key in cache:
             value: TargetReturnType = cache[key][1]
 
-            del cache[key]
+            del cache[key]  #TODO: just replace time
 
         else:
             if max_entries and (len(cache) >= max_entries):
