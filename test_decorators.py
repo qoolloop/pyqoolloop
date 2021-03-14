@@ -1,7 +1,6 @@
 import inspect
 from mypy_extensions import (
     DefaultArg,
-    # DefaultNamedArg,
 )
 import pytest
 import threading
@@ -115,7 +114,6 @@ def test_pass_args_to_function(
                 DefaultArg(Any, 'arg0'),
                 DefaultArg(Any, 'arg1'),
                 DefaultArg(Any, 'arg2'),
-                # DefaultNamedArg(Dict[str, Any], 'kwargs')
             ],
             None]
 ) -> None:
