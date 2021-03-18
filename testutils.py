@@ -1,3 +1,6 @@
+"""
+Module with useful functions for unit testing.
+"""
 from typing_extensions import Protocol
 import sys
 from typing import (
@@ -26,7 +29,7 @@ Operator = Callable[[Any, Any], bool]
 _ObjectType = TypeVar('_ObjectType')
 
 
-def eq(one: object, another: object) -> bool:
+def eq(one: object, another: object) -> bool:  # pylint: disable=invalid-name
     """
     Function equivalent to the equals operator.
 
