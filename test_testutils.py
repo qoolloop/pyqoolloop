@@ -11,6 +11,7 @@ from pyexception.testutils import raises
 
 from .testutils import (
     combine_lists,
+    current_function_name,
     EmptyResult,
     included,
     to_set,
@@ -155,3 +156,13 @@ def test_combine_lists(
             assert expected_set == result_set
 
     return
+
+
+def test__current_function_name():
+
+    def _inner_function():
+        assert '_inner_function' == current_function_name()
+        assert 'test__current_function_name' == current_function_name(1)
+
+
+    _inner_function()

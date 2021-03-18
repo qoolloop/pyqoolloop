@@ -1,8 +1,8 @@
 """
 Module with useful functions for unit testing.
 """
-from typing_extensions import Protocol
 import sys
+import inspect
 from typing import (
     Any,
     Callable,
@@ -14,6 +14,8 @@ from typing import (
     TypeVar,
     Union,
 )
+
+from typing_extensions import Protocol
 
 from pyexception.exception import (
     Reason,
@@ -143,7 +145,9 @@ def _included_set(
 
 
 def _included_dict(
-        one: Dict[Any, Any], another: Dict[Any, Any], equals: Operator = eq
+        one: Dict[Any, Any],
+        another: Dict[Any, Any],
+        equals: Operator = eq  # pylint: disable=redefined-outer-name
 ) -> bool:
     for each_key, each_value in one.items():
         if each_key not in another:
@@ -162,7 +166,9 @@ def _included_dict(
 
 
 def included(
-        one: Iterable[Any], another: Iterable[Any], equals: Operator = eq
+        one: Iterable[Any],
+        another: Iterable[Any],
+        equals: Operator = eq  # pylint: disable=redefined-outer-name
 ) -> bool:
     """
     Check that all elements in one is included in the other
@@ -194,7 +200,11 @@ def current_function_name(pop_stack: int = 0) -> str:
     :returns: Name of function on stack.
     """
     # https://stackoverflow.com/a/13514318/2400328
-    return sys._getframe(pop_stack + 1).f_code.co_name
+    frame = inspect.currentframe()
+    for index in range(pop_stack + 1):
+        frame = frame.f_back
+        
+    return frame.f_code.co_name
 
 
 class EmptyResult(Reason):
