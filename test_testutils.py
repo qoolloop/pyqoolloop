@@ -36,10 +36,76 @@ from .testutils import (
     (dict(a="1"), dict(a="1", bcd=1), True),
     (dict(a=1), dict(a="1", bcd=1), False),
     (dict(a="1", bcd=1), dict(a="1"), False),
+
+    ({}, {}, True),
+    ({}, {1: 1}, True),
+    ({}, {"1": 1}, True),
+    ({1: 1}, {}, False),
+    ({1: 1}, {1: 1}, True),
+    ({"1": 1}, {1: 1}, False),
+    ({1: 1}, {"1": 1}, False),
+    ({1: 1}, {1: "1"}, False),
+    ({1: "1"}, {1: "1"}, True),
+    ({"1": "1"}, {1: "1"}, False),
+    ({1: "1"}, {"1": "1"}, False),
+    ({1: 1}, {1: "1"}, False),
+    ({1: "1"}, {1: "1", "bcd": 1}, True),
+    ({"1": "1"}, {1: "1", "bcd": 1}, False),
+    ({1: "1"}, {"1": "1", "bcd": 1}, False),
+    ({1: 1}, {1: "1", "bcd": 1}, False),
+    ({1: "1", "bcd": 1}, {1: "1"}, False),
 ))
 def test__included(
         one: Iterable[Any], another: Iterable[Any], result: bool) -> None:
     assert result == included(one, another)
+
+
+@pytest.mark.parametrize("one, another, result", (
+    ([], [], True),
+    ([], [1], True),
+    ([1], [], False),
+    ([1], [1], True),
+    (["1"], ["1"], True),
+    (["1"], ["1", 1], True),
+    (["1", 1], ["1"], True),  # not `False`
+
+    (dict(), dict(), True),
+    (dict(), dict(a=1), True),
+    (dict(a=1), dict(), False),
+    (dict(a=1), dict(a=1), True),
+    (dict(a=1), dict(a="1"), True),  # not `False`
+    (dict(a="1"), dict(a="1"), True),
+    (dict(a=1), dict(a="1"), True),  # not `False`
+    (dict(a="1"), dict(a="1", bcd=1), True),
+    (dict(a=1), dict(a="1", bcd=1), True),  # not `False`
+    (dict(a="1", bcd=1), dict(a="1"), False),
+
+    ({}, {}, True),
+    ({}, {1: 1}, True),
+    ({}, {"1": 1}, True),
+    ({1: 1}, {}, False),
+    ({1: 1}, {1: 1}, True),
+    ({"1": 1}, {1: 1}, False),
+    ({1: 1}, {"1": 1}, False),
+    ({1: 1}, {1: "1"}, True),  # not `False`
+    ({1: "1"}, {1: "1"}, True),
+    ({"1": "1"}, {1: "1"}, False),
+    ({1: "1"}, {"1": "1"}, False),
+    ({1: 1}, {1: "1"}, True),  # not `False`
+    ({1: "1"}, {1: "1", "bcd": 1}, True),
+    ({"1": "1"}, {1: "1", "bcd": 1}, False),
+    ({1: "1"}, {"1": "1", "bcd": 1}, False),
+    ({1: 1}, {1: "1", "bcd": 1}, True),  # not `False`
+    ({1: "1", "bcd": 1}, {1: "1"}, False),
+))
+def test__included__equals(
+        one: Iterable[Any], another: Iterable[Any], result: bool) -> None:
+
+    def _str_equals(one: Any, another: Any) -> bool:
+        return str(one) == str(another)
+    
+
+    assert result == included(one, another, equals=_str_equals)
 
 
 @pytest.mark.parametrize("expected_result, args", [

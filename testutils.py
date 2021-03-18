@@ -31,7 +31,7 @@ _ObjectType = TypeVar('_ObjectType')
 
 def eq(one: object, another: object) -> bool:  # pylint: disable=invalid-name
     """
-    Function equivalent to the equals operator.
+    Function equivalent to the equals (`__eq__`) operator.
 
     :param one: One value to compare
     :param another: Another value to compare
@@ -41,8 +41,15 @@ def eq(one: object, another: object) -> bool:  # pylint: disable=invalid-name
     return one == another
 
 
-class _HasEquals(Protocol):
+class _HasEquals(Protocol):  # pylint: disable=too-few-public-methods
     def equals(self, value: object) -> bool:
+        """
+        Comparison for equality.
+
+        :param another: Value to compare with `self`.
+
+        :returns: `True` if `self` equals `value`.
+        """
         ...
 
 
@@ -61,7 +68,8 @@ def equals(one: _HasEquals, another: object) -> bool:  #TODO: rename `equals_met
 def equal_set(
         one_set: Collection[object],
         another_set: Collection[object],
-        equals: Callable[[object, object], bool] = eq
+        equals: Callable[[object, object], bool] = eq \
+        # pylint: disable=redefined-outer-name
 ) -> bool:  #TODO: reimplemet using `set()`
     """
     Check for equality between two iterables ignoring order
@@ -100,12 +108,32 @@ def equal_set(
 def _included_set(
         one_set: Iterable[Any],
         another_set: Iterable[Any],
-        equals: Operator = eq
+        equals: Operator = eq \
+        # pylint: disable=redefined-outer-name
 ) -> bool:
+
+    def _iterable_in(each: Any, another_set: Iterable[Any]) -> bool:
+        for other in another_set:
+            if equals(each, other):
+                return True
+
+        return False
+
+
+    def _set_in(each: Any, another_set: set) -> bool:
+        return each in another_set
+
+
+    if equals == eq:  # pylint: disable=comparison-with-callable
+        is_in = _set_in
+
+    else:
+        is_in = _iterable_in
+
     another_set = set(another_set)
 
     for each in one_set:
-        if each not in another_set:
+        if not is_in(each, another_set):
             _logger.info("%r not included", each)
             return False
 
@@ -141,7 +169,7 @@ def included(
 
     :param one: Iterable or `dict` that could be included in `another`
     :param another: Iterable or `dict` that could include `one`.
-    :param equals: Function to be used to compare values.
+    :param equals: Function to be used to compare values (not keys).
 
     :returns: Returns `True`, when elements in `one` are included in
         `another`.
@@ -171,7 +199,6 @@ def current_function_name(pop_stack: int = 0) -> str:
 
 class EmptyResult(Reason):
     """Result is empty"""
-    pass
 
 
 def combine_lists(
