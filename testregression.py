@@ -2,6 +2,7 @@
 Functions for testing for regression
 """
 import os
+import logging
 import pickle
 from typing import (
     Optional,
@@ -11,7 +12,7 @@ from typing import (
 
 from . import introspect
 
-import pylog
+import pylog  # pylint: disable=wrong-import-order
 _logger = pylog.getLogger(__name__)
 
 
@@ -62,7 +63,8 @@ def make_filename(
 
 
 def _save_or_load(
-        value: _ParameterType, save: bool,
+        value: _ParameterType,
+        save: bool,
         index: Union[None, int, float] = None,
         suffix: Optional[str] = None,
         depth: int = 1
@@ -85,11 +87,14 @@ def _save_or_load(
         else:
             raise
 
-    if save and (previous_value != value):
-        with open(filename, 'wb') as write_file:
-            pickle.dump(value, write_file)
+    if save:
+        if previous_value != value:
+            with open(filename, 'wb') as write_file:
+                pickle.dump(value, write_file)
 
-    return value
+        return value
+
+    return previous_value
 
 
 def assert_no_change(
@@ -99,7 +104,9 @@ def assert_no_change(
         index: Union[None, int, float] = None,
         suffix: Optional[str] = None,
         error_on_save: bool = True,
-        depth: int = 1) -> None:
+        depth: int = 1,
+        _logger: logging.Logger = _logger
+) -> None:
     """
     Assertion to check for regression.
 
@@ -112,6 +119,7 @@ def assert_no_change(
     :param error_on_save: If `True`, raises class:`AssertionError` if
         `save == True`. This can be used to avoid leaving `save` as True.
     :para depth: (For internal use)  #TODO: rename with prefix `_`
+    :para _logger: (For test) Logger to use.
 
     :raises AssertionError: If `value` does not equal saved value
     :raises FileNotFoundError: If `value` has not been saved before
@@ -125,9 +133,9 @@ def assert_no_change(
     """
     if save:
         module_name, function_name, _ = introspect.get_function_info(
-            depth=depth)
+            depth=depth + 1)
         _logger.error(
-            "`save` is True in %s (%s)" % (function_name, module_name))
+            "`save` is `True` in %s (%s)" % (function_name, module_name))
         _logger.error(
             "`value` is %r" % (value,))
 
