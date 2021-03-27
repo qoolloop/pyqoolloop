@@ -198,11 +198,15 @@ def current_function_name(pop_stack: int = 0) -> str:
       `1` for caller of caller.  #TODO: rename `depth`
 
     :returns: Name of function on stack.
+
+    :raises AssertionError: `pop_stack` is too large.
     """
     # https://stackoverflow.com/a/13514318/2400328
     frame = inspect.currentframe()
+    assert frame is not None
     for index in range(pop_stack + 1):
         frame = frame.f_back
+        assert frame is not None
         
     return frame.f_code.co_name
 
