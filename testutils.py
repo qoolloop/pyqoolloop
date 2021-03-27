@@ -1,7 +1,6 @@
 """
 Module with useful functions for unit testing.
 """
-import sys
 import inspect
 from typing import (
     Any,
@@ -204,7 +203,7 @@ def current_function_name(pop_stack: int = 0) -> str:
     # https://stackoverflow.com/a/13514318/2400328
     frame = inspect.currentframe()
     assert frame is not None
-    for index in range(pop_stack + 1):
+    for _ in range(pop_stack + 1):
         frame = frame.f_back
         assert frame is not None
         
@@ -277,7 +276,7 @@ def combine_lists(
     if not raise_if_empty:
         return result
     
-    for each in result:
+    for _ in result:
         return result  # `result` has element
     
     raise RecoveredException("Empty result", reason=EmptyResult)
