@@ -1,10 +1,14 @@
-import pytest
+"""
+Tests for `testutils` module.
+"""
 from typing import (
     Any,
     Iterable,
     Sequence,
     Union,
 )
+
+import pytest
 
 from pyexception.exception import RecoveredException
 from pyexception.testutils import raises
@@ -57,7 +61,11 @@ from .testutils import (
     ({1: "1", "bcd": 1}, {1: "1"}, False),
 ))
 def test__included(
-        one: Iterable[Any], another: Iterable[Any], result: bool) -> None:
+        one: Iterable[Any], another: Iterable[Any], result: bool
+) -> None:
+    """
+    Test for `included()`.
+    """
     assert result == included(one, another)
 
 
@@ -100,7 +108,11 @@ def test__included(
     ({1: "1", "bcd": 1}, {1: "1"}, False),
 ))
 def test__included__equals(
-        one: Iterable[Any], another: Iterable[Any], result: bool) -> None:
+        one: Iterable[Any], another: Iterable[Any], result: bool
+) -> None:
+    """
+    Test for `included()` with `equals` argument specified.
+    """
 
     def _str_equals(one: Any, another: Any) -> bool:
         return str(one) == str(another)
@@ -138,9 +150,12 @@ def test_combine_lists(
         expected_result: Sequence[Iterable[object]],
         args: Iterable[Union[object, Iterable[object]]]
 ) -> None:
+    """
+    Test for `combine_lists()`.
+    """
     expected_set = to_set(expected_result)
 
-    if (len(expected_result) == 0):
+    if len(expected_result) == 0:
         with raises(RecoveredException, EmptyResult):
             result_list = combine_lists(*args)
 
@@ -155,14 +170,17 @@ def test_combine_lists(
 
             assert expected_set == result_set
 
-    return
+    # enddef
 
 
 def test__current_function_name():
+    """
+    Test for `current_function_name()`.
+    """
 
     def _inner_function():
-        assert '_inner_function' == current_function_name()
-        assert 'test__current_function_name' == current_function_name(1)
+        assert current_function_name() == '_inner_function'
+        assert current_function_name(1) == 'test__current_function_name'
 
 
     _inner_function()
