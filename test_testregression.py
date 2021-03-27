@@ -27,13 +27,13 @@ def test__make_filename__index() -> None:
 def test__assert_no_change() -> None:
     save = False
 
-    assert_no_change(1, save, error_on_save=False)
+    assert_no_change(1, save=save, error_on_save=False)
 
-    assert_no_change(2, save, index=0, error_on_save=False)
+    assert_no_change(2, save=save, index=0, error_on_save=False)
 
-    assert_no_change(3, save, suffix="suffix", error_on_save=False)
+    assert_no_change(3, save=save, suffix="suffix", error_on_save=False)
 
-    assert_no_change(4, save, index=0, suffix="suffix")
+    assert_no_change(4, save=save, index=0, suffix="suffix")
 
 
 def test__assert_no_change__no_save() -> None:

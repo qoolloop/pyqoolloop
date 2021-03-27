@@ -68,33 +68,33 @@ def _save_or_load(
         depth: int = 1
 ) -> _ParameterType:
 
-    class CannotRead:
+    class _CannotRead:  # pylint: disable=too-few-public-methods
         """ Something that should not exist elsewhere"""
-        pass
     
 
     filename = make_filename(index=index, suffix=suffix, depth=depth + 1)
 
     try:
-        with open(filename, 'rb') as f:
-            previous_value = pickle.load(f)
+        with open(filename, 'rb') as read_file:
+            previous_value = pickle.load(read_file)
 
     except IOError:
         if save:
-            previous_value = CannotRead
+            previous_value = _CannotRead
 
         else:
             raise
 
     if save and (previous_value != value):
-        with open(filename, 'wb') as f:
-            pickle.dump(value, f)
+        with open(filename, 'wb') as write_file:
+            pickle.dump(value, write_file)
 
     return value
 
 
 def assert_no_change(
         value: object,
+        *,  # too many positional arguments
         save: bool,
         index: Union[None, int, float] = None,
         suffix: Optional[str] = None,

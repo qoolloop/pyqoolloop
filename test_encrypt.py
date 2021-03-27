@@ -39,11 +39,11 @@ def test__key_from_password(index: int, password: str, salt: bytes) -> None:
     save = False
     
     key = encrypt.key_from_password(password, salt)
-    testregression.assert_no_change(key, save, index)
+    testregression.assert_no_change(key, save=save, index=index)
 
     # Make sure same PBKDF2HMAC is not used twice, but produces same results
     key = encrypt.key_from_password(password, salt)
-    testregression.assert_no_change(key, False, index)
+    testregression.assert_no_change(key, save=False, index=index)
 
     assert not save, "Warning"
 
