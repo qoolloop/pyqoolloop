@@ -135,9 +135,9 @@ def assert_no_change(
         module_name, function_name, _ = introspect.get_function_info(
             depth=depth + 1)
         _logger.error(
-            "`save` is `True` in %s (%s)" % (function_name, module_name))
+            "`save` is `True` in %s (%s)", function_name, module_name)
         _logger.error(
-            "`value` is %r" % (value,))
+            "`value` is %r", value)
 
     previous_value = _save_or_load(
         value, save, index=index, suffix=suffix, depth=depth + 1)
@@ -148,4 +148,4 @@ def assert_no_change(
     if error_on_save:
         assert not save
 
-    return
+    # enddef

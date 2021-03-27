@@ -118,9 +118,9 @@ def test__assert_no_change__logger():
                 self, message: str, *arg: Any, **kwargs: Any) -> None:
             self.called = True
             
-            super().warning(message, *arg, **kwargs)
+            super().error(message, *arg, **kwargs)
             
-            self.message += message + "\n"
+            self.message += (message % arg) + "\n"
 
 
         def reset_message(self):
