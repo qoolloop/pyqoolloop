@@ -1,8 +1,12 @@
+"""
+Tests for `encrypt` module.
+"""
 import math
 import os
-import pytest
 import sys
 import tempfile
+
+import pytest
 
 from pyexception.exception import (
     RecoveredException,
@@ -16,7 +20,7 @@ from . import (
     testregression,
 )
 
-import pylog
+import pylog  # pylint: disable=wrong-import-order
 logger = pylog.getLogger(__name__)
 
 
@@ -36,6 +40,9 @@ def _make_temporary_encryptor() -> encrypt.EncryptorDecryptor:
      b'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
 ))
 def test__key_from_password(index: int, password: str, salt: bytes) -> None:
+    """
+    Test that `key_from_password()` produces consistent results.
+    """
     save = False
     
     key = encrypt.key_from_password(password, salt)
@@ -45,10 +52,11 @@ def test__key_from_password(index: int, password: str, salt: bytes) -> None:
     key = encrypt.key_from_password(password, salt)
     testregression.assert_no_change(key, save=False, index=index)
 
-    assert not save, "Warning"
-
 
 def test__encrypt_to_file__overwrite() -> None:
+    """
+    Test behavior of `encrypt_to_file()` when file already exists.
+    """
     encryptor = _make_temporary_encryptor()
 
     with tempfile.TemporaryDirectory() as directory:
@@ -149,6 +157,9 @@ def test__encrypt_to_file__overwrite() -> None:
      {'complex set', 1, 3.5, False, None, (1, 2)}),
 ))
 def test__encrypt_decrypt(index: float, value: object) -> None:
+    """
+    Test that `decrypt()` is possible after `encrypt()`.
+    """
     logger.info("value: %r", value)
                          
     encryptor = _make_temporary_encryptor()
@@ -170,6 +181,10 @@ def test__encrypt_decrypt(index: float, value: object) -> None:
     (1.2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
 ))
 def test__encrypt_decrypt_from_file(index: float, value: str) -> None:
+    """
+    Test that `decrypt_from_file()` can read a file stored by
+    `encrypt_to_file()`.
+    """
     encryptor = _make_temporary_encryptor()
 
     with tempfile.TemporaryDirectory() as directory:
@@ -190,6 +205,10 @@ def test__encrypt_decrypt_from_file(index: float, value: str) -> None:
 ))
 def test__encrypt_decrypt_from_file__no_change(
         index: float, value: str) -> None:
+    """
+    Test that `decrypt_from_file()` can read a file stored in the past by
+    `encrypt_to_file()`.
+    """
     save = False
 
     key_filename = testregression.make_filename(
@@ -229,6 +248,10 @@ def test__encrypt_decrypt_from_file__no_change(
 ))
 def test__encrypt_decrypt_from_file__no_change__auto_rotate(
         index: float, value: str) -> None:
+    """
+    Test that the primary key is used for encryption after `rotate_file()`.
+    """
+    #TODO: Split intent
     primary_key = encrypt.EncryptorDecryptor.generate_key()
 
     primary_encryptor = encrypt.EncryptorDecryptor(primary_key)
@@ -268,6 +291,10 @@ def test__encrypt_decrypt_from_file__no_change__auto_rotate(
 
 
 def test__decrypt_from_file__no_file_exception() -> None:
+    """
+    Test that `decrypt_from_file()` raises `FileNotFoundError`, when
+    file doesn't exist.
+    """
     encryptor = _make_temporary_encryptor()
 
     with pytest.raises(FileNotFoundError):
@@ -281,6 +308,10 @@ def test__decrypt_from_file__no_file_exception() -> None:
     'str',
 ))
 def test__decrypt_from_file__no_file__default(default: object) -> None:
+    """
+    Test that `decrypt_from_file()` returns default value, when file doesn't
+    exist.
+    """
     encryptor = _make_temporary_encryptor()
 
     value = encryptor.decrypt_from_file(
