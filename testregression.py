@@ -148,4 +148,4 @@ def assert_no_change(
     if error_on_save:
         assert not save
 
-    # enddef
+    # endif
