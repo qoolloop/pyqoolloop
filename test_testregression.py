@@ -39,7 +39,17 @@ def test__make_filename__index() -> None:
     assert '1.0' not in int_filename
 
 
-def test__assert_no_change() -> None:
+parametrize__assert_no_change = pytest.mark.parametrize('value, kwargs', (
+    (1, {}),
+    (2, dict(index=0)),
+    (3, dict(suffix="suffix")),
+    (4, dict(index=0, suffix="suffix")),
+))
+
+
+@parametrize__assert_no_change
+def test__assert_no_change(
+        value: int, kwargs: Dict[str, Any]) -> None:
     """
     Test that `assert_no_change()` raises `AssertionError`, when
     the `value` argument has changed.
@@ -51,66 +61,42 @@ def test__assert_no_change() -> None:
 
     save = False
 
-    assert_no_change(1, save=save, error_on_save=False)
-    with pytest.raises(AssertionError):
-        assert_no_change(False, save=False, error_on_save=False)
+    different_values = {
+        1: False,
+        2: None,
+        3: True,
+        4: _NonExistent
+    }
 
-    assert_no_change(2, save=save, index=0, error_on_save=False)
-    with pytest.raises(AssertionError):
-        assert_no_change(None, save=False, index=0, error_on_save=False)
-
-    assert_no_change(3, save=save, suffix="suffix", error_on_save=False)
+    assert_no_change(value, save=save, error_on_save=False, **kwargs)
     with pytest.raises(AssertionError):
         assert_no_change(
-            True, save=False, suffix="suffix", error_on_save=False)
-
-    assert_no_change(4, save=save, index=0, suffix="suffix")
-    with pytest.raises(AssertionError):
-        assert_no_change(_NonExistent, save=False, index=0, suffix="suffix")
+            different_values[value], save=False, error_on_save=False, **kwargs)
 
 
-def test__assert_no_change__no_save() -> None:
+@parametrize__assert_no_change
+def test__assert_no_change__no_save(
+        value: int, kwargs: Dict[str, Any]) -> None:
     """
     Test that `assert_no_change()` raises `FileNotFoundError` when the `save`
     argument is `False` and no previous value has been saved.
     """
     with pytest.raises(FileNotFoundError):
-        assert_no_change(1, save=False)
+        assert_no_change(value, save=False, **kwargs)
 
-    with pytest.raises(FileNotFoundError):
-        assert_no_change(2, save=False, index=0)
 
-    with pytest.raises(FileNotFoundError):
-        assert_no_change(3, save=False, suffix="suffix")
-
-    with pytest.raises(FileNotFoundError):
-        assert_no_change(4, save=False, index=0, suffix="suffix")
-        
-
-def test__assert_no_change__save() -> None:
+@parametrize__assert_no_change
+def test__assert_no_change__save(
+        value: int, kwargs: Dict[str, Any]) -> None:
     """
     Test that `assert_no_change()` raises `AssertionError` when the `save`
     argument is `True`.
     """
     with pytest.raises(AssertionError):
-        assert_no_change(1, save=True)
-
-    with pytest.raises(AssertionError):
-        assert_no_change(2, save=True, index=0)
-
-    with pytest.raises(AssertionError):
-        assert_no_change(3, save=True, suffix="suffix")
-
-    with pytest.raises(AssertionError):
-        assert_no_change(4, save=True, index=0, suffix="suffix")
+        assert_no_change(value, save=True, **kwargs)
 
 
-@pytest.mark.parametrize('value, kwargs', (  #TODO: Use same parameters for other tests
-    (1, {}),
-    (2, dict(index=0)),
-    (3, dict(suffix="suffix")),
-    (4, dict(index=0, suffix="suffix")),
-))
+@parametrize__assert_no_change
 def test__assert_no_change__save__no_previous(
         value: int, kwargs: Dict[str, Any]) -> None:
     """
