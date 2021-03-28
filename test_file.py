@@ -1,3 +1,6 @@
+"""
+Test for `file` module.
+"""
 import os
 import tempfile
 from typing import (
@@ -21,6 +24,15 @@ LoadFunc = Callable[[str, str, DefaultNamedArg(bool, 'raise_exception')], Any]
 DumpFunc = Callable[[str, str, Any, DefaultNamedArg(bool, 'overwrite')], None]
 
 
+parametrize__load_dump = pytest.mark.parametrize(
+    "load_func, dump_func, value",
+    (
+        (file.load_pickle, file.dump_pickle, {'key': 11}),
+        (file.load_text, file.dump_text, 'text'),
+    )
+)
+
+
 def _test__no_file__no_exception(load_func: LoadFunc) -> None:
     """
     Subtest to check that no exception is raised
@@ -41,29 +53,28 @@ def _test__no_file__exception(load_func: LoadFunc) -> None:
     # endwith
 
 
-def test_load_pickle__no_file__no_exception() -> None:
-    _test__no_file__no_exception(file.load_pickle)
+@parametrize__load_dump
+def test__load__no_file__no_exception(
+        load_func: LoadFunc, dump_func: DumpFunc, value: Any) -> None:
+    """
+    Test load functions that no exception is raised with default argument
+    """
+    # pylint: disable=unused-argument # dump_func, value
+    _test__no_file__no_exception(load_func)
     
 
-def test_load_text__no_file__no_exception() -> None:
-    _test__no_file__no_exception(file.load_text)
+@parametrize__load_dump
+def test_load_pickle__no_file__exception(
+        load_func: LoadFunc, dump_func: DumpFunc, value: Any) -> None:
+    """
+    Test load functions that exception is raised when the `raise_exception`
+    argument is `True`
+    """
+    # pylint: disable=unused-argument # dump_func, value
+    _test__no_file__exception(load_func)
     
 
-def test_load_pickle__no_file__exception() -> None:
-    _test__no_file__exception(file.load_pickle)
-    
-
-def test_load_text__no_file__exception() -> None:
-    _test__no_file__exception(file.load_text)
-    
-
-load_dump_parameters = ("load_func, dump_func, value", (
-    (file.load_pickle, file.dump_pickle, {'key': 11}),
-    (file.load_text, file.dump_text, 'text'),
-))
-
-
-@pytest.mark.parametrize(*load_dump_parameters)
+@parametrize__load_dump
 def test__regular(
         load_func: LoadFunc, dump_func: DumpFunc, value: Any) -> None:
     """
@@ -89,14 +100,14 @@ def test__regular(
     # endtry
     
 
-@pytest.mark.parametrize(*load_dump_parameters)
+@parametrize__load_dump
 def test__destination_exists__no_exception(
         load_func: LoadFunc, dump_func: DumpFunc, value: Any) -> None:
     """
     Test that exception is not raised if the `overwrite` argument is `True`.
     """
-    f, temp_filename = tempfile.mkstemp()
-    os.close(f)
+    temp_file, temp_filename = tempfile.mkstemp()
+    os.close(temp_file)
 
     try:
         dump_func('', temp_filename, value, overwrite=True)
@@ -109,14 +120,14 @@ def test__destination_exists__no_exception(
     assert read == value
     
 
-@pytest.mark.parametrize(*load_dump_parameters)
+@parametrize__load_dump
 def test__destination_exists__exception(
         load_func: LoadFunc, dump_func: DumpFunc, value: Any) -> None:
     """
     Test that `FileExistsError` is raised when destination file already
     exists.
     """
-    # pylint: disable=unused-argument load_func
+    # pylint: disable=unused-argument # load_func
 
     temp_file, temp_filename = tempfile.mkstemp()
     os.close(temp_file)
