@@ -798,12 +798,13 @@ def test_retry__method(
     class _Class:
 
         @retry(attempts, exceptions)
-        def func(
+        def func(  # pylint:disable=no-self-use
                 self,
                 arg1: str,
                 arg2: str,
                 kwarg1: Optional[str] = None,
-                kwarg2: Optional[str] = None) -> None:
+                kwarg2: Optional[str] = None
+        ) -> None:
             assert arg1 == 'arg1'
             assert arg2 == 'arg2'
             assert kwarg1 == 'kwarg1'
@@ -1206,7 +1207,7 @@ def test_cache__no_args(
 
     @decorator(**kwargs)
     class _Class:
-        def a_method(self) -> int:
+        def a_method(self) -> int:  # pylint: disable=no-self-use
             return _counter_function()
 
 
@@ -1258,7 +1259,8 @@ def test_cache__args(
 
     @decorator(**kwargs)
     class _Class:
-        def a_method(self, arg1: int, arg2: int) -> int:
+        def a_method(self, arg1: int, arg2: int) -> int: \
+                # pylint: disable=no-self-use
             return arg1 + arg2 + _counter_function()
 
 
@@ -1313,7 +1315,8 @@ def test_cache__kwargs(
 
     @decorator(**kwargs)
     class _Class:
-        def a_method(self, arg0: int, arg1: int = 0, arg2: int = 3) -> int:
+        def a_method(self, arg0: int, arg1: int = 0, arg2: int = 3) -> int: \
+                # pylint: disable=no-self-use
             return arg1 + arg2 + _counter_function()
 
 
@@ -1369,7 +1372,8 @@ def test_cache__default_kwargs(
 
     @decorator(**kwargs)
     class _Class():
-        def a_method(self, arg0: int, arg1: int = 0, arg2: int = 3) -> int:
+        def a_method(self, arg0: int, arg1: int = 0, arg2: int = 3) -> int: \
+                # pylint: disable=no-self-use
             return arg1 + arg2 + _counter_function()
 
 
@@ -1428,7 +1432,7 @@ def test_cache__synchronize(
 
     @decorator(max_entries=max_entries, **kwargs)
     class _Class:
-        def a_method(self) -> str:
+        def a_method(self) -> str:  # pylint: disable=no-self-use
             return _inc_dec(variables)
 
 
@@ -1477,7 +1481,8 @@ def test_keep_cache__max_entries() -> None:
 
         @keep_cache(keep_time_secs=10, max_entries=max_entries)  #TODO: No mypy warning even though `@keep_cache` isn't declared for classes.
         class _Class():
-            def a_method(self, arg: int) -> int:
+            def a_method(self, arg: int) -> int: \
+                    # pylint: disable=no-self-use
                 return arg
 
             @staticmethod
@@ -1535,7 +1540,7 @@ def test_keep_cache__max_entries__expire() -> None:
 
     @keep_cache(keep_time_secs=keep_time_secs, max_entries=max_entries)
     class _Class():
-        def a_method(self, arg: int) -> int:
+        def a_method(self, arg: int) -> int:  # pylint: disable=no-self-use
             return arg
 
         @staticmethod
@@ -1584,12 +1589,13 @@ def test_keep_cache__max_entries__refresh() -> None:
         return arg
 
     
-    NUM_CALLABLES = 6
-    for callables_index in range(NUM_CALLABLES):
+    num_callables = 6
+    for callables_index in range(num_callables):
 
         @keep_cache(keep_time_secs=keep_time_secs, max_entries=max_entries)
         class _Class():
-            def a_method(self, arg: int) -> int:
+            def a_method(self, arg: int) -> int: \
+                    # pylint: disable=no-self-use
                 return arg
 
             @staticmethod
@@ -1611,7 +1617,7 @@ def test_keep_cache__max_entries__refresh() -> None:
             _Class.a_staticmethod,
             _Class.a_classmethod,
         )
-        assert len(callables) == NUM_CALLABLES
+        assert len(callables) == num_callables
 
         each = callables[callables_index]
         
@@ -1647,7 +1653,8 @@ def test_keep_cache__exclude_kw(
 
     @decorator(exclude_kw=['extra'], **kwargs)
     class _Class():
-        def a_method(self, arg: int, extra: int) -> int:
+        def a_method(self, arg: int, extra: int) -> int: \
+                # pylint: disable=no-self-use
             return arg + extra
 
         @staticmethod
@@ -1694,7 +1701,7 @@ def test_expire_cache__no_args__expire() -> None:
 
     @expire_cache(expire_time_secs=0)
     class _Class:
-        def a_method(self) -> int:
+        def a_method(self) -> int:  # pylint: disable=no-self-use
             return _counter_function()
 
 
@@ -1741,7 +1748,7 @@ def test_expire_cache__max_entries() -> None:
 
     @expire_cache(expire_time_secs=10, max_entries=max_entries)
     class _Class:
-        def a_method(self, arg: int) -> int:
+        def a_method(self, arg: int) -> int:  # pylint: disable=no-self-use
             return arg
 
 
@@ -1794,7 +1801,7 @@ def test_expire_cache__max_entries__same_args(
 
     @decorator(max_entries=max_entries, **kwargs)
     class _Class:
-        def a_method(self, arg: int) -> int:
+        def a_method(self, arg: int) -> int:  # pylint: disable=no-self-use
             return arg
 
 
@@ -1839,7 +1846,7 @@ def test_expire_cache__max_entries__refresh() -> None:
 
     @expire_cache(expire_time_secs=10, max_entries=max_entries)
     class _Class:
-        def a_method(self, arg: int) -> int:
+        def a_method(self, arg: int) -> int:  # pylint: disable=no-self-use
             return arg + _counter_function()
 
 
