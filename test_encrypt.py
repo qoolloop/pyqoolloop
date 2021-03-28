@@ -77,10 +77,10 @@ def test__encrypt_to_file__overwrite() -> None:
         loaded = encryptor.decrypt_from_file(value_filename)
         assert loaded == new_value
 
-    return
+    # endwith
 
 
-@pytest.mark.parametrize('index, value', (
+@pytest.mark.parametrize('_index, value', (
     (0.1, b'password'),
     # UnicodeDecodeError: 'utf-8' codec can't decode byte 0x80 in position 0:
     # invalid start byte
@@ -156,7 +156,7 @@ def test__encrypt_to_file__overwrite() -> None:
     (9.5,
      {'complex set', 1, 3.5, False, None, (1, 2)}),
 ))
-def test__encrypt_decrypt(index: float, value: object) -> None:
+def test__encrypt_decrypt(_index: float, value: object) -> None:
     """
     Test that `decrypt()` is possible after `encrypt()`.
     """
@@ -173,14 +173,14 @@ def test__encrypt_decrypt(index: float, value: object) -> None:
     else:
         assert decrypted == value
 
-    return
+    # endif
 
 
-@pytest.mark.parametrize('index, value', (
+@pytest.mark.parametrize('_index, value', (
     (1.1, 'password'),
     (1.2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
 ))
-def test__encrypt_decrypt_from_file(index: float, value: str) -> None:
+def test__encrypt_decrypt_from_file(_index: float, value: str) -> None:
     """
     Test that `decrypt_from_file()` can read a file stored by
     `encrypt_to_file()`.
@@ -196,7 +196,7 @@ def test__encrypt_decrypt_from_file(index: float, value: str) -> None:
 
         assert loaded == value
 
-    return
+    # endwith
 
 
 @pytest.mark.parametrize('index, value', (
@@ -217,15 +217,15 @@ def test__encrypt_decrypt_from_file__no_change(
     if save:
         key = encrypt.EncryptorDecryptor.generate_key()
 
-        with open(key_filename, 'wb') as f:
-            f.write(key)
+        with open(key_filename, 'wb') as key_file:
+            key_file.write(key)
 
-        logger.info("Key length: %d" % len(key))
+        logger.info("Key length: %d", len(key))
 
-    with open(key_filename, 'rb') as f:
-        key = f.read()
+    with open(key_filename, 'rb') as key_file:
+        key = key_file.read()
         
-    logger.info("Key length: %d" % len(key))
+    logger.info("Key length: %d", len(key))
 
     encryptor = encrypt.EncryptorDecryptor(key)
 
@@ -242,12 +242,12 @@ def test__encrypt_decrypt_from_file__no_change(
     assert not save, "Warning"
 
 
-@pytest.mark.parametrize('index, value', (
+@pytest.mark.parametrize('_index, value', (
     (1.1, 'password'),
     (1.2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
 ))
 def test__encrypt_decrypt_from_file__no_change__auto_rotate(
-        index: float, value: str) -> None:
+        _index: float, value: str) -> None:
     """
     Test that the primary key is used for encryption after `rotate_file()`.
     """
@@ -287,7 +287,7 @@ def test__encrypt_decrypt_from_file__no_change__auto_rotate(
         loaded = joint_encryptor.decrypt_from_file(value_filename)
         assert loaded == value
 
-    return
+    # endwith
 
 
 def test__decrypt_from_file__no_file_exception() -> None:
@@ -300,7 +300,7 @@ def test__decrypt_from_file__no_file_exception() -> None:
     with pytest.raises(FileNotFoundError):
         encryptor.decrypt_from_file("any file")
 
-    return
+    # endwith
 
 
 @pytest.mark.parametrize('default', (
