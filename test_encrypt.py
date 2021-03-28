@@ -249,9 +249,75 @@ def test__encrypt_decrypt_from_file__no_change(
 def test__encrypt_decrypt_from_file__no_change__auto_rotate(
         _index: float, value: str) -> None:
     """
+    Test that `decrypt_from_file()` can read from files that are generated
+    with all its keys.
+    """
+    primary_key = encrypt.EncryptorDecryptor.generate_key()
+
+    primary_encryptor = encrypt.EncryptorDecryptor(primary_key)
+
+    secondary_key = encrypt.EncryptorDecryptor.generate_key()
+
+    secondary_encryptor = encrypt.EncryptorDecryptor(secondary_key)
+
+    joint_encryptor = encrypt.EncryptorDecryptor((primary_key, secondary_key))
+
+    with tempfile.TemporaryDirectory() as directory:
+        value_filename = os.path.join(directory, 'value.bin')
+
+        primary_encryptor.encrypt_to_file(
+            value, value_filename)
+
+        loaded = joint_encryptor.decrypt_from_file(value_filename)
+        assert loaded == value
+
+        secondary_encryptor.encrypt_to_file(
+            value, value_filename, overwrite=True)
+
+        loaded = joint_encryptor.decrypt_from_file(value_filename)
+        assert loaded == value
+
+    # endwith
+
+
+@pytest.mark.parametrize('_index, value', (
+    (1.1, 'password'),
+    (1.2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
+))
+def test__security(
+        _index: float, value: str) -> None:
+    """
+    Test that files generated with one key cannot be decrypted with another.
+    """
+    primary_key = encrypt.EncryptorDecryptor.generate_key()
+
+    primary_encryptor = encrypt.EncryptorDecryptor(primary_key)
+
+    secondary_key = encrypt.EncryptorDecryptor.generate_key()
+
+    secondary_encryptor = encrypt.EncryptorDecryptor(secondary_key)
+
+    with tempfile.TemporaryDirectory() as directory:
+        value_filename = os.path.join(directory, 'value.bin')
+
+        primary_encryptor.encrypt_to_file(value, value_filename)
+
+        with pytest.raises(RecoveredException):
+            secondary_encryptor.decrypt_from_file(value_filename)
+
+        # endwith
+    # endwith
+
+    
+@pytest.mark.parametrize('_index, value', (
+    (1.1, 'password'),
+    (1.2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
+))
+def test__rotate_file(
+        _index: float, value: str) -> None:
+    """
     Test that the primary key is used for encryption after `rotate_file()`.
     """
-    #TODO: Split intent
     primary_key = encrypt.EncryptorDecryptor.generate_key()
 
     primary_encryptor = encrypt.EncryptorDecryptor(primary_key)
@@ -274,10 +340,6 @@ def test__encrypt_decrypt_from_file__no_change__auto_rotate(
 
         joint_encryptor.rotate_file(value_filename)
 
-        none_encryptor = _make_temporary_encryptor()
-        with pytest.raises(RecoveredException):
-            none_encryptor.decrypt_from_file(value_filename)
-
         with pytest.raises(RecoveredException):
             secondary_encryptor.decrypt_from_file(value_filename)
 
@@ -288,7 +350,7 @@ def test__encrypt_decrypt_from_file__no_change__auto_rotate(
         assert loaded == value
 
     # endwith
-
+    
 
 def test__decrypt_from_file__no_file_exception() -> None:
     """
