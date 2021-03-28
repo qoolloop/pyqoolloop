@@ -1,10 +1,13 @@
+"""
+Tests for the `testregression` module.
+"""
 import os
-import pytest
 from typing import (
     Any,
     Dict,
-    List,
 )
+
+import pytest
 
 import pylog
 
@@ -15,6 +18,10 @@ from .testregression import (
 
 
 def test__make_filename__float_index() -> None:
+    """
+    Test that the `index` argument is treated differently is different types
+    are passed to `make_filename()`.
+    """
     int_filename = make_filename(index=1)
     float_filename = make_filename(index=1.1)
 
@@ -22,12 +29,21 @@ def test__make_filename__float_index() -> None:
 
 
 def test__make_filename__index() -> None:
+    """
+    Test that the `index` argument is treated as a `int`, when an `int` is
+    passed to `make_filename()`.
+    """
     int_filename = make_filename(index=1)
 
+    assert '1' in int_filename
     assert '1.0' not in int_filename
 
 
 def test__assert_no_change() -> None:
+    """
+    Test that `assert_no_change()` raises `AssertionError`, when
+    the `value` argument has changed.
+    """
 
     class _NonExistent:  # pylint: disable=too-few-public-methods
         """ Something that should not exist elsewhere"""
@@ -54,6 +70,10 @@ def test__assert_no_change() -> None:
 
 
 def test__assert_no_change__no_save() -> None:
+    """
+    Test that `assert_no_change()` raises `FileNotFoundError` when the `save`
+    argument is `False` and no previous value has been saved.
+    """
     with pytest.raises(FileNotFoundError):
         assert_no_change(1, save=False)
 
@@ -68,6 +88,10 @@ def test__assert_no_change__no_save() -> None:
         
 
 def test__assert_no_change__save() -> None:
+    """
+    Test that `assert_no_change()` raises `AssertionError` when the `save`
+    argument is `True`.
+    """
     with pytest.raises(AssertionError):
         assert_no_change(1, save=True)
 
@@ -89,6 +113,10 @@ def test__assert_no_change__save() -> None:
 ))
 def test__assert_no_change__save__no_previous(
         value: int, kwargs: Dict[str, Any]) -> None:
+    """
+    Test that no exception occurs with no value being saved, when  the `save`
+    argument if `True`for `assert_no_change()`.
+    """
     
     filename = make_filename(**kwargs)
     try:
@@ -103,10 +131,14 @@ def test__assert_no_change__save__no_previous(
     finally:
         os.remove(filename)
 
-    return
+    # enddef
 
 
 def test__assert_no_change__logger():
+    """
+    Test that logging is as expected for `assert_no_change()`.
+    """
+    # pylint: disable=missing-function-docstring
 
     class _Logger(pylog.Logger):
 
@@ -114,13 +146,13 @@ def test__assert_no_change__logger():
 
         message: str
 
-        def error(  # type:ignore[override]
-                self, message: str, *arg: Any, **kwargs: Any) -> None:
+        def error(
+                self, msg: str, *arg: Any, **kwargs: Any) -> None:
             self.called = True
             
-            super().error(message, *arg, **kwargs)
+            super().error(msg, *arg, **kwargs)
             
-            self.message += (message % arg) + "\n"
+            self.message += (msg % arg) + "\n"
 
 
         def reset_message(self):
@@ -132,11 +164,10 @@ def test__assert_no_change__logger():
 
             
         def check_message_content(self):
-            assert _logger.message.find(
-                "test__assert_no_change__logger") >= 0, \
+            assert "test__assert_no_change__logger" in _logger.message, \
                 "message not as expected: %s" % self.message
-            assert _logger.message.find("test_testregression") >= 0
-            assert _logger.message.find(str(value)) >= 0
+            assert "test_testregression" in _logger.message
+            assert str(value) in _logger.message
 
 
         # endclass
