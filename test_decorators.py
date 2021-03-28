@@ -1837,12 +1837,10 @@ def _test_new_method(
     assert value == instance_a.new_value
 
     with pytest.raises(TypeError):
-        class_a.method(value) \
-            # type:ignore[attr-defined, arg-type, call-arg]
+        class_a.method(value)  # type:ignore[attr-defined, arg-type, call-arg]
 
     with pytest.raises(TypeError):
-        class_a.new_method(value) \
-            # type:ignore[attr-defined, arg-type, call-arg]
+        class_a.new_method(value)  # type:ignore[attr-defined, arg-type, call-arg]
 
 
 def test__extend_with_method() -> None:
