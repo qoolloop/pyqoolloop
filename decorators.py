@@ -480,7 +480,7 @@ def deprecated(
     """
 
     def log_function(
-            target: Callable[..., TargetReturnType], # TargetFunction,
+            target: Callable[..., TargetReturnType],  # TargetFunction,
             *args: Any,
             **kwargs: Any
     ) -> TargetReturnType:
@@ -490,7 +490,7 @@ def deprecated(
         if message is not None:
             message_str += "\n" + message
         
-        logger.warning(message_str)
+        logger.warning(message_str)  #TODO: lazy string
 
         if raise_exception or \
            ((raise_exception is None) and raise_exception_for_deprecated):
@@ -809,7 +809,8 @@ def keep_cache(
     
     :param keep_time_secs: Keep value longer than this period (seconds).
     :param max_entries: Don't keep more than this number of entries.
-      If a class is decorated, one cache is held for all methods in the class.
+      If a class is decorated, one cache store is held for all methods in the
+      class.
     :param dont_synchronize: True, if thread safety is not necessary.
     :param exclude_kw: Iterable of argument names to exclude from arguments
       to identify cache data. Cached data is retrieved by taking the previous
