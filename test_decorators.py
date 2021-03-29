@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 """
 Tests for `decorators` module.
 """
@@ -63,15 +64,14 @@ def name_of_function() -> None:
     """
     Function decorated with `@pass_args`.
     """
-    pass
 
 
-def test__FunctionDecorator__wraps() -> None:
+def test__FunctionDecorator__wraps() -> None:  # pylint: disable=invalid-name
     """
     Test that `__name__` of decorated function has the name of the decorated
     function.
     """
-    assert 'name_of_function' == name_of_function.__name__
+    assert name_of_function.__name__ == 'name_of_function'
     
 
 # pass_args ###
@@ -162,16 +162,16 @@ class DifferentFunctions(Protocol):
     func_call_count: int
     
     def __init__(
-            self, arg0: Any = 0, # *, kwargs: Dict[str, Any]
+            self, arg0: Any = 0, **kwargs: Any, # *, kwargs: Dict[str, Any]
     ) -> None:
         """
         Initialize instance.
         """
-        ...
+        super().__init__(**kwargs)
 
 
     def func(
-            self, arg0: Any = 0, # *, kwargs: Dict[str, Any]
+            self, arg0: Any = 0,  # *, kwargs: Dict[str, Any]
     ) -> None:
         """
         Increment `self.func_call_count`.
@@ -181,7 +181,7 @@ class DifferentFunctions(Protocol):
 
     @staticmethod
     def static_func(
-            arg0: Any = 0, # *, kwargs: Dict[str, Any]
+            arg0: Any = 0,  # *, kwargs: Dict[str, Any]
     ) -> None:
         """
         Increment `cls.static_func_call_count`.
@@ -191,7 +191,7 @@ class DifferentFunctions(Protocol):
 
     @classmethod
     def class_func(
-            cls, arg0: Any = 0, # *, kwargs: Dict[str, Any]
+            cls, arg0: Any = 0,  # *, kwargs: Dict[str, Any]
     ) -> None:
         """
         Increment `cls.class_func_call_count`.
@@ -201,6 +201,7 @@ class DifferentFunctions(Protocol):
 
 @pass_args
 class PassArgsClass:
+    # Not subclassing Protocol, because want to test regular class
     """
     Test class for instance, static, and class methods.
 
@@ -253,7 +254,7 @@ class PassArgsClass:
         
 
 @pass_args
-class PassArgsClassWithMandatoryKeyword(object):
+class PassArgsClassWithMandatoryKeyword:
     """
     Test class for instance, static, and class methods with mandatory keyword
     argument.
@@ -306,18 +307,19 @@ class PassArgsClassWithMandatoryKeyword(object):
         cls.class_func_call_count += 1
         
 
-@pytest.mark.parametrize('Klass', (
+@pytest.mark.parametrize('pass_args_class', (
     PassArgsClass,
     PassArgsClassWithMandatoryKeyword,
 ))
-def test__pass_args_to_class(Klass: Type[DifferentFunctions]) -> None:
+def test__pass_args_to_class(
+        pass_args_class: Type[DifferentFunctions]) -> None:
     """
     Test passing arguments to methods in class decorated by `@pass_args`.
     """
 
-    instance = Klass()
+    instance = pass_args_class()
 
-    instance = Klass("a")
+    instance = pass_args_class("a")
     assert instance.init_call_count == 1
 
     instance.func(arg0="A")
@@ -329,26 +331,26 @@ def test__pass_args_to_class(Klass: Type[DifferentFunctions]) -> None:
     instance.func()
     assert instance.func_call_count == 3
 
-    Klass.static_func()
-    assert Klass.static_func_call_count == 1
+    pass_args_class.static_func()
+    assert pass_args_class.static_func_call_count == 1
 
-    Klass.static_func(arg0="O")
-    assert Klass.static_func_call_count == 2
+    pass_args_class.static_func(arg0="O")
+    assert pass_args_class.static_func_call_count == 2
 
-    Klass.static_func("")
-    assert Klass.static_func_call_count == 3
+    pass_args_class.static_func("")
+    assert pass_args_class.static_func_call_count == 3
 
     instance.static_func("oo")
     assert instance.static_func_call_count == 4
     
-    Klass.class_func()
-    assert Klass.class_func_call_count == 1
+    pass_args_class.class_func()
+    assert pass_args_class.class_func_call_count == 1
 
-    Klass.class_func(arg0="O")
-    assert Klass.class_func_call_count == 2
+    pass_args_class.class_func(arg0="O")
+    assert pass_args_class.class_func_call_count == 2
 
-    Klass.class_func("")
-    assert Klass.class_func_call_count == 3
+    pass_args_class.class_func("")
+    assert pass_args_class.class_func_call_count == 3
 
     instance.class_func("")
     assert instance.class_func_call_count == 4
@@ -363,15 +365,16 @@ def test__deprecated__log() -> None:
 
     class _Logger(pylog.Logger):
 
-        function_called: bool
+        function_called = False
+        warn_called = False
 
-        def warning(  # type:ignore[override]
-                self, message: str, *arg: Any, **kwargs: Any) -> None:
-            super().warning(message, *arg, **kwargs)
+        def warning(
+                self, msg: str, *arg: Any, **kwargs: Any) -> None:
+            super().warning(msg, *arg, **kwargs)
             
             self.warn_called = True
 
-            assert "deprecated_function" in message
+            assert "deprecated_function" in msg
 
 
     _logger = _Logger('name')
@@ -413,9 +416,11 @@ def test__deprecated__raise_exception_true(global_setting: bool) -> None:
     class _Logger(pylog.Logger):
 
         function_called = False
+        warn_called = False
 
-        def warning(  # type:ignore[override]
-                self, message: str, *args: Any, **kwargs: Any) -> None:
+        def warning(
+                self, msg: str, *args: Any, **kwargs: Any) -> None:
+            super().warning(msg, *args, **kwargs)
             self.warn_called = True
 
 
@@ -456,10 +461,11 @@ def test__deprecated__raise_exception_false(global_setting: bool) -> None:
     class _Logger(pylog.Logger):
 
         function_called = False
+        warn_called = False
 
-        def warning(  # type:ignore[override]
-                self, message: str, *args: Any, **kwargs: Any) -> None:
-            super().warning(message, *args, **kwargs)
+        def warning(
+                self, msg: str, *args: Any, **kwargs: Any) -> None:
+            super().warning(msg, *args, **kwargs)
             self.warn_called = True
 
 
@@ -496,10 +502,11 @@ def test__deprecated__raise_exception_for_deprecated_true() -> None:
     class _Logger(pylog.Logger):
 
         function_called = False
+        warn_called = False
 
-        def warning(  # type:ignore[override]
-                self, message: str, *args: Any, **kwargs: Any) -> None:
-            super().warning(message, *args, **kwargs)
+        def warning(
+                self, msg: str, *args: Any, **kwargs: Any) -> None:
+            super().warning(msg, *args, **kwargs)
             self.warn_called = True
 
 
@@ -536,10 +543,11 @@ def test_deprecated__raise_exception_for_deprecated_false() -> None:
     class _Logger(pylog.Logger):
 
         function_called = False
-
-        def warning(  # type:ignore[override]
-                self, message: str, *args: Any, **kwargs: Any) -> None:
-            super().warning(message, *args, **kwargs)
+        warn_called = False
+            
+        def warning(
+                self, msg: str, *args: Any, **kwargs: Any) -> None:
+            super().warning(msg, *args, **kwargs)
             self.warn_called = True
 
 
@@ -690,7 +698,7 @@ def test_retry__with_no_exceptions(
 
 
     value = _func('arg1', 'arg2', 'kwarg1', 'kwarg2')
-    assert 0 == value
+    assert value == 0
 
     assert result['count'] == 1
 
@@ -728,7 +736,7 @@ def test_retry__with_extra_argument(attempts: int) -> None:
 
 
     with pytest.raises(_AnException):
-        _func(
+        _func(  # pylint: disable=unexpected-keyword-arg # attempts
             'arg1',
             'arg2',
             kwarg2='kwarg2',
@@ -951,13 +959,15 @@ def _test_synchronized(
         variables: Dict[str, Union[int, bool]],
         function: Union[Callable[..., str], Iterable[Callable[..., str]]],
         args: Tuple[Any, ...] = (),
-        kwargs: Dict[str, Any] = dict(),
+        kwargs: Optional[Dict[str, Any]] = None,
         expected_count: Optional[int] = None
 ) -> None:
+    if kwargs is None:
+        kwargs = dict()
 
-    NUM_ITERATIONS = 5
+    num_iterations = 5
             
-    NUM_THREADS = 5
+    num_threads = 5
 
     class _Thread(threading.Thread):
 
@@ -968,7 +978,9 @@ def _test_synchronized(
             self.function = function
 
         def run(self) -> None:
-            for iteration in range(NUM_ITERATIONS):
+            assert kwargs is not None
+            
+            for _ in range(num_iterations):
                 result = self.function(*args, **kwargs)
                 assert result == "result"
             # endfor
@@ -980,7 +992,7 @@ def _test_synchronized(
     threads = []
     for each_function in function:
         threads.extend(
-            [_Thread(each_function) for count in range(NUM_THREADS)]
+            [_Thread(each_function) for count in range(num_threads)]
         )
 
     for each_thread in threads:
@@ -994,7 +1006,7 @@ def _test_synchronized(
     assert not variables['failure']
 
     if expected_count is None:
-        expected_count = len(threads) * NUM_ITERATIONS
+        expected_count = len(threads) * num_iterations
         
     assert variables['count'] == expected_count
 
@@ -1043,8 +1055,9 @@ def test_synchronized_on_instance__method() -> None:
     """
     Test `@synchronized_on_instance` on instance method.
     """
+    # pylint: disable=missing-function-docstring
 
-    class _Class(object):
+    class _Class:
 
         @synchronized_on_instance(lock_field='lock')
         def method(self, variables: Dict[str, Union[int, bool]]) -> str:
@@ -1066,7 +1079,7 @@ def test_synchronized_on_instance__method__no_parentheses() -> None:
     """
     # pylint: disable=missing-function-docstring
 
-    class _Class(object):
+    class _Class:
 
         @synchronized_on_instance
         def method(self, variables: Dict[str, Union[int, bool]]) -> str:
@@ -1090,7 +1103,7 @@ def test_synchronized_on_instance__staticmethod() -> None:
     # pylint: disable=missing-function-docstring
 
     @synchronized_on_instance(lock_field='lock')
-    class _Class(object):
+    class _Class:
 
         # __init__(self) doesn't really need locking
 
@@ -1116,7 +1129,7 @@ def test_synchronized_on_instance__classmethod() -> None:
     # pylint: disable=missing-function-docstring
 
     @synchronized_on_instance(lock_field='lock')
-    class _Class(object):
+    class _Class:
 
         @classmethod
         def method(cls) -> str:
@@ -1142,7 +1155,7 @@ def test_synchronized_on_instance__class() -> None:
     # pylint: disable=missing-function-docstring
 
     @synchronized_on_instance(lock_field='lock')
-    class _Class(object):
+    class _Class:
 
         def method(self, variables: Dict[str, Union[int, bool]]) -> str:
             lock = threading.RLock()  # RLock() is a function
@@ -1164,7 +1177,7 @@ def test_synchronized_on_instance__class__no_parentheses() -> None:
     # pylint: disable=missing-function-docstring
 
     @synchronized_on_instance
-    class _Class(object):
+    class _Class:
 
         def method(self, variables: Dict[str, Union[int, bool]]) -> str:
             lock = threading.RLock()  # RLock() is a function
@@ -1309,25 +1322,41 @@ def test_cache__kwargs(
     # pylint: disable=missing-function-docstring
 
     @decorator(**kwargs)
-    def _function(arg0: int, arg1: int = 0, arg2: int = 3) -> int:
+    def _function(
+            arg0: int,  # pylint: disable=unused-argument
+            arg1: int = 0,
+            arg2: int = 3
+    ) -> int:
         return arg1 + arg2 + _counter_function()
 
 
     @decorator(**kwargs)
     class _Class:
-        def a_method(self, arg0: int, arg1: int = 0, arg2: int = 3) -> int: \
-                # pylint: disable=no-self-use
+        def a_method(  # pylint: disable=no-self-use
+                self,
+                arg0: int,  # pylint: disable=unused-argument
+                arg1: int = 0,
+                arg2: int = 3
+        ) -> int:
             return arg1 + arg2 + _counter_function()
 
 
         @staticmethod
-        def a_staticmethod(arg0: int, arg1: int = 0, arg2: int = 3) -> int:
+        def a_staticmethod(
+                arg0: int,  # pylint: disable=unused-argument
+                arg1: int = 0,
+                arg2: int = 3
+        ) -> int:
             return arg1 + arg2 + _counter_function()
 
 
         @classmethod
         def a_classmethod(
-                cls, arg0: int, arg1: int = 0, arg2: int = 3) -> int:
+                cls,
+                arg0: int,  # pylint: disable=unused-argument
+                arg1: int = 0,
+                arg2: int = 3
+        ) -> int:
             return arg1 + arg2 + _counter_function()
 
 
@@ -1366,25 +1395,41 @@ def test_cache__default_kwargs(
     # pylint: disable=missing-function-docstring
 
     @decorator(**kwargs)
-    def _function(arg0: int, arg1: int = 0, arg2: int = 3) -> int:
+    def _function(
+            arg0: int,  # pylint: disable=unused-argument
+            arg1: int = 0,
+            arg2: int = 3
+    ) -> int:
         return arg1 + arg2 + _counter_function()
 
 
     @decorator(**kwargs)
     class _Class():
-        def a_method(self, arg0: int, arg1: int = 0, arg2: int = 3) -> int: \
-                # pylint: disable=no-self-use
+        def a_method(  # pylint: disable=no-self-use
+                self,
+                arg0: int,  # pylint: disable=unused-argument
+                arg1: int = 0,
+                arg2: int = 3
+        ) -> int:
             return arg1 + arg2 + _counter_function()
 
 
         @staticmethod
-        def a_staticmethod(arg0: int, arg1: int = 0, arg2: int = 3) -> int:
+        def a_staticmethod(
+                arg0: int,  # pylint: disable=unused-argument
+                arg1: int = 0,
+                arg2: int = 3
+        ) -> int:
             return arg1 + arg2 + _counter_function()
 
 
         @classmethod
         def a_classmethod(
-                cls, arg0: int, arg1: int = 0, arg2: int = 3) -> int:
+                cls,
+                arg0: int,  # pylint: disable=unused-argument
+                arg1: int = 0,
+                arg2: int = 3
+        ) -> int:
             return arg1 + arg2 + _counter_function()
 
 
@@ -1476,10 +1521,12 @@ def test_keep_cache__max_entries() -> None:
         return arg
 
 
-    NUM_CALLABLES = 6
-    for callables_index in range(NUM_CALLABLES):
+    num_callables = 6
+    for callables_index in range(num_callables):
 
-        @keep_cache(keep_time_secs=10, max_entries=max_entries)  #TODO: No mypy warning even though `@keep_cache` isn't declared for classes.
+        @keep_cache(keep_time_secs=10, max_entries=max_entries)
+        #TODO: No mypy warning even though `@keep_cache` isn't declared for
+        #  classes.
         class _Class():
             def a_method(self, arg: int) -> int: \
                     # pylint: disable=no-self-use
@@ -1496,7 +1543,7 @@ def test_keep_cache__max_entries() -> None:
 
         instance = _Class()
 
-        CALLABLES = (
+        callables = (
             _function,
             instance.a_method,
             instance.a_staticmethod,
@@ -1504,9 +1551,9 @@ def test_keep_cache__max_entries() -> None:
             _Class.a_staticmethod,
             _Class.a_classmethod,
         )
-        assert len(CALLABLES) == NUM_CALLABLES
+        assert len(callables) == num_callables
 
-        each = CALLABLES[callables_index]
+        each = callables[callables_index]
         
         for index in range(max_entries + 1):
             if index == max_entries:
