@@ -45,13 +45,18 @@ logger = pylog.getLogger(__name__)
 
 # Common ###
 
-_counter = 0
+class _Counter:
+    counter = 0
 
+    def inc(self) -> int:
+        """
+        Increment counter.
+        """
+        self.counter += 1
+        return self.counter
 
-def _counter_function() -> int:
-    global _counter
-    _counter += 1
-    return _counter
+        
+_counter = _Counter()
 
 
 DecoratorType = Callable[..., Callable[..., Any]]  #TODO: ?
@@ -1215,23 +1220,23 @@ def test_cache__no_args(
     
     @decorator(**kwargs)
     def _function() -> int:
-        return _counter_function()
+        return _counter.inc()
 
 
     @decorator(**kwargs)
     class _Class:
         def a_method(self) -> int:  # pylint: disable=no-self-use
-            return _counter_function()
+            return _counter.inc()
 
 
         @staticmethod
         def a_staticmethod() -> int:
-            return _counter_function()
+            return _counter.inc()
 
 
         @classmethod
         def a_classmethod(cls) -> int:
-            return _counter_function()
+            return _counter.inc()
 
 
     instance = _Class()
@@ -1267,24 +1272,24 @@ def test_cache__args(
 
     @decorator(**kwargs)
     def _function(arg1: int, arg2: int) -> int:
-        return arg1 + arg2 + _counter_function()
+        return arg1 + arg2 + _counter.inc()
 
 
     @decorator(**kwargs)
     class _Class:
         def a_method(self, arg1: int, arg2: int) -> int: \
                 # pylint: disable=no-self-use
-            return arg1 + arg2 + _counter_function()
+            return arg1 + arg2 + _counter.inc()
 
 
         @staticmethod
         def a_staticmethod(arg1: int, arg2: int) -> int:
-            return arg1 + arg2 + _counter_function()
+            return arg1 + arg2 + _counter.inc()
 
 
         @classmethod
         def a_classmethod(cls, arg1: int, arg2: int) -> int:
-            return arg1 + arg2 + _counter_function()
+            return arg1 + arg2 + _counter.inc()
 
 
     instance = _Class()
@@ -1327,7 +1332,7 @@ def test_cache__kwargs(
             arg1: int = 0,
             arg2: int = 3
     ) -> int:
-        return arg1 + arg2 + _counter_function()
+        return arg1 + arg2 + _counter.inc()
 
 
     @decorator(**kwargs)
@@ -1338,7 +1343,7 @@ def test_cache__kwargs(
                 arg1: int = 0,
                 arg2: int = 3
         ) -> int:
-            return arg1 + arg2 + _counter_function()
+            return arg1 + arg2 + _counter.inc()
 
 
         @staticmethod
@@ -1347,7 +1352,7 @@ def test_cache__kwargs(
                 arg1: int = 0,
                 arg2: int = 3
         ) -> int:
-            return arg1 + arg2 + _counter_function()
+            return arg1 + arg2 + _counter.inc()
 
 
         @classmethod
@@ -1357,7 +1362,7 @@ def test_cache__kwargs(
                 arg1: int = 0,
                 arg2: int = 3
         ) -> int:
-            return arg1 + arg2 + _counter_function()
+            return arg1 + arg2 + _counter.inc()
 
 
     instance = _Class()
@@ -1400,7 +1405,7 @@ def test_cache__default_kwargs(
             arg1: int = 0,
             arg2: int = 3
     ) -> int:
-        return arg1 + arg2 + _counter_function()
+        return arg1 + arg2 + _counter.inc()
 
 
     @decorator(**kwargs)
@@ -1411,7 +1416,7 @@ def test_cache__default_kwargs(
                 arg1: int = 0,
                 arg2: int = 3
         ) -> int:
-            return arg1 + arg2 + _counter_function()
+            return arg1 + arg2 + _counter.inc()
 
 
         @staticmethod
@@ -1420,7 +1425,7 @@ def test_cache__default_kwargs(
                 arg1: int = 0,
                 arg2: int = 3
         ) -> int:
-            return arg1 + arg2 + _counter_function()
+            return arg1 + arg2 + _counter.inc()
 
 
         @classmethod
@@ -1430,7 +1435,7 @@ def test_cache__default_kwargs(
                 arg1: int = 0,
                 arg2: int = 3
         ) -> int:
-            return arg1 + arg2 + _counter_function()
+            return arg1 + arg2 + _counter.inc()
 
 
     instance = _Class()
@@ -1743,23 +1748,23 @@ def test_expire_cache__no_args__expire() -> None:
 
     @expire_cache(expire_time_secs=0)
     def _function() -> int:
-        return _counter_function()
+        return _counter.inc()
 
 
     @expire_cache(expire_time_secs=0)
     class _Class:
         def a_method(self) -> int:  # pylint: disable=no-self-use
-            return _counter_function()
+            return _counter.inc()
 
 
         @staticmethod
         def a_staticmethod() -> int:
-            return _counter_function()
+            return _counter.inc()
 
 
         @classmethod
         def a_classmethod(cls) -> int:
-            return _counter_function()
+            return _counter.inc()
 
 
     instance = _Class()
@@ -1888,23 +1893,23 @@ def test_expire_cache__max_entries__refresh() -> None:
 
     @expire_cache(expire_time_secs=10, max_entries=max_entries)
     def _function(arg: int) -> int:
-        return arg + _counter_function()
+        return arg + _counter.inc()
 
 
     @expire_cache(expire_time_secs=10, max_entries=max_entries)
     class _Class:
         def a_method(self, arg: int) -> int:  # pylint: disable=no-self-use
-            return arg + _counter_function()
+            return arg + _counter.inc()
 
 
         @staticmethod
         def a_staticmethod(arg: int) -> int:
-            return arg + _counter_function()
+            return arg + _counter.inc()
 
 
         @classmethod
         def a_classmethod(cls, arg: int) -> int:
-            return arg + _counter_function()
+            return arg + _counter.inc()
 
 
     instance = _Class()
