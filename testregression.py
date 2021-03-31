@@ -5,6 +5,7 @@ import os
 import logging
 import pickle
 from typing import (
+    Any,
     Optional,
     TypeVar,
     Union,
@@ -68,7 +69,7 @@ def _save_or_load(
         index: Union[None, int, float] = None,
         suffix: Optional[str] = None,
         depth: int = 1
-) -> _ParameterType:
+) -> Any:
 
     class _CannotRead:  # pylint: disable=too-few-public-methods
         """ Something that should not exist elsewhere"""

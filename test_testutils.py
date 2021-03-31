@@ -173,12 +173,12 @@ def test_combine_lists(
     # enddef
 
 
-def test__current_function_name():
+def test__current_function_name() -> None:
     """
     Test for `current_function_name()`.
     """
 
-    def _inner_function():
+    def _inner_function() -> None:
         assert current_function_name() == '_inner_function'
         assert current_function_name(1) == 'test__current_function_name'
 
