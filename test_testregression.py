@@ -120,7 +120,7 @@ def test__assert_no_change__save__no_previous(
     # enddef
 
 
-def test__assert_no_change__logger():
+def test__assert_no_change__logger() -> None:
     """
     Test that logging is as expected for `assert_no_change()`.
     """
@@ -141,15 +141,15 @@ def test__assert_no_change__logger():
             self.message += (msg % arg) + "\n"
 
 
-        def reset_message(self):
+        def reset_message(self) -> None:
             self.message = ""
             
 
-        def check_empty_message(self):
+        def check_empty_message(self) -> None:
             assert self.message == ""
 
             
-        def check_message_content(self):
+        def check_message_content(self) -> None:
             assert "test__assert_no_change__logger" in _logger.message, \
                 "message not as expected: %s" % self.message
             assert "test_testregression" in _logger.message
