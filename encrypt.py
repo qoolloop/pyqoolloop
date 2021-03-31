@@ -2,6 +2,12 @@
 Convenience functions for encrypting/decrypting via json
 """
 import base64
+from typing import (
+    Iterable,
+    Sequence,
+    Union,
+)
+
 import cryptography.fernet
 from cryptography.fernet import (
     Fernet,
@@ -11,11 +17,6 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import msgpack  #TODO: Can use Packer class for speed up
-from typing import (
-    Iterable,
-    Sequence,
-    Union,
-)
 
 from pyexception.exception import (
     Reason,
@@ -197,16 +198,16 @@ class EncryptorDecryptor:
     @staticmethod
     def _make_RecoveredException_InvalidToken(
             e: cryptography.fernet.InvalidToken) -> RecoveredException:
-        try:
+        try:  # necessary for use with `from` below
             raise RecoveredException(
                 "Could not read value",
                 reason=InvalidToken,
                 logger=_logger) from e
 
-        except RecoveredException as e:
-            return e
+        except RecoveredException as raised_exception:
+            return raised_exception
 
-        return
+        # enddef
         
 
     #TODO: necessary?
@@ -249,8 +250,6 @@ class EncryptorDecryptor:
 
         self._write_file(encrypted, filename, overwrite=overwrite)
 
-        return
-
 
     @classmethod
     def _decrypt(cls, fernet: _FernetType, encrypted: bytes) -> object:
@@ -259,8 +258,8 @@ class EncryptorDecryptor:
             try:
                 encoded = fernet.decrypt(encrypted)
 
-            except cryptography.fernet.InvalidToken as e:
-                raise cls._make_RecoveredException_InvalidToken(e)
+            except cryptography.fernet.InvalidToken as exception:
+                raise cls._make_RecoveredException_InvalidToken(exception)
 
             return encoded
 
@@ -340,8 +339,8 @@ class EncryptorDecryptor:
             # try with primary key, and don't save if ok
             decrypted = self._decrypt(self._primary_fernet, encrypted)
 
-        except RecoveredException as e:
-            if not e.get_reason().isa(InvalidToken):
+        except RecoveredException as exception:
+            if not exception.get_reason().isa(InvalidToken):
                 raise
 
             # try with all keys

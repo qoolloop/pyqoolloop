@@ -13,7 +13,7 @@ from typing import (
 
 
 #TODO: rename `get_directory()`
-def get_file_path(filename: str) -> str:  #TODO: rename `path`
+def get_file_path(filename: str) -> str:  #TODO: rename `path` and accept PathLike
     """
     Get directory of file.
 
