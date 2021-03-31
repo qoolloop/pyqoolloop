@@ -121,7 +121,7 @@ def _included_set(
         return False
 
 
-    def _set_in(each: Any, another_set: set) -> bool:
+    def _set_in(each: Any, another_set: set[Any]) -> bool:
         return each in another_set
 
 
