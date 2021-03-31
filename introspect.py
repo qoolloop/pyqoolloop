@@ -23,7 +23,7 @@ def get_function_info(depth: int = 2) -> Tuple[str, str, str]:
     frame = inspect.currentframe()
     assert frame is not None, "Not supported on certain python implementations"
 
-    for index in range(depth):
+    for _ in range(depth):
         frame = frame.f_back
         assert frame is not None
 

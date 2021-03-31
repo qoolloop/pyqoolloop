@@ -27,11 +27,12 @@ def get_file_path(filename: str) -> str:  #TODO: rename `path`
 def load_pickle(
         file_path: str, filename: str, raise_exception: bool = False
 ) -> Any:
+    #TODO: Accept `None` for `filename` to specify file with `file_path`?
     """
     Load from pickle file.
 
     :param file_path: Path to directory.
-    :param filename: Name of file in `file_path` directory.  #TODO: Accept `None` to specify file with `file_path`?
+    :param filename: Name of file in `file_path` directory.
     :param raise_exception: `True` to raise exception on error, such as
       file not found. If `False`, this function will return `None` on error.
 
@@ -41,8 +42,8 @@ def load_pickle(
     :raise other: Other file related errors.
     """
     try:
-        with open(os.path.join(file_path, filename), 'rb') as f:
-            value = pickle.load(f)
+        with open(os.path.join(file_path, filename), 'rb') as read_file:
+            value = pickle.load(read_file)
 
         return value
 
@@ -81,19 +82,20 @@ def dump_pickle(
 
     _check_overwrite(full_filename, overwrite)
 
-    with open(full_filename, 'wb') as f:
-        pickle.dump(value, f)
+    with open(full_filename, 'wb') as write_file:
+        pickle.dump(value, write_file)
     # endwith
 
 
 def load_text(
     file_path: str, filename: str, raise_exception: bool = False
 ) -> Optional[str]:
+    #TODO: Accept `None` for `filename` to specify file with `file_path`?    
     """
     Read text from file.
 
     :param file_path: Path to directory.
-    :param filename: Name of file in `file_path` directory.  #TODO: Accept `None` to specify file with `file_path`?
+    :param filename: Name of file in `file_path` directory.
     :param raise_exception: `True` to raise exception on error, such as
       file not found. If `False`, this function will return `None` on error.
 
@@ -104,8 +106,8 @@ def load_text(
       `file_`raise_exception` is `False`.
     """
     try:
-        with open(os.path.join(file_path, filename), 'r') as f:
-            return f.read()
+        with open(os.path.join(file_path, filename), 'r') as read_file:
+            return read_file.read()
         # endwith
 
     except:  # noqa:E722
@@ -136,8 +138,8 @@ def dump_text(
 
     _check_overwrite(full_filename, overwrite)
 
-    with open(full_filename, 'w') as f:
-        f.write(value)
+    with open(full_filename, 'w') as write_file:
+        write_file.write(value)
     # endwith
 
 
