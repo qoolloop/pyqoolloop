@@ -30,7 +30,7 @@ Operator = Callable[[Any, Any], bool]
 _ObjectType = TypeVar('_ObjectType')
 
 
-def eq(one: object, another: object) -> bool:  # pylint: disable=invalid-name
+def eq(one: object, another: object) -> bool:  #TODO: rename eq_operator
     """
     Function equivalent to the equals (`__eq__`) operator.
 
@@ -54,7 +54,7 @@ class _HasEquals(Protocol):  # pylint: disable=too-few-public-methods
         ...
 
 
-def equals(one: _HasEquals, another: object) -> bool:  #TODO: rename `equals_method`
+def equals_method(one: _HasEquals, another: object) -> bool:
     """
     Function equivalent to the `equals()` method.
 
@@ -71,7 +71,7 @@ def equal_set(
         another_set: Collection[object],
         equals: Callable[[object, object], bool] = eq \
         # pylint: disable=redefined-outer-name
-) -> bool:  #TODO: reimplemet using `set()`
+) -> bool:  #FUTURE: reimplement using `set()`
     """
     Check for equality between two iterables ignoring order
     
@@ -217,7 +217,8 @@ class EmptyResult(Reason):
 def combine_lists(
         *args: Union[object, Collection[object]],
         raise_if_empty: bool = True
-) -> Iterable[object]:  #TODO: test
+) -> Iterable[object]:
+    #TODO: test example
     r"""
     Create a list of lists by taking one element from each of the arguments.
     Can be used to create test parameters from combinations.
@@ -225,7 +226,6 @@ def combine_lists(
     If one of the arguments is not iterable, it will be treated as though
     it was in a list.
 
-    #TODO: test example
       >>> combine_lists((a, b), (c, d))
       [[a, c], [a, d], [b, c], [b, d]]
       >>> combline_lists((a, b), c)
@@ -282,7 +282,6 @@ def combine_lists(
     raise RecoveredException("Empty result", reason=EmptyResult)
 
 
-#TODO: Do we need this in `testutils`?
 def to_set(
         iterable: Iterable[Hashable]
 ) -> Set[Hashable]:
@@ -295,6 +294,8 @@ def to_set(
     :param iterable: Iterable.
 
     :returns: Resulting set.
+    
+    .. note:: This is convenient for use with `@pytest.mark.parametrize`.
     """
     result = set()
     for each in iterable:
