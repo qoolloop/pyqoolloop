@@ -30,7 +30,7 @@ Operator = Callable[[Any, Any], bool]
 _ObjectType = TypeVar('_ObjectType')
 
 
-def eq(one: object, another: object) -> bool:  #TODO: rename eq_operator
+def eq_operator(one: object, another: object) -> bool:
     """
     Function equivalent to the equals (`__eq__`) operator.
 
@@ -69,7 +69,7 @@ def equals_method(one: _HasEquals, another: object) -> bool:
 def equal_set(
         one_set: Collection[object],
         another_set: Collection[object],
-        equals: Callable[[object, object], bool] = eq \
+        equals: Callable[[object, object], bool] = eq_operator \
         # pylint: disable=redefined-outer-name
 ) -> bool:  #FUTURE: reimplement using `set()`
     """
@@ -109,7 +109,7 @@ def equal_set(
 def _included_set(
         one_set: Iterable[Any],
         another_set: Iterable[Any],
-        equals: Operator = eq \
+        equals: Operator = eq_operator \
         # pylint: disable=redefined-outer-name
 ) -> bool:
 
@@ -125,7 +125,7 @@ def _included_set(
         return each in another_set
 
 
-    if equals == eq:  # pylint: disable=comparison-with-callable
+    if equals == eq_operator:  # pylint: disable=comparison-with-callable
         is_in = _set_in
 
     else:
@@ -146,7 +146,7 @@ def _included_set(
 def _included_dict(
         one: Dict[Any, Any],
         another: Dict[Any, Any],
-        equals: Operator = eq  # pylint: disable=redefined-outer-name
+        equals: Operator = eq_operator  # pylint: disable=redefined-outer-name
 ) -> bool:
     for each_key, each_value in one.items():
         if each_key not in another:
@@ -167,7 +167,7 @@ def _included_dict(
 def included(
         one: Iterable[Any],
         another: Iterable[Any],
-        equals: Operator = eq  # pylint: disable=redefined-outer-name
+        equals: Operator = eq_operator  # pylint: disable=redefined-outer-name
 ) -> bool:
     """
     Check that all elements in one is included in the other
