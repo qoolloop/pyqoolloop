@@ -218,7 +218,6 @@ def combine_lists(
         *args: Union[object, Collection[object]],
         raise_if_empty: bool = True
 ) -> Iterable[object]:
-    #TODO: test example
     r"""
     Create a list of lists by taking one element from each of the arguments.
     Can be used to create test parameters from combinations.
@@ -226,10 +225,12 @@ def combine_lists(
     If one of the arguments is not iterable, it will be treated as though
     it was in a list.
 
-      >>> combine_lists((a, b), (c, d))
-      [[a, c], [a, d], [b, c], [b, d]]
-      >>> combline_lists((a, b), c)
-      [[a, c], [b, c]]
+      >>> to_set( combine_lists(('a', 'b'), ('c', 'd')) ) == \
+      ...  to_set( [['a', 'c'], ['a', 'd'], ['b', 'c'], ['b', 'd']] )
+      True
+      >>> to_set( combine_lists(('a', 'b'), 'c') ) == \
+      ...  to_set( [['a', 'c'], ['b', 'c']] )
+      True
 
     :param \*args: Lists to combine
     :param raise_if_empty: If `True`, raise an exception if the result is
