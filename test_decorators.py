@@ -167,16 +167,16 @@ class DifferentFunctions(Protocol):
     func_call_count: int
     
     def __init__(
-            self, arg0: Any = 0, **kwargs: Any, # *, kwargs: Dict[str, Any]
+            self, arg0: Any = 0,
     ) -> None:
         """
         Initialize instance.
         """
-        super().__init__(**kwargs)
+        super().__init__()
 
 
     def func(
-            self, arg0: Any = 0,  # *, kwargs: Dict[str, Any]
+            self, arg0: Any = 0,
     ) -> None:
         """
         Increment `self.func_call_count`.
@@ -186,7 +186,7 @@ class DifferentFunctions(Protocol):
 
     @staticmethod
     def static_func(
-            arg0: Any = 0,  # *, kwargs: Dict[str, Any]
+            arg0: Any = 0,
     ) -> None:
         """
         Increment `cls.static_func_call_count`.
@@ -196,7 +196,7 @@ class DifferentFunctions(Protocol):
 
     @classmethod
     def class_func(
-            cls, arg0: Any = 0,  # *, kwargs: Dict[str, Any]
+            cls, arg0: Any = 0,
     ) -> None:
         """
         Increment `cls.class_func_call_count`.
