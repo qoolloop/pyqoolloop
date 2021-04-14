@@ -797,49 +797,6 @@ def test_retry__without_extra_argument(attempts_value: int) -> None:
     (2, (AnException, RuntimeError)),
     (3, (TypeError, AnException)),
 ))
-def test_retry__method(  #TODO: remove because we have `test__retry()`
-        attempts: int,
-        exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]]
-) -> None:
-    """
-    Test `@retry` on instance method.
-    """
-    # pylint: disable=missing-function-docstring
-
-    result = {'count': 0}
-
-    class _Class:
-
-        @retry(attempts, exceptions)
-        def func(  # pylint:disable=no-self-use
-                self,
-                arg1: str,
-                arg2: str,
-                kwarg1: Optional[str] = None,
-                kwarg2: Optional[str] = None
-        ) -> None:
-            assert arg1 == 'arg1'
-            assert arg2 == 'arg2'
-            assert kwarg1 == 'kwarg1'
-            assert kwarg2 == 'kwarg2'
-
-            result['count'] += 1
-
-            raise AnException("an exception")
-
-
-    instance = _Class()
-    with pytest.raises(AnException):
-        instance.func('arg1', 'arg2', 'kwarg1', 'kwarg2')
-
-    assert result['count'] == attempts
-    
-
-@pytest.mark.parametrize('attempts, exceptions', (
-    (1, AnException),
-    (2, (AnException, RuntimeError)),
-    (3, (TypeError, AnException)),
-))
 def test__retry(
         attempts: int,
         exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]]
@@ -853,9 +810,8 @@ def test__retry(
 
     class _Class:
 
-        @retry(attempts, exceptions)
-        def instance_method(  # pylint:disable=no-self-use
-                self,
+        @staticmethod
+        def common(
                 arg1: str,
                 arg2: str,
                 kwarg1: Optional[str] = None,
@@ -871,6 +827,17 @@ def test__retry(
             raise AnException("an exception")
 
 
+        @retry(attempts, exceptions)
+        def instance_method(  # pylint:disable=no-self-use
+                self,
+                arg1: str,
+                arg2: str,
+                kwarg1: Optional[str] = None,
+                kwarg2: Optional[str] = None
+        ) -> None:
+            _Class.common(arg1, arg2, kwarg1, kwarg2)
+
+
         @staticmethod
         @retry(attempts, exceptions)
         def static_method(
@@ -878,14 +845,7 @@ def test__retry(
                 arg2: str,
                 kwarg1: Optional[str] = None,
                 kwarg2: Optional[str] = None) -> None:
-            assert arg1 == 'arg1'
-            assert arg2 == 'arg2'
-            assert kwarg1 == 'kwarg1'
-            assert kwarg2 == 'kwarg2'
-
-            result['count'] += 1
-
-            raise AnException("an exception")
+            _Class.common(arg1, arg2, kwarg1, kwarg2)
 
 
         @classmethod
@@ -918,54 +878,6 @@ def test__retry(
             each('arg1', 'arg2', 'kwarg1', 'kwarg2')
 
         assert result['count'] == attempts
-    
-
-@pytest.mark.parametrize('attempts, exceptions', (
-    (1, AnException),
-    (2, (AnException, RuntimeError)),
-    (3, (TypeError, AnException)),
-))
-def test_retry__classmethod(  #TODO: remove because we have `test__retry()`
-        attempts: int,
-        exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]]
-) -> None:
-    """
-    Test `@retry` on class method.
-    """
-    # pylint: disable=missing-function-docstring
-
-    result = {'count': 0}
-
-    class _Class:
-
-        @classmethod
-        @retry(attempts, exceptions)
-        def func(
-                cls,
-                arg1: str,
-                arg2: str,
-                kwarg1: Optional[str] = None,
-                kwarg2: Optional[str] = None) -> None:
-            assert arg1 == 'arg1'
-            assert arg2 == 'arg2'
-            assert kwarg1 == 'kwarg1'
-            assert kwarg2 == 'kwarg2'
-
-            result['count'] += 1
-
-            raise AnException("an exception")
-
-
-    with pytest.raises(AnException):
-        _Class.func('arg1', 'arg2', 'kwarg1', 'kwarg2')
-
-    assert result['count'] == attempts
-
-    instance = _Class()
-    with pytest.raises(AnException):
-        instance.func('arg1', 'arg2', 'kwarg1', 'kwarg2')
-
-    assert result['count'] == attempts * 2
     
 
 # common functions ###
