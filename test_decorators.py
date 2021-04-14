@@ -797,7 +797,7 @@ def test_retry__without_extra_argument(attempts_value: int) -> None:
     (2, (AnException, RuntimeError)),
     (3, (TypeError, AnException)),
 ))
-def test_retry__method(
+def test_retry__method(  #TODO: remove because we have `test__retry()`
         attempts: int,
         exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]]
 ) -> None:
@@ -840,12 +840,12 @@ def test_retry__method(
     (2, (AnException, RuntimeError)),
     (3, (TypeError, AnException)),
 ))
-def test_retry__staticmethod(
+def test__retry(
         attempts: int,
         exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]]
 ) -> None:
     """
-    Test `@retry` on static method.
+    Test `@retry`.
     """
     # pylint: disable=missing-function-docstring
 
@@ -853,9 +853,27 @@ def test_retry__staticmethod(
 
     class _Class:
 
+        @retry(attempts, exceptions)
+        def instance_method(  # pylint:disable=no-self-use
+                self,
+                arg1: str,
+                arg2: str,
+                kwarg1: Optional[str] = None,
+                kwarg2: Optional[str] = None
+        ) -> None:
+            assert arg1 == 'arg1'
+            assert arg2 == 'arg2'
+            assert kwarg1 == 'kwarg1'
+            assert kwarg2 == 'kwarg2'
+
+            result['count'] += 1
+
+            raise AnException("an exception")
+
+
         @staticmethod
         @retry(attempts, exceptions)
-        def func(
+        def static_method(
                 arg1: str,
                 arg2: str,
                 kwarg1: Optional[str] = None,
@@ -870,16 +888,36 @@ def test_retry__staticmethod(
             raise AnException("an exception")
 
 
-    with pytest.raises(AnException):  #TODO: merge with other tests
-        _Class.func('arg1', 'arg2', 'kwarg1', 'kwarg2')
+        @classmethod
+        @retry(attempts, exceptions)
+        def class_method(
+                cls,
+                arg1: str,
+                arg2: str,
+                kwarg1: Optional[str] = None,
+                kwarg2: Optional[str] = None) -> None:
+            assert arg1 == 'arg1'
+            assert arg2 == 'arg2'
+            assert kwarg1 == 'kwarg1'
+            assert kwarg2 == 'kwarg2'
 
-    assert result['count'] == attempts
+            result['count'] += 1
+
+            raise AnException("an exception")
+
 
     instance = _Class()
-    with pytest.raises(AnException):
-        instance.func('arg1', 'arg2', 'kwarg1', 'kwarg2')
+    for each in (
+            _Class.static_method,
+            _Class.class_method,
+            instance.instance_method,
+    ):
+        result['count'] = 0
 
-    assert result['count'] == attempts * 2
+        with pytest.raises(AnException):
+            each('arg1', 'arg2', 'kwarg1', 'kwarg2')
+
+        assert result['count'] == attempts
     
 
 @pytest.mark.parametrize('attempts, exceptions', (
@@ -887,7 +925,7 @@ def test_retry__staticmethod(
     (2, (AnException, RuntimeError)),
     (3, (TypeError, AnException)),
 ))
-def test_retry__classmethod(
+def test_retry__classmethod(  #TODO: remove because we have `test__retry()`
         attempts: int,
         exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]]
 ) -> None:
@@ -1519,7 +1557,7 @@ def test_keep_cache__max_entries() -> None:
     for callables_index in range(num_callables):
 
         @keep_cache(keep_time_secs=10, max_entries=max_entries)
-        #TODO: No mypy warning even though `@keep_cache` isn't declared for
+        #FUTURE: No mypy warning even though `@keep_cache` isn't declared for
         #  classes.
         class _Class():
             def a_method(self, arg: int) -> int: \
