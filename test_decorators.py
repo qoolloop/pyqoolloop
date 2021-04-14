@@ -1198,16 +1198,17 @@ def test_synchronized_on_instance__class__no_parentheses() -> None:
 
 # common cache ###
 
-CACHE_DECORATORS = (
-    (keep_cache, dict(keep_time_secs=0.1)),
-    (expire_cache, dict(expire_time_secs=10)),
+parametrize__cache_test = pytest.mark.parametrize(
+    'decorator, kwargs',
+    (
+        (keep_cache, dict(keep_time_secs=0.1)),
+        (expire_cache, dict(expire_time_secs=10)),
+    )
 )
+
     
 
-@pytest.mark.parametrize(
-    'decorator, kwargs',
-    CACHE_DECORATORS
-)
+@parametrize__cache_test
 def test_cache__no_args(
         decorator: DecoratorType,
         kwargs: Any
@@ -1256,10 +1257,7 @@ def test_cache__no_args(
         assert first == second
 
 
-@pytest.mark.parametrize(
-    'decorator, kwargs',
-    CACHE_DECORATORS
-)
+@parametrize__cache_test
 def test_cache__args(
         decorator: DecoratorType,
         kwargs: Any
@@ -1312,10 +1310,7 @@ def test_cache__args(
         assert first == second
 
 
-@pytest.mark.parametrize(
-    'decorator, kwargs',
-    CACHE_DECORATORS
-)
+@parametrize__cache_test
 def test_cache__kwargs(
         decorator: DecoratorType,
         kwargs: Any
@@ -1385,10 +1380,7 @@ def test_cache__kwargs(
         assert first == second
 
 
-@pytest.mark.parametrize(
-    'decorator, kwargs',
-    CACHE_DECORATORS
-)
+@parametrize__cache_test
 def test_cache__default_kwargs(
         decorator: DecoratorType,
         kwargs: Any
@@ -1458,10 +1450,7 @@ def test_cache__default_kwargs(
         assert first == second
 
 
-@pytest.mark.parametrize(
-    'decorator, kwargs',
-    CACHE_DECORATORS
-)
+@parametrize__cache_test
 def test_cache__synchronize(
         decorator: DecoratorType,
         kwargs: Any
@@ -1685,10 +1674,7 @@ def test_keep_cache__max_entries__refresh() -> None:
     # endfor
 
 
-@pytest.mark.parametrize(
-    'decorator, kwargs',
-    CACHE_DECORATORS
-)
+@parametrize__cache_test
 def test_keep_cache__exclude_kw(
         decorator: DecoratorType,
         kwargs: Any
@@ -1830,10 +1816,7 @@ def test_expire_cache__max_entries() -> None:
         # endfor
 
 
-@pytest.mark.parametrize(  #TODO: common parameters
-    'decorator, kwargs',
-    CACHE_DECORATORS
-)
+@parametrize__cache_test
 def test_expire_cache__max_entries__same_args(
         decorator: DecoratorType,
         kwargs: Any
