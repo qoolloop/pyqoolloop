@@ -8,7 +8,7 @@ from typing import Tuple
 
 #TODO: test
 #TODO: return `namedtuple` or equivalent
-def get_function_info(depth: int = 2) -> Tuple[str, str, str]:
+def get_function_info(depth: int = 1) -> Tuple[str, str, str]:
     """
     Get information about a function on the call stack.
     

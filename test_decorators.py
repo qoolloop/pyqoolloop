@@ -59,7 +59,7 @@ class _Counter:
 _counter = _Counter()
 
 
-DecoratorType = Callable[..., Callable[..., Any]]  #TODO: ?
+DecoratorType = Callable[..., Callable[..., Any]]
     
 
 # FunctionDecorator ###
