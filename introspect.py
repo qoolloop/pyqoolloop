@@ -1,14 +1,15 @@
 """
 Defines functions for introspection
 """
+from collections import namedtuple
 import inspect
 import os
-from typing import Tuple
 
 
-#TODO: test
-#TODO: return `namedtuple` or equivalent
-def get_function_info(depth: int = 1) -> Tuple[str, str, str]:
+FunctionInfo = namedtuple('FunctionInfo', ('module', 'function', 'dir'))
+
+
+def get_function_info(depth: int = 1) -> FunctionInfo:
     """
     Get information about a function on the call stack.
     
@@ -33,4 +34,4 @@ def get_function_info(depth: int = 1) -> Tuple[str, str, str]:
 
     dir_name = os.path.dirname(inspect.getfile(frame))
 
-    return module_name, function_name, dir_name
+    return FunctionInfo(module_name, function_name, dir_name)
