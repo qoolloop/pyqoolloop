@@ -24,6 +24,8 @@ from pyexception.exception import (
     FileExists,
 )
 
+from .file import write_mode
+
 import pylog
 _logger = pylog.getLogger(__name__)
 
@@ -178,12 +180,7 @@ class EncryptorDecryptor:
     @staticmethod
     def _write_file(
             encrypted: bytes, filename: str, overwrite: bool = False) -> None:
-        if overwrite:
-            mode = 'wb'
-
-        else:
-            mode = 'xb'
-            
+        mode = write_mode(text=False, overwrite=overwrite)
         try:
             with open(filename, mode) as f:
                 f.write(encrypted)
