@@ -57,12 +57,21 @@ def load_pickle(
     # endtry
 
 
-def _check_overwrite(full_filename: str, overwrite: bool) -> None:
-    #TODO: Do something about race conditions with os.path.exists()=>Use 'x' for file mode. See encrypt
+def write_mode(*, text: bool = True, overwrite: bool = False) -> str:
+    """
+    Return file mode for `open()`
 
-    if not overwrite and os.path.exists(full_filename):
-        raise FileExistsError()
-    # endif
+    :param text: `True` for text file. `False` for binary.
+    :param overwrite: `True` to allow overwriting existing file.
+
+    :return: File mode for `open()` corresponding to function arguments.
+    """
+    mode = 'w' if overwrite else 'x'
+
+    if not text:
+        mode += 'b'
+
+    return mode
     
 
 def dump_pickle(
@@ -80,9 +89,9 @@ def dump_pickle(
     """
     full_filename = os.path.join(file_path, filename)
 
-    _check_overwrite(full_filename, overwrite)
+    mode = write_mode(text=False, overwrite=overwrite)
 
-    with open(full_filename, 'wb') as write_file:
+    with open(full_filename, mode) as write_file:
         pickle.dump(value, write_file)
     # endwith
 
@@ -136,9 +145,9 @@ def dump_text(
     """
     full_filename = os.path.join(file_path, filename)
 
-    _check_overwrite(full_filename, overwrite)
+    mode = write_mode(text=True, overwrite=overwrite)
 
-    with open(full_filename, 'w') as write_file:
+    with open(full_filename, mode) as write_file:
         write_file.write(value)
     # endwith
 
