@@ -19,13 +19,28 @@ import pylog  # pylint: disable=wrong-import-order
 logger = pylog.getLogger(__name__)
 
 
+@pytest.mark.parametrize('file_path, expected_directory_suffix', (
+    ('a_file', '/pyqoolloop'),
+    ('/root_file', '/'),
+    ('/a/b', '/a'),
+    ('/a/b/c', '/a/b'),
+))
+def test__get_directory(
+        file_path: str, expected_directory_suffix: str) -> None:
+    """
+    Test `get_directory()`.
+    """
+    directory = file.get_directory(file_path)
+    assert directory.endswith(expected_directory_suffix)
+    
+
 LoadFunc = Callable[[str, str, DefaultNamedArg(bool, 'raise_exception')], Any]
 
 DumpFunc = Callable[[str, str, Any, DefaultNamedArg(bool, 'overwrite')], None]
 
 
 parametrize__load_dump = pytest.mark.parametrize(
-    "load_func, dump_func, value",
+    'load_func, dump_func, value',
     (
         (file.load_pickle, file.dump_pickle, {'key': 11}),
         (file.load_text, file.dump_text, 'text'),

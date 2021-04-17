@@ -12,16 +12,15 @@ from typing import (
 )
 
 
-#TODO: rename `get_directory()`
-def get_file_path(filename: str) -> str:  #TODO: rename `path` and accept PathLike
+def get_directory(path: str) -> str:  #FUTURE: accept PathLike
     """
     Get directory of file.
 
     :param filename: Path to file. Specify `__file__`, for example.
     :return: Path to directory of the file.
     """
-    file_path = os.path.dirname(os.path.abspath(filename))
-    return file_path
+    directory_path = os.path.dirname(os.path.abspath(path))
+    return directory_path
     
 
 def load_pickle(
