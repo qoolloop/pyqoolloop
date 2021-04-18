@@ -1,5 +1,5 @@
 """
-Test for `file` module.
+Test for `io` module.
 """
 import os
 import tempfile
@@ -15,7 +15,7 @@ from mypy_extensions import (
 )
 import pytest
 
-from . import file
+from . import fileio
 
 import pylog  # pylint: disable=wrong-import-order
 logger = pylog.getLogger(__name__)
@@ -32,7 +32,7 @@ def test__get_directory(
     """
     Test `get_directory()`.
     """
-    directory = file.get_directory(file_path)
+    directory = fileio.get_directory(file_path)
     assert directory.endswith(expected_directory_suffix)
     
 
@@ -48,8 +48,8 @@ DumpFunc = Callable[
 parametrize__load_dump = pytest.mark.parametrize(
     'load_func, dump_func, value',
     (
-        (file.load_pickle, file.dump_pickle, {'key': 11}),
-        (file.load_text, file.dump_text, 'text'),
+        (fileio.load_pickle, fileio.dump_pickle, {'key': 11}),
+        (fileio.load_text, fileio.dump_text, 'text'),
     )
 )
 

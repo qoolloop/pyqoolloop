@@ -28,10 +28,10 @@ pyqoolloop.encrypt module
    :undoc-members:
    :show-inheritance:
 
-pyqoolloop.file module
+pyqoolloop.fileio module
 ----------------------
 
-.. automodule:: pyqoolloop.file
+.. automodule:: pyqoolloop.fileio
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,4 +1,3 @@
-#TODO: Not sure `file` is the right name for this module
 """
 Module for file manipulation.
 
@@ -26,8 +25,6 @@ def get_directory(path: str) -> str:  #FUTURE: accept PathLike
     """
     directory_path = os.path.dirname(os.path.abspath(path))
     return directory_path
-
-
 
 
 def _write_mode(

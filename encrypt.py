@@ -24,7 +24,7 @@ from pyexception.exception import (
     FileExists,
 )
 
-from .file import open_write_binary
+from .fileio import open_write_binary
 
 import pylog
 _logger = pylog.getLogger(__name__)
