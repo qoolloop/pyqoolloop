@@ -28,39 +28,6 @@ def get_directory(path: str) -> str:  #FUTURE: accept PathLike
     return directory_path
 
 
-def load_pickle(
-        file_path: Union[str, Iterable[str]],
-        *,
-        raise_exception: bool = False
-) -> Any:
-    """
-    Load from pickle file.
-
-    :param file_path: Path to directory. If `Iterable`, the elements will be
-      joined.
-    :param filename: Name of file in `file_path` directory.
-    :param raise_exception: `True` to raise exception on error, such as
-      file not found. If `False`, this function will return `None` on error.
-
-    :return: loaded value
-
-    :raise FileNotFoundError: File is not found
-    :raise other: Other file related errors.
-    """
-    try:
-        with open_read_binary(file_path) as read_file:
-            value = pickle.load(read_file)
-
-        return value
-
-    except:  # noqa: E722
-        if raise_exception:
-            # Python 3 raises FileNotFoundError
-            # https://stackoverflow.com/a/15032444/2400328
-            raise
-
-        return None
-    # endtry
 
 
 def _write_mode(
@@ -157,6 +124,41 @@ def open_read_binary(
     full_path = _join_path(file_path)
     
     return open(full_path, 'rb')
+
+
+def load_pickle(
+        file_path: Union[str, Iterable[str]],
+        *,
+        raise_exception: bool = False
+) -> Any:
+    """
+    Load from pickle file.
+
+    :param file_path: Path to directory. If `Iterable`, the elements will be
+      joined.
+    :param filename: Name of file in `file_path` directory.
+    :param raise_exception: `True` to raise exception on error, such as
+      file not found. If `False`, this function will return `None` on error.
+
+    :return: loaded value
+
+    :raise FileNotFoundError: File is not found
+    :raise other: Other file related errors.
+    """
+    try:
+        with open_read_binary(file_path) as read_file:
+            value = pickle.load(read_file)
+
+        return value
+
+    except:  # noqa: E722
+        if raise_exception:
+            # Python 3 raises FileNotFoundError
+            # https://stackoverflow.com/a/15032444/2400328
+            raise
+
+        return None
+    # endtry
 
 
 def dump_pickle(
