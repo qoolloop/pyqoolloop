@@ -3,6 +3,7 @@ cryptography
 funcsigs
 future
 msgpack
+msgpack-types
 
 # pylog
 pytest
