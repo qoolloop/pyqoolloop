@@ -1,4 +1,7 @@
+#TODO: Not sure `file` is the right name for this module
 """
+Module for file manipulation.
+
 .. note::
   Note that reading pickle files from an unknown source can be a security risk.
 """
@@ -6,9 +9,11 @@ import os
 import pickle
 from typing import (
     Any,
+    IO,
     Iterable,
     List,
     Optional,
+    Union,
 )
 
 
@@ -21,7 +26,7 @@ def get_directory(path: str) -> str:  #FUTURE: accept PathLike
     """
     directory_path = os.path.dirname(os.path.abspath(path))
     return directory_path
-    
+
 
 def load_pickle(
         file_path: str, filename: str, raise_exception: bool = False
@@ -56,22 +61,67 @@ def load_pickle(
     # endtry
 
 
-def write_mode(*, text: bool = True, overwrite: bool = False) -> str:
-    """
-    Return file mode for `open()`
+def _write_mode(
+        overwrite: bool = False
+) -> str:
+    mode = 'w' if overwrite else 'x'
+    return mode
 
-    :param text: `True` for text file. `False` for binary.
+
+def _join_path(file_path: Union[str, Iterable[str]]) -> str:
+    if isinstance(file_path, str):
+        return file_path
+
+    return os.path.join(*file_path)
+
+
+def open_write_text(
+        file_path: Union[str, Iterable[str]],
+        *,
+        overwrite: bool = False
+) -> IO[str]:
+    """
+    Same as standard `open()` for writing text, but with boolean file mode.
+
+    :param file_path: Path to file. If iterable of `str`, the elements will be
+      joined.
     :param overwrite: `True` to allow overwriting existing file.
 
-    :return: File mode for `open()` corresponding to function arguments.
+    :return: File object that is opened.
     """
-    mode = 'w' if overwrite else 'x'
-
-    if not text:
-        mode += 'b'
-
-    return mode
     
+    mode = _write_mode(overwrite=overwrite)
+
+    full_path = _join_path(file_path)
+    
+    return open(full_path, mode)
+
+
+def open_write_binary(
+        file_path: Union[str, Iterable[str]],
+        *,
+        overwrite: bool = False
+) -> IO[bytes]:
+    """
+    Same as standard `open()` for writing binary files, but with boolean
+      file mode.
+
+    :param file_path: Path to file. If iterable of `str`, the elements will be
+      joined.
+    :param overwrite: `True` to allow overwriting existing file.
+
+    :return: File object that is opened.
+    """
+    
+    mode = _write_mode(overwrite=overwrite)
+
+    full_path = _join_path(file_path)
+    
+    return open(full_path, mode + 'b')
+
+
+#TODO: `open_read()`
+
 
 def dump_pickle(
         file_path: str, filename: str, value: object, overwrite: bool = False
@@ -88,9 +138,8 @@ def dump_pickle(
     """
     full_filename = os.path.join(file_path, filename)
 
-    mode = write_mode(text=False, overwrite=overwrite)
-
-    with open(full_filename, mode) as write_file:
+    with open_write_binary(full_filename, overwrite=overwrite) \
+         as write_file:
         pickle.dump(value, write_file)
     # endwith
 
@@ -144,9 +193,7 @@ def dump_text(
     """
     full_filename = os.path.join(file_path, filename)
 
-    mode = write_mode(text=True, overwrite=overwrite)
-
-    with open(full_filename, mode) as write_file:
+    with open_write_text(full_filename, overwrite=overwrite) as write_file:
         write_file.write(value)
     # endwith
 
