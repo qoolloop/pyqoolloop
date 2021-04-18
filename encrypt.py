@@ -26,7 +26,7 @@ from pyexception.exception import (
 
 from .fileio import open_write_binary
 
-import pylog
+import pylog  # pylint: disable=wrong-import-order
 _logger = pylog.getLogger(__name__)
 
 

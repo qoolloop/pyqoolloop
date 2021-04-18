@@ -21,7 +21,7 @@ from pyexception.exception import (
     RecoveredException,
 )
 
-import pylog
+import pylog  # pylint: disable=wrong-import-order
 _logger = pylog.getLogger(__name__)
 
 
