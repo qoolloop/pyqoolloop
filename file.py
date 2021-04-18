@@ -29,13 +29,15 @@ def get_directory(path: str) -> str:  #FUTURE: accept PathLike
 
 
 def load_pickle(
-        file_path: str, filename: str, raise_exception: bool = False
+        file_path: Union[str, Iterable[str]],
+        *,
+        raise_exception: bool = False
 ) -> Any:
-    #TODO: Accept `None` for `filename` to specify file with `file_path`?
     """
     Load from pickle file.
 
-    :param file_path: Path to directory.
+    :param file_path: Path to directory. If `Iterable`, the elements will be
+      joined.
     :param filename: Name of file in `file_path` directory.
     :param raise_exception: `True` to raise exception on error, such as
       file not found. If `False`, this function will return `None` on error.
@@ -46,7 +48,7 @@ def load_pickle(
     :raise other: Other file related errors.
     """
     try:
-        with open(os.path.join(file_path, filename), 'rb') as read_file:
+        with open_read_binary(file_path) as read_file:
             value = pickle.load(read_file)
 
         return value
@@ -81,7 +83,8 @@ def open_write_text(
         overwrite: bool = False
 ) -> IO[str]:
     """
-    Same as standard `open()` for writing text, but with boolean file mode.
+    Same as standard `open()` for writing text, but with a different way to
+      specify arguments.
 
     :param file_path: Path to file. If iterable of `str`, the elements will be
       joined.
@@ -103,8 +106,8 @@ def open_write_binary(
         overwrite: bool = False
 ) -> IO[bytes]:
     """
-    Same as standard `open()` for writing binary files, but with boolean
-      file mode.
+    Same as standard `open()` for writing binary files, but with a different
+      way to specify arguments.
 
     :param file_path: Path to file. If iterable of `str`, the elements will be
       joined.
@@ -120,7 +123,40 @@ def open_write_binary(
     return open(full_path, mode + 'b')
 
 
-#TODO: `open_read_*()`
+def open_read_text(
+        file_path: Union[str, Iterable[str]],
+) -> IO[str]:
+    """
+    Same as standard `open()` for writing text, but with a different way to
+      specify arguments.
+
+    :param file_path: Path to file. If iterable of `str`, the elements will be
+      joined.
+    :param overwrite: `True` to allow overwriting existing file.
+
+    :return: File object that is opened.
+    """
+    full_path = _join_path(file_path)
+    
+    return open(full_path, 'r')
+
+
+def open_read_binary(
+        file_path: Union[str, Iterable[str]],
+) -> IO[bytes]:
+    """
+    Same as standard `open()` for reading binary files, but with a different
+      way to specify arguments.
+
+    :param file_path: Path to file. If iterable of `str`, the elements will be
+      joined.
+
+    :return: File object that is opened.
+    """
+    
+    full_path = _join_path(file_path)
+    
+    return open(full_path, 'rb')
 
 
 def dump_pickle(
@@ -147,13 +183,13 @@ def dump_pickle(
 
 
 def load_text(
-    file_path: str, filename: str, raise_exception: bool = False
+    file_path: Union[str, Iterable[str]], *, raise_exception: bool = False
 ) -> Optional[str]:
-    #TODO: Accept `None` for `filename` to specify file with `file_path`?    
     """
     Read text from file.
 
-    :param file_path: Path to directory.
+    :param file_path: Path to directory. If `Iterable`, the elements will be
+      joined.
     :param filename: Name of file in `file_path` directory.
     :param raise_exception: `True` to raise exception on error, such as
       file not found. If `False`, this function will return `None` on error.
@@ -165,7 +201,7 @@ def load_text(
       `file_`raise_exception` is `False`.
     """
     try:
-        with open(os.path.join(file_path, filename), 'r') as read_file:
+        with open_read_text(file_path) as read_file:
             return read_file.read()
         # endwith
 

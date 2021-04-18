@@ -36,7 +36,9 @@ def test__get_directory(
     assert directory.endswith(expected_directory_suffix)
     
 
-LoadFunc = Callable[[str, str, DefaultNamedArg(bool, 'raise_exception')], Any]
+LoadFunc = Callable[
+    [Union[str, Iterable[str]], DefaultNamedArg(bool, 'raise_exception')],
+    Any]
 
 DumpFunc = Callable[
     [Union[str, Iterable[str]], Any, DefaultNamedArg(bool, 'overwrite')],
@@ -56,7 +58,7 @@ def _test__no_file__no_exception(load_func: LoadFunc) -> None:
     """
     Subtest to check that no exception is raised
     """
-    read = load_func('', 'non-existent-file.pp')
+    read = load_func(('non-existent-file.pp',))
     assert read is None
 
 
@@ -66,7 +68,7 @@ def _test__no_file__exception(load_func: LoadFunc) -> None:
     `raise_exception` argument is `True`
     """
     with pytest.raises(FileNotFoundError):
-        read = load_func('', 'non-existent-file.pp',
+        read = load_func('non-existent-file.pp',
                          raise_exception=True)
         assert read is None
     # endwith
@@ -106,7 +108,7 @@ def test__regular(
         dump_func((temp_dir_name, filename), value)
 
         try:
-            read = load_func(temp_dir_name, filename)
+            read = load_func((temp_dir_name, filename))
 
         finally:
             os.remove(os.path.join(temp_dir_name, filename))
@@ -131,7 +133,7 @@ def test__destination_exists__no_exception(
     try:
         dump_func(temp_filename, value, overwrite=True)
 
-        read = load_func('', temp_filename)
+        read = load_func((temp_filename,))
 
     finally:
         os.remove(temp_filename)
