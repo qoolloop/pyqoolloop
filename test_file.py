@@ -6,6 +6,8 @@ import tempfile
 from typing import (
     Any,
     Callable,
+    Iterable,
+    Union,
 )
 
 from mypy_extensions import (
@@ -36,7 +38,9 @@ def test__get_directory(
 
 LoadFunc = Callable[[str, str, DefaultNamedArg(bool, 'raise_exception')], Any]
 
-DumpFunc = Callable[[str, str, Any, DefaultNamedArg(bool, 'overwrite')], None]
+DumpFunc = Callable[
+    [Union[str, Iterable[str]], Any, DefaultNamedArg(bool, 'overwrite')],
+    None]
 
 
 parametrize__load_dump = pytest.mark.parametrize(
@@ -99,7 +103,7 @@ def test__regular(
     try:
         filename = 'filename'
 
-        dump_func(temp_dir_name, filename, value)
+        dump_func((temp_dir_name, filename), value)
 
         try:
             read = load_func(temp_dir_name, filename)
@@ -125,7 +129,7 @@ def test__destination_exists__no_exception(
     os.close(temp_file)
 
     try:
-        dump_func('', temp_filename, value, overwrite=True)
+        dump_func(temp_filename, value, overwrite=True)
 
         read = load_func('', temp_filename)
 
@@ -149,7 +153,7 @@ def test__destination_exists__exception(
 
     try:
         with pytest.raises(FileExistsError):
-            dump_func('', temp_filename, value)
+            dump_func((temp_filename,), value)
 
     finally:
         os.remove(temp_filename)

@@ -120,25 +120,27 @@ def open_write_binary(
     return open(full_path, mode + 'b')
 
 
-#TODO: `open_read()`
+#TODO: `open_read_*()`
 
 
 def dump_pickle(
-        file_path: str, filename: str, value: object, overwrite: bool = False
+        file_path: Union[str, Iterable[str]],
+        value: object,
+        *,
+        overwrite: bool = False
 ) -> None:
     """
     Save to pickle file.
 
-    :param file_path: Path to directory.
+    :param file_path: Path to directory. If `Iterable` the elements will be
+      joined
     :param filename: Name of file in `file_path` directory.
     :param overwrite: `True` to write over existing file.
 
     :raises FileExistsError: Raised when file already exists and
       `overwrite` is `False`
     """
-    full_filename = os.path.join(file_path, filename)
-
-    with open_write_binary(full_filename, overwrite=overwrite) \
+    with open_write_binary(file_path, overwrite=overwrite) \
          as write_file:
         pickle.dump(value, write_file)
     # endwith
@@ -178,12 +180,16 @@ def load_text(
 
 
 def dump_text(
-        file_path: str, filename: str, value: str, overwrite: bool = False
+        file_path: Union[str, Iterable[str]],
+        value: str,
+        *,
+        overwrite: bool = False
 ) -> None:
     """
     Save text to file.
 
-    :param file_path: Path to directory.
+    :param file_path: Path to directory. If `Iterable` the elements will be
+      joined
     :param filename: Name of file in `file_path`.
     :param value: Text to save.
     :param overwrite: `True` to write over existing file.
@@ -191,9 +197,7 @@ def dump_text(
     :raises FileExistsError: Raised when file already exists and
       `overwrite` is `False`
     """
-    full_filename = os.path.join(file_path, filename)
-
-    with open_write_text(full_filename, overwrite=overwrite) as write_file:
+    with open_write_text(file_path, overwrite=overwrite) as write_file:
         write_file.write(value)
     # endwith
 
