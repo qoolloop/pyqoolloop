@@ -193,13 +193,13 @@ class EncryptorDecryptor:
 
 
     @staticmethod
-    def _make_RecoveredException_InvalidToken(
-            e: cryptography.fernet.InvalidToken) -> RecoveredException:
+    def _make__RecoveredException__InvalidToken(
+            exception: cryptography.fernet.InvalidToken) -> RecoveredException:
         try:  # necessary for use with `from` below
             raise RecoveredException(
                 "Could not read value",
                 reason=InvalidToken,
-                logger=_logger) from e
+                logger=_logger) from exception
 
         except RecoveredException as raised_exception:
             return raised_exception
@@ -256,7 +256,7 @@ class EncryptorDecryptor:
                 encoded = fernet.decrypt(encrypted)
 
             except cryptography.fernet.InvalidToken as exception:
-                raise cls._make_RecoveredException_InvalidToken(exception)
+                raise cls._make__RecoveredException__InvalidToken(exception)
 
             return encoded
 
