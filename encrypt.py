@@ -58,7 +58,7 @@ def key_from_password(password: str, salt: bytes) -> bytes:
     return key
 
 
-#TODO: Split `msgpack_ext_hook` per type
+#TODO: Split `_msgpack_ext_hook` per type
 _TUPLE_TYPE = 100
 _SET_TYPE = 101
 
@@ -73,7 +73,7 @@ def _packb(value: object) -> bytes:
 
 
 def _unpackb(encoded: bytes) -> object:
-    value = msgpack.unpackb(encoded, raw=False, ext_hook=msgpack_ext_hook)
+    value = msgpack.unpackb(encoded, raw=False, ext_hook=_msgpack_ext_hook)
     return value
 
 
@@ -92,8 +92,8 @@ def msgpack_default(obj: Iterable[object]) -> msgpack.ExtType:  #TODO: rename `_
     return msgpack.ExtType(obj_type, data)
 
 
-#TODO: Split `msgpack_ext_hook` per type
-def msgpack_ext_hook(code: int, data: bytes) -> object:  #TODO: rename `_msgpack_ext_hook()`
+#TODO: Split `_msgpack_ext_hook` per type
+def _msgpack_ext_hook(code: int, data: bytes) -> object:
 
     if code == _TUPLE_TYPE:
         unpacked_iterable = _unpackb(data)
@@ -154,7 +154,7 @@ class EncryptorDecryptor:
             self._fernet = MultiFernet(fernets)
             self._primary_fernet = Fernet(key[0])
 
-        return
+        # endif
 
 
     @classmethod
@@ -171,8 +171,8 @@ class EncryptorDecryptor:
 
     @staticmethod
     def _read_file(filename: str) -> bytes:
-        with open(filename, 'rb') as f:
-            encrypted = f.read()
+        with open(filename, 'rb') as read_file:
+            encrypted = read_file.read()
 
         return encrypted
 
@@ -185,11 +185,11 @@ class EncryptorDecryptor:
                  as write_file:
                 write_file.write(encrypted)
 
-        except FileExistsError as e:
+        except FileExistsError as exception:
             raise RecoveredException(
-                "File exists", FileExists, logger=_logger) from e
+                "File exists", FileExists, logger=_logger) from exception
 
-        return
+        # endtry
 
 
     @staticmethod
