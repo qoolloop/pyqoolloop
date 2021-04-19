@@ -67,7 +67,7 @@ def _packb(value: object) -> bytes:
     encoded = msgpack.packb(
         value,
         use_bin_type=True, strict_types=True,
-        default=msgpack_default)
+        default=_msgpack_default)
     assert isinstance(encoded, bytes)  #TODO: Somehow msgpack.packb() returns type Any
     return encoded
 
@@ -77,14 +77,14 @@ def _unpackb(encoded: bytes) -> object:
     return value
 
 
-def msgpack_default(obj: Iterable[object]) -> msgpack.ExtType:  #TODO: rename `_msgpack_default()`
+def _msgpack_default(obj: Iterable[object]) -> msgpack.ExtType:
     if isinstance(obj, tuple):
         obj_type = _TUPLE_TYPE
-        data = _packb([each for each in obj])
+        data = _packb(list(obj))
 
     elif isinstance(obj, set):
         obj_type = _SET_TYPE
-        data = _packb([each for each in obj])
+        data = _packb(list(obj))
 
     else:
         raise TypeError("Unexpected type: %r" % (obj,))
