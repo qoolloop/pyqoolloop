@@ -345,7 +345,8 @@ class GenericDecorator:
 
         decorator_self = self
 
-        if isinstance(target, type):  # Type[TargetClass]
+        if isinstance(target, type):  # pylint: disable=no-else-return
+            # Type[TargetClass]  
             return _make_class_decorator(target)
 
         elif callable(target):
@@ -463,7 +464,8 @@ def pass_args(
     return decorator(target)
 
 
-raise_exception_for_deprecated = False
+# not constant
+raise_exception_for_deprecated = False  # pylint: disable=invalid-name
 
 
 def deprecated(
@@ -555,9 +557,9 @@ def retry(
                 # endif
             # endtry
 
-        # e is not available outside except clause in Python 3
+        # exception is not available outside except clause in Python 3
         # https://cosmicpercolator.com/2016/01/13/exception-leaks-in-python-2-and-3/
-        assert False, "Unexpected execution"
+        raise AssertionError("Unexpected execution")
 
     
     decorator = GenericDecorator(retry_function)
@@ -712,7 +714,7 @@ def synchronized_on_instance(
     def _call_when_decorating_class(
             target: Any,  # TargetFunction,
             instance: TargetClass,
-            cls: Type[TargetClass],
+            cls: Type[TargetClass],  # pylint: disable=unused-argument
             *args: Any,
             **kwargs: Any
     ) -> Any:  # TargetReturnType:
@@ -728,13 +730,14 @@ def synchronized_on_instance(
     return decorator(__target)
 
 
-def synchronized_on_class(
-        __target: Optional[Type[TargetClass]] = None,
-        *,
-        lock_field: str = '__lock'
-) -> Union[Type[TargetClass], ClassWrapperFactory[TargetClass]]:
-    #TODO: Not sure whether locks should be on each subclass or use one for all subclasses -> Should be one for all subclasses, because of how the topmost class needs synchronization.
-    ...
+#FUTURE:
+# def synchronized_on_class(
+#         __target: Optional[Type[TargetClass]] = None,
+#         *,
+#         lock_field: str = '__lock'
+# ) -> Union[Type[TargetClass], ClassWrapperFactory[TargetClass]]:
+    # Not sure whether locks should be on each subclass or use one for all subclasses -> Should be one for all subclasses, because of how the topmost class needs synchronization.
+#     ...
 
 
 def _get_signature_values(
@@ -854,7 +857,7 @@ def keep_cache(
 
         else:
             if max_entries and (len(cache) >= max_entries):
-                old_key, old_value = cache.popitem(last=False)
+                _, old_value = cache.popitem(last=False)
                 assert (now - old_value[0]).total_seconds() > keep_time_secs
 
             value = target(*args, **kwargs)

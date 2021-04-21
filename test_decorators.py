@@ -417,6 +417,7 @@ def test__deprecated__raise_exception_true(global_setting: bool) -> None:
     """
     Test `@deprecated` with argument `raise_exception` as `True`.
     """
+    #FUTURE: lock for `raise_exception_for_deprecated`, when running parallel
 
     class _Logger(pylog.Logger):
 
