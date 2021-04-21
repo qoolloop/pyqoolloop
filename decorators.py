@@ -15,11 +15,6 @@ from functools import (
 )
 import inspect
 import logging
-from mypy_extensions import (
-    Arg,
-    KwArg,
-    VarArg,
-)
 import threading
 import time
 from typing import (
@@ -36,6 +31,12 @@ from typing import (
     Tuple,
     Type,
     TypeVar,
+)
+
+from mypy_extensions import (
+    Arg,
+    KwArg,
+    VarArg,
 )
 
 
@@ -1057,8 +1058,7 @@ def extension(
         for name, value in extension_class.__dict__.items():
             # not `ismethod()` because not bound
             if inspect.isfunction(value) \
-               or isinstance(value, staticmethod) \
-               or isinstance(value, classmethod):
+               or isinstance(value, (classmethod, staticmethod)):
                 setattr(
                     __extended_class,
                     name,
