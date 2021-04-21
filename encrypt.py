@@ -16,11 +16,11 @@ from cryptography.fernet import (
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-import msgpack  #TODO: Can use Packer class for speed up
+import msgpack  #FUTURE: Can use Packer class for speed up
 
 from pyexception.exception import (
     Reason,
-    RecoveredException,  #TODO: Use Recoveredexception in other modules
+    RecoveredException,  #FUTURE: Use Recoveredexception in other modules
     FileExists,
 )
 
@@ -57,7 +57,6 @@ def key_from_password(password: str, salt: bytes) -> bytes:
     return key
 
 
-#TODO: Split `_msgpack_ext_hook` per type
 _TUPLE_TYPE = 100
 _SET_TYPE = 101
 
