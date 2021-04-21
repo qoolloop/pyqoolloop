@@ -34,7 +34,6 @@ class InvalidToken(Reason):
     """
     Reason for exception raised when token is invalid
     """
-    pass
 
 
 def key_from_password(password: str, salt: bytes) -> bytes:
@@ -68,7 +67,6 @@ def _packb(value: object) -> bytes:
         value,
         use_bin_type=True, strict_types=True,
         default=_msgpack_default)
-    assert isinstance(encoded, bytes)  #TODO: Somehow msgpack.packb() returns type Any
     return encoded
 
 
@@ -92,7 +90,6 @@ def _msgpack_default(obj: Iterable[object]) -> msgpack.ExtType:
     return msgpack.ExtType(obj_type, data)
 
 
-#TODO: Split `_msgpack_ext_hook` per type
 def _msgpack_ext_hook(code: int, data: bytes) -> object:
 
     if code == _TUPLE_TYPE:
@@ -207,21 +204,15 @@ class EncryptorDecryptor:
         # enddef
         
 
-    #TODO: necessary?
-    _supported_root_types = (
-        dict, list, tuple, bytes, str, int, float, bool, type(None))
-
-    #TODO: necessary?
-    # Note that tuple is not included.
-    _supported_value_types = (
-        dict, list, str, int, float, bool, type(None)
-    )
-
     def encrypt(self, value: object) -> bytes:
         """
         Encrypt various types of data
 
         :param value: Value to encrypt
+          Supported root types:
+            dict, list, tuple, set, bytes, str, int, float, bool, type(None)
+          Supported value types:
+            dict, list, str, int, float, bool, type(None)
 
         :return: Result of encryption
         """
