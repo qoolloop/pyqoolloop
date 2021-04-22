@@ -9,7 +9,6 @@ from typing import (
     Any,
     Callable,
     cast,
-    ClassVar,
     Dict,
     Iterable,
     Optional,
@@ -116,6 +115,7 @@ def pass_args_function(
 
 @pass_args
 def pass_args_function_with_mandatory_keyword(
+        # pylint: disable=invalid-name
         arg0: Any = 0,
         arg1: Any = 1,
         arg2: Any = 2,
@@ -158,9 +158,9 @@ class DifferentFunctions(Protocol):
     Protocol with instance, static, and class methods.
     """
  
-    static_func_call_count: ClassVar[int]
+    static_func_call_count: int
 
-    class_func_call_count: ClassVar[int]
+    class_func_call_count: int
 
     init_call_count: int
     
@@ -1932,7 +1932,7 @@ class NewClassMethodClass(Protocol):
     """
     Protocol with a class method.
     """
-    new_value: ClassVar[int]
+    new_value: int
     
     @classmethod
     def new_class_method(cls, value: int) -> None:
@@ -1962,7 +1962,7 @@ def test__extend_with_class_method() -> None:
     """
 
     class _ClassA:  # pylint: disable=too-few-public-methods
-        new_value: ClassVar[int]
+        new_value: int
     
 
     @extend_with_class_method(_ClassA)
