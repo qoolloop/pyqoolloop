@@ -551,8 +551,6 @@ def keep_cache(
         if key in cache:
             value: TargetReturnType = cache[key][1]
 
-            del cache[key]  #TODO: just replace time
-
         else:
             if max_entries and (len(cache) >= max_entries):
                 _, old_value = cache.popitem(last=False)
