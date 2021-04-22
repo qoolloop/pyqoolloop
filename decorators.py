@@ -282,7 +282,9 @@ def synchronized_on_function(
         lock_field: str = '__lock',
         dont_synchronize: bool = False  #TODO: Why necessary?
 ) -> Callable[..., Any]:
-# Union[TargetFunction, FunctionWrapperFactory[TargetFunction]]:  #TODO: doesn't work (mypy 0.800) https://github.com/python/mypy/issues/3644
+# Union[TargetFunction, FunctionWrapperFactory[TargetFunction]]:
+#FUTURE: Union doesn't work (mypy 0.800)
+# https://github.com/python/mypy/issues/3644
     """
     Used to decorate function that needs thread locking for access
 
@@ -354,12 +356,14 @@ def synchronized_on_instance(
         *,
         lock_field: str = '__lock'
 ) -> Any:
-# ) -> Union[  #TODO: Unions don't work with `TypeVar` (mypy 0.800) https://github.com/python/mypy/issues/3644
+# ) -> Union[
 #     TargetFunction,
 #     Type[TargetClass],
 #     FunctionWrapperFactory[TargetFunction],
 #     ClassWrapperFactory[TargetClass]
 # ]:
+#FUTURE: Unions don't work with `TypeVar` (mypy 0.800)
+# https://github.com/python/mypy/issues/3644
     """
     Used to decorate instance methods and classes that need thread locking
     for access
@@ -425,8 +429,10 @@ def synchronized_on_instance(
 #         *,
 #         lock_field: str = '__lock'
 # ) -> Union[Type[TargetClass], ClassWrapperFactory[TargetClass]]:
-    # Not sure whether locks should be on each subclass or use one for all subclasses -> Should be one for all subclasses, because of how the topmost class needs synchronization.
-#     ...
+    # Not sure whether locks should be on each subclass or use one for all
+    # subclasses -> Should be one for all subclasses, because of how the
+    # topmost class needs synchronization.
+    #     ...
 
 
 def _get_signature_values(
@@ -486,7 +492,8 @@ def keep_cache(
     ...
     
 
-#TODO: Deprecate. `@keep_cache` probably isn't necessary. We only need `max_entries`, which is available with `@expire_cache`.
+#FUTURE: Deprecate. `@keep_cache` probably isn't necessary.
+# We only need `max_entries`, which is available with `@expire_cache`.
 def keep_cache(
         __target: Optional[TargetFunction] = None,
         *,
@@ -495,7 +502,9 @@ def keep_cache(
         dont_synchronize: bool = False,
         exclude_kw: Iterable[str] = ()
 ) -> Callable[..., Any]:
-# Union[TargetFunction, FunctionWrapperFactory[TargetFunction]]:  #TODO: Unions don't work with `TypeVar` (mypy 0.800) https://github.com/python/mypy/issues/3644
+# Union[TargetFunction, FunctionWrapperFactory[TargetFunction]]:
+#FUTURE: Unions don't work with `TypeVar` (mypy 0.800)
+# https://github.com/python/mypy/issues/3644
     """
     Decorator to cache returned values of a function for at least the time
     specified since the last call
@@ -585,7 +594,7 @@ def expire_cache(
     ...
 
 
-#TODO: rename `cache`?
+#TODO: rename `cache` after removing `@keep_cache`
 def expire_cache(
     __target: Optional[TargetFunction] = None,
     *,
@@ -595,7 +604,8 @@ def expire_cache(
     exclude_kw: Iterable[str] = ()
 ) -> Callable[..., Any]:
 # Union[TargetFunction, FunctionWrapperFactory[TargetFunction]]:
-    #FUTURE: Unions don't work with `TypeVar`. (mypy 0.800) https://github.com/python/mypy/issues/3644
+#FUTURE: Unions don't work with `TypeVar`. (mypy 0.800)
+# https://github.com/python/mypy/issues/3644
     """
     Decorator to cache returned values of a function that are held for at most
     a specified amount of time since the first call
@@ -641,7 +651,7 @@ def expire_cache(
             if (now - stored_time).total_seconds() < expire_time_secs:
                 return cast(TargetReturnType, stored_value)
 
-            del cache[key]  #TODO: just replace time
+            del cache[key]
 
         if max_entries and (len(cache) >= max_entries):
             cache.popitem(last=False)
@@ -668,7 +678,7 @@ def extend_with_method(
 
     .. note:: The function needs to have `self` as the first argument.
     """
-    #TODO: `override=False`
+    #FUTURE: `override=False`
 
     def _decorator(target: TargetFunction) -> TargetFunction:
         setattr(
@@ -693,7 +703,7 @@ def extend_with_static_method(
     .. note:: (function) The decorated function does not need `self` or `cls`
       as arguments.
     """
-    #TODO: `override=False`
+    #FUTURE: `override=False`
 
     def _decorator(target: TargetFunction) -> TargetFunction:
         setattr(
@@ -718,7 +728,7 @@ def extend_with_class_method(
     .. note:: The decorated function needs to have `cls` as the first
       argument.
     """
-    #TODO: `override=False`
+    #FUTURE: `override=False`
 
     def _decorator(target: TargetFunction) -> TargetFunction:
         setattr(
