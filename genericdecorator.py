@@ -36,7 +36,7 @@ TargetReturnType = TypeVar('TargetReturnType')
 TargetFunction = TypeVar(
     'TargetFunction', bound=Callable[..., Any])  # TargetReturnType])
 """Type for decorated function"""
-#TODO: Currently (mypy 0.800) not possible to declare generic TypeVar
+#FUTURE: Currently (mypy 0.800) not possible to declare generic `TypeVar`
 # https://github.com/python/mypy/issues/8278
 # Would need to use Callable[..., TargetReturnType] directly.
 
@@ -103,7 +103,8 @@ class GenericDecorator:
     See implementation of decorators in this module.
     """
 
-    #TODO: Type hints probably aren't what they're supposed to be, especially with the use of `TypeVar`
+    #FUTURE: Type hints probably aren't what they're supposed to be,
+    # especially with the use of `TypeVar`
     def __init__(
             self,
             wrapper_for_function: TargetFunctionWrapper[TargetReturnType],
@@ -205,12 +206,14 @@ class GenericDecorator:
             self,
             target: Optional[Target] = None
     ) -> Any:
-    # ) -> Union[  #TODO: Unions don't work with `TypeVar` (mypy 0.800) https://github.com/python/mypy/issues/3644
+    # ) -> Union[
     #     TargetFunction,
     #     Type[TargetClass],
     #     FunctionWrapperFactory[TargetFunction],
     #     ClassWrapperFactory[TargetClass]
     # ]:
+    #FUTURE: Unions don't work with `TypeVar` (mypy 0.800)
+    # https://github.com/python/mypy/issues/3644
         """
         Function object to use to return from decorator.
 
