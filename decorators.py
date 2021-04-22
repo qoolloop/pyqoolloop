@@ -104,8 +104,8 @@ To be used if the wrapped class has the same methods as the target class.
 
 def _through_method(
         target: Callable[..., TargetReturnType],  # TargetFunction,
-        instance: TargetClass,
-        cls: Type[TargetClass],
+        instance: TargetClass,  # pylint: disable=unused-argument
+        cls: Type[TargetClass],  # pylint: disable=unused-argument
         *args: Any,
         **kwargs: Any
 ) -> TargetReturnType:
@@ -197,8 +197,8 @@ class GenericDecorator:
 
         def default_wrapper(
                 target: Callable[..., TargetReturnType],  # TargetFunction,
-                instance: TargetClass,
-                cls: Type[TargetClass],
+                instance: TargetClass,  # pylint: disable=unused-argument
+                cls: Type[TargetClass],  # pylint: disable=unused-argument
                 *args: Any,
                 **kwargs: Any
         ) -> TargetReturnType:
@@ -252,13 +252,19 @@ class GenericDecorator:
                 target_class: Type[TargetClass]) -> Type[TargetClass]:
 
             class Descriptor(Protocol):
+                """
+                Protocol for descriptor.
+                """
                 def __get__(
                         self, instance: TargetClass, owner: Type[TargetClass]
                 ) -> TargetFunctionWrapper[TargetReturnType]:
                     ...
                 
 
-            class DescriptorForAllMethods(object):
+            class DescriptorForAllMethods:
+                """
+                Descriptor super class
+                """
 
                 def __init__(
                         self,
@@ -288,6 +294,11 @@ class GenericDecorator:
 
 
             class DescriptorForInstanceMethod(DescriptorForAllMethods):
+                # pylint: disable=too-few-public-methods
+                """
+                Descriptor to be used for instance method.
+                """
+
                 def __init__(
                         self, method: Descriptor,
                 ) -> None:
@@ -296,6 +307,10 @@ class GenericDecorator:
                     
 
             class DescriptorForStaticmethod(DescriptorForAllMethods):
+                # pylint: disable=too-few-public-methods
+                """
+                Descriptor to be used for staticmethod.
+                """
 
                 def __init__(self, method: staticmethod) -> None:
                     super().__init__(
@@ -303,6 +318,10 @@ class GenericDecorator:
 
 
             class DescriptorForClassmethod(DescriptorForAllMethods):
+                # pylint: disable=too-few-public-methods
+                """
+                Descriptor to be used for classmethod.
+                """
 
                 def __init__(self, method: classmethod) -> None:
                     super().__init__(
@@ -905,7 +924,8 @@ def expire_cache(
     dont_synchronize: bool = False,
     exclude_kw: Iterable[str] = ()
 ) -> Callable[..., Any]:
-# Union[TargetFunction, FunctionWrapperFactory[TargetFunction]]:  #TODO: Unions don't work with `TypeVar`. (mypy 0.800) https://github.com/python/mypy/issues/3644
+# Union[TargetFunction, FunctionWrapperFactory[TargetFunction]]:
+    #FUTURE: Unions don't work with `TypeVar`. (mypy 0.800) https://github.com/python/mypy/issues/3644
     """
     Decorator to cache returned values of a function that are held for at most
     a specified amount of time since the first call
