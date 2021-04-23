@@ -321,7 +321,7 @@ def synchronized_on_function(
         _call_function if not dont_synchronize
         else _through_function)
 
-    #TODO: A little inefficient when dont_synchronize=True
+    #FUTURE: A little inefficient when dont_synchronize=True
     decorator = GenericDecorator(
         call_function,
         wrapper_for_staticmethod=_through_method,
@@ -465,106 +465,6 @@ def _get_signature_values(
     arguments[''] = hash(target)
     _exclude(arguments, exclude_kw)
     return arguments
-
-
-@overload
-def keep_cache(
-        __target: TargetFunction,
-        *,
-        keep_time_secs: float,
-        max_entries: Optional[int] = None,
-        dont_synchronize: bool = False,
-        exclude_kw: Iterable[str] = ()
-) -> TargetFunction:
-    ...
-
-    
-@overload
-def keep_cache(
-        __target: None = None,
-        *,
-        keep_time_secs: float,
-        max_entries: Optional[int] = None,
-        dont_synchronize: bool = False,
-        exclude_kw: Iterable[str] = ()
-) -> Callable[[TargetFunction], TargetFunction]:
-    # FunctionWrapperFactory[TargetFunction]:
-    ...
-    
-
-#FUTURE: Deprecate. `@keep_cache` probably isn't necessary.
-# We only need `max_entries`, which is available with `@expire_cache`.
-def keep_cache(
-        __target: Optional[TargetFunction] = None,
-        *,
-        keep_time_secs: float,
-        max_entries: Optional[int] = None,
-        dont_synchronize: bool = False,
-        exclude_kw: Iterable[str] = ()
-) -> Callable[..., Any]:
-# Union[TargetFunction, FunctionWrapperFactory[TargetFunction]]:
-#FUTURE: Unions don't work with `TypeVar` (mypy 0.800)
-# https://github.com/python/mypy/issues/3644
-    """
-    Decorator to cache returned values of a function for at least the time
-    specified since the last call
-    
-    :param keep_time_secs: Keep value longer than this period (seconds).
-    :param max_entries: Don't keep more than this number of entries.
-      If a class is decorated, one cache store is held for all methods in the
-      class.
-    :param dont_synchronize: True, if thread safety is not necessary.
-    :param exclude_kw: Iterable of argument names to exclude from arguments
-      to identify cache data. Cached data is retrieved by taking the previous
-      return value from a call to the target function with the same argument
-      values except those assigned to argument names in `exclude_kw`.
-
-    :raises AssertionError: There are more than `max_entries` values within
-      `keep_time_secs`
-
-    .. note:: Argument values for the target function must be hashable.
-      Decorate each method, if a separate cache is needed for each method.
-    """
-
-    # holds tuples (<time>, <value>)
-    cache: OrderedDict[
-        FrozenSet[Tuple[str, Any]], Tuple[datetime.datetime, Any]
-    ] = OrderedDict()
-
-    
-    # Note that synchronization is on `_cached_function()`, not each target
-    # function. This is necessary for guarding the cache, but is too much
-    # for each target function. More concretely, if `expire_cache` decorates
-    # a class, one `cache` is used for all the methods.
-    @synchronized_on_function(dont_synchronize=dont_synchronize)
-    def _cached_function(
-            target: Callable[..., TargetReturnType],  # TargetFunction,
-            *args: Any,
-            **kwargs: Any
-    ) -> TargetReturnType:
-
-        now = datetime.datetime.utcnow()
-        
-        arguments = _get_signature_values(target, args, kwargs, exclude_kw)
-        # https://stackoverflow.com/a/39440252/2400328
-        key = frozenset(arguments.items())
-        if key in cache:
-            value: TargetReturnType = cache[key][1]
-
-        else:
-            if max_entries and (len(cache) >= max_entries):
-                _, old_value = cache.popitem(last=False)
-                assert (now - old_value[0]).total_seconds() > keep_time_secs
-
-            value = target(*args, **kwargs)
-
-        cache[key] = (now, value)
-
-        return value
-
-
-    decorator = GenericDecorator(_cached_function)
-    return decorator(__target)
 
 
 @overload
