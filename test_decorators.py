@@ -540,7 +540,7 @@ def test__deprecated__raise_exception_for_deprecated_true() -> None:
     # endtry
 
 
-def test_deprecated__raise_exception_for_deprecated_false() -> None:
+def test__deprecated__raise_exception_for_deprecated_false() -> None:
     """
     Test `@deprecated` with `raise_exception_for_deprecated` as `False`.
     """
@@ -601,7 +601,7 @@ class UnhandledException(Exception):
     (2, (AnException, RuntimeError)),
     (3, (TypeError, AnException)),
 ))
-def test_retry__with_exceptions(
+def test__retry__with_exceptions(
         attempts: int,
         exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]]
 ) -> None:
@@ -638,7 +638,7 @@ def test_retry__with_exceptions(
     (2, (AnException, RuntimeError)),
     (3, (TypeError, AnException)),
 ))
-def test_retry__with_unhandled_exceptions(
+def test__retry__with_unhandled_exceptions(
         attempts: int,
         exceptions: Union[Type[Exception], Tuple[Type[Exception]]]
 ) -> None:
@@ -675,7 +675,7 @@ def test_retry__with_unhandled_exceptions(
     (2, (AnException, RuntimeError)),
     (3, (TypeError, AnException)),
 ))
-def test_retry__with_no_exceptions(
+def test__retry__with_no_exceptions(
         attempts: int,
         exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]]
 ) -> None:
@@ -713,7 +713,7 @@ def test_retry__with_no_exceptions(
     2,
     3,
 ))
-def test_retry__with_extra_argument(attempts: int) -> None:
+def test__retry__with_extra_argument(attempts: int) -> None:
     """
     Test `@retry` with `attemps` argument.
     """
@@ -756,7 +756,7 @@ def test_retry__with_extra_argument(attempts: int) -> None:
     2,
     3,
 ))
-def test_retry__without_extra_argument(attempts_value: int) -> None:
+def test__retry__without_extra_argument(attempts_value: int) -> None:
     """
     Test `@retry` on instance method without `attempts` argument.
     """
@@ -968,7 +968,39 @@ def _test_synchronized(
 
 # synchronized_on_function ###
 
-def test_synchronized_on_function() -> None:
+def test__synchronized_on_function() -> None:
+    """
+    Test `@synchronized_on_instance` on function.
+    """
+
+    variables = _create_variables()
+
+    @synchronized_on_function
+    def _function() -> str:
+        # Cannot access lock on function, because the name `function` doesn't
+        # point to this target function anymore after decoration
+        return _inc_dec(variables)
+
+    _test_synchronized(variables, _function)
+
+
+def test__synchronized_on_function__parentheses() -> None:
+    """
+    Test `@synchronized_on_instance` on function.
+    """
+
+    variables = _create_variables()
+
+    @synchronized_on_function()
+    def _function() -> str:
+        # Cannot access lock on function, because the name `function` doesn't
+        # point to this target function anymore after decoration
+        return _inc_dec(variables)
+
+    _test_synchronized(variables, _function)
+
+
+def test__synchronized_on_function__lock_field() -> None:
     """
     Test `@synchronized_on_instance` on function.
     """
@@ -985,7 +1017,7 @@ def test_synchronized_on_function() -> None:
 
 
 @pytest.mark.unreliable
-def test_synchronized_on_function__dont_synchronize() -> None:
+def test__synchronized_on_function__dont_synchronize() -> None:
     """
     Test `@synchronized_on_instance` on instance method without
     synchronization
@@ -1006,7 +1038,7 @@ def test_synchronized_on_function__dont_synchronize() -> None:
 
 # synchronized_on_instance ###
 
-def test_synchronized_on_instance__method() -> None:
+def test__synchronized_on_instance__method() -> None:
     """
     Test `@synchronized_on_instance` on instance method.
     """
@@ -1028,7 +1060,7 @@ def test_synchronized_on_instance__method() -> None:
     _test_synchronized(variables, instance.method, (variables,))
 
 
-def test_synchronized_on_instance__method__no_parentheses() -> None:
+def test__synchronized_on_instance__method__no_parentheses() -> None:
     """
     Test `@synchronized_on_instance` on instance method with no parentheses.
     """
@@ -1051,7 +1083,7 @@ def test_synchronized_on_instance__method__no_parentheses() -> None:
     _test_synchronized(variables, instance.method, (variables,))
 
 
-def test_synchronized_on_instance__staticmethod() -> None:
+def test__synchronized_on_instance__staticmethod() -> None:
     """
     Test `@synchronized_on_instance` on class with static method.
     """
@@ -1077,7 +1109,7 @@ def test_synchronized_on_instance__staticmethod() -> None:
     assert result == "result"
 
 
-def test_synchronized_on_instance__classmethod() -> None:
+def test__synchronized_on_instance__classmethod() -> None:
     """
     Test `@synchronized_on_instance` on class with class method.
     """
@@ -1103,7 +1135,7 @@ def test_synchronized_on_instance__classmethod() -> None:
     assert result == "result"
 
 
-def test_synchronized_on_instance__class() -> None:
+def test__synchronized_on_instance__class() -> None:
     """
     Test `@synchronized_on_instance` on class.
     """
@@ -1125,7 +1157,7 @@ def test_synchronized_on_instance__class() -> None:
     _test_synchronized(variables, instance.method, (variables,))
 
 
-def test_synchronized_on_instance__class__no_parentheses() -> None:
+def test__synchronized_on_instance__class__no_parentheses() -> None:
     """
     Test `@synchronized_on_instance` with no parentheses.
     """

@@ -9,6 +9,7 @@ Declares convenient decorators.
 from collections import OrderedDict
 import copy
 import datetime
+from functools import partial
 import inspect
 import logging
 import threading
@@ -315,7 +316,7 @@ def synchronized_on_function(
 
 
     if __target and not dont_synchronize:
-        return __target
+        return partial(_call_function, __target)
         
     call_function: TargetFunctionWrapper[TargetReturnType] = (
         _call_function if not dont_synchronize
