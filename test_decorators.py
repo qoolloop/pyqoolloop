@@ -26,7 +26,7 @@ import pytest
 from . import decorators
 from .decorators import (
     deprecated,
-    expire_cache,
+    cache,
     extend_with_method,
     extend_with_class_method,
     extend_with_static_method,
@@ -1151,14 +1151,14 @@ def test_synchronized_on_instance__class__no_parentheses() -> None:
 parametrize__cache_test = pytest.mark.parametrize(
     'decorator, kwargs',
     (
-        (expire_cache, dict(expire_time_secs=10)),
+        (cache, dict(expire_time_secs=10)),
     )
 )
 
     
 
 @parametrize__cache_test
-def test_cache__no_args(
+def test__cache__no_args(
         decorator: DecoratorType,
         kwargs: Any
 ) -> None:
@@ -1207,7 +1207,7 @@ def test_cache__no_args(
 
 
 @parametrize__cache_test
-def test_cache__args(
+def test__cache__args(
         decorator: DecoratorType,
         kwargs: Any
 ) -> None:
@@ -1260,7 +1260,7 @@ def test_cache__args(
 
 
 @parametrize__cache_test
-def test_cache__kwargs(
+def test__cache__kwargs(
         decorator: DecoratorType,
         kwargs: Any
 ) -> None:
@@ -1330,7 +1330,7 @@ def test_cache__kwargs(
 
 
 @parametrize__cache_test
-def test_cache__default_kwargs(
+def test__cache__default_kwargs(
         decorator: DecoratorType,
         kwargs: Any
 ) -> None:
@@ -1400,7 +1400,7 @@ def test_cache__default_kwargs(
 
 
 @parametrize__cache_test
-def test_cache__synchronize(
+def test__cache__synchronize(
         decorator: DecoratorType,
         kwargs: Any
 ) -> None:
@@ -1448,20 +1448,20 @@ def test_cache__synchronize(
         _test_synchronized(variables, each, expected_count=1)
 
 
-# expire_cache ###
+# cache ###
 
-def test_expire_cache__no_args__expire() -> None:
+def test__cache__no_args__expire() -> None:
     """
-    Test `@expire_cache` with no arguments expires the cache.
+    Test `@cache` with no arguments expires the cache.
     """
     # pylint: disable=missing-function-docstring
 
-    @expire_cache(expire_time_secs=0)
+    @cache(expire_time_secs=0)
     def _function() -> int:
         return _counter.inc()
 
 
-    @expire_cache(expire_time_secs=0)
+    @cache(expire_time_secs=0)
     class _Class:
         def a_method(self) -> int:  # pylint: disable=no-self-use
             return _counter.inc()
@@ -1494,7 +1494,7 @@ def test_expire_cache__no_args__expire() -> None:
         assert first < second
 
 
-def test_expire_cache__max_entries() -> None:
+def test__cache__max_entries() -> None:
     """
     Test cache decorators with argument `max_entries` calling method with
     different arguments.
@@ -1503,12 +1503,12 @@ def test_expire_cache__max_entries() -> None:
 
     max_entries = 3
 
-    @expire_cache(expire_time_secs=10, max_entries=max_entries)
+    @cache(expire_time_secs=10, max_entries=max_entries)
     def _function(arg: int) -> int:
         return arg
 
 
-    @expire_cache(expire_time_secs=10, max_entries=max_entries)
+    @cache(expire_time_secs=10, max_entries=max_entries)
     class _Class:
         def a_method(self, arg: int) -> int:  # pylint: disable=no-self-use
             return arg
@@ -1541,7 +1541,7 @@ def test_expire_cache__max_entries() -> None:
 
 
 @parametrize__cache_test
-def test_expire_cache__max_entries__same_args(
+def test__cache__max_entries__same_args(
         decorator: DecoratorType,
         kwargs: Any
 ) -> None:
@@ -1590,20 +1590,20 @@ def test_expire_cache__max_entries__same_args(
         # endfor
 
 
-def test_expire_cache__max_entries__refresh() -> None:
+def test__cache__max_entries__refresh() -> None:
     """
-    Test `@expire_cache` with argument `max_entries`.
+    Test `@cache` with argument `max_entries`.
     """
     # pylint: disable=missing-function-docstring
 
     max_entries = 3
 
-    @expire_cache(expire_time_secs=10, max_entries=max_entries)
+    @cache(expire_time_secs=10, max_entries=max_entries)
     def _function(arg: int) -> int:
         return arg + _counter.inc()
 
 
-    @expire_cache(expire_time_secs=10, max_entries=max_entries)
+    @cache(expire_time_secs=10, max_entries=max_entries)
     class _Class:
         def a_method(self, arg: int) -> int:  # pylint: disable=no-self-use
             return arg + _counter.inc()

@@ -468,7 +468,7 @@ def _get_signature_values(
 
 
 @overload
-def expire_cache(
+def cache(
         __target: TargetFunction,
         *,
         expire_time_secs: float,
@@ -480,7 +480,7 @@ def expire_cache(
 
 
 @overload
-def expire_cache(
+def cache(
         __target: None = None,
         *,
         expire_time_secs: float,
@@ -492,8 +492,7 @@ def expire_cache(
     ...
 
 
-#TODO: rename `cache` after removing `@keep_cache`
-def expire_cache(
+def cache(
     __target: Optional[TargetFunction] = None,
     *,
     expire_time_secs: float,
@@ -522,14 +521,14 @@ def expire_cache(
     """
 
     # holds tuples (<time>, <value>)
-    cache: OrderedDict[
+    cache_storage: OrderedDict[
         FrozenSet[Tuple[str, Any]], Tuple[datetime.datetime, Any]
     ] = OrderedDict()
 
 
     # Note that synchronization is on `_cached_function()`, not each target
     # function. This is necessary for guarding the cache, but is too much
-    # for each target function. More concretely, if `expire_cache` decorates
+    # for each target function. More concretely, if `cache` decorates
     # a class, one `cache` is used for all the methods.
     @synchronized_on_function(dont_synchronize=dont_synchronize)
     def _cached_function(
@@ -543,20 +542,20 @@ def expire_cache(
         arguments = _get_signature_values(target, args, kwargs, exclude_kw)
         # https://stackoverflow.com/a/39440252/2400328
         key = frozenset(arguments.items())
-        if key in cache:
-            stored_time, stored_value = cache[key]
+        if key in cache_storage:
+            stored_time, stored_value = cache_storage[key]
 
             if (now - stored_time).total_seconds() < expire_time_secs:
                 return cast(TargetReturnType, stored_value)
 
-            del cache[key]
+            del cache_storage[key]
 
-        if max_entries and (len(cache) >= max_entries):
-            cache.popitem(last=False)
+        if max_entries and (len(cache_storage) >= max_entries):
+            cache_storage.popitem(last=False)
 
         value: TargetReturnType = target(*args, **kwargs)
 
-        cache[key] = (now, value)
+        cache_storage[key] = (now, value)
 
         return value
 
