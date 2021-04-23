@@ -378,7 +378,7 @@ def test__deprecated__log() -> None:
             
             self.warn_called = True
 
-            assert "deprecated_function" in msg
+            assert "deprecated_function" in msg % arg
 
 
     _logger = _Logger('name')
@@ -443,8 +443,13 @@ def test__deprecated__raise_exception_true(global_setting: bool) -> None:
 
     try:
         with pytest.raises(DeprecationWarning):
-            result = deprecated_function()
-            assert result is None
+            try:
+                result = deprecated_function()
+                assert result is None
+
+            except DeprecationWarning as exception:
+                assert "deprecated_function" in str(exception)
+                raise
 
         assert _logger.warn_called
         assert not _logger.function_called
@@ -968,7 +973,7 @@ def _test_synchronized(
 
 # synchronized_on_function ###
 
-def test__synchronized_on_function() -> None:
+def test__synchronized_on_function__no_parentheses() -> None:
     """
     Test `@synchronized_on_instance` on function.
     """
@@ -984,7 +989,7 @@ def test__synchronized_on_function() -> None:
     _test_synchronized(variables, _function)
 
 
-def test__synchronized_on_function__parentheses() -> None:
+def test__synchronized_on_function() -> None:
     """
     Test `@synchronized_on_instance` on function.
     """

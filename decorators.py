@@ -177,17 +177,19 @@ def deprecated(
             *args: Any,
             **kwargs: Any
     ) -> TargetReturnType:
-        message_str = "deprecated function called: %r (%r)" % \
-            (target.__name__, target.__module__)
+        message_tuple = (
+            "deprecated function called: %r (%r)%s%s",
+            target.__name__,
+            target.__module__,
+            "\n" if message else "",
+            message if message else ""
+        )
 
-        if message is not None:
-            message_str += "\n" + message
-        
-        logger.warning(message_str)  #TODO: lazy string
+        logger.warning(*message_tuple)
 
         if raise_exception or \
            ((raise_exception is None) and raise_exception_for_deprecated):
-            raise DeprecationWarning(message_str)
+            raise DeprecationWarning(message_tuple[0] % message_tuple[1:])
 
         result = target(*args, **kwargs)
         return result
@@ -197,7 +199,7 @@ def deprecated(
     return decorator
 
 
-#TODO: type hint for `attempts` argument added to decorated function
+#FUTURE: Add type hint for `attempts` argument to decorated function
 # c.f. https://stackoverflow.com/a/47060298/2400328
 # c.f. https://www.python.org/dev/peps/pep-0612/
 def retry(
@@ -281,7 +283,7 @@ def synchronized_on_function(
         __target: Optional[Callable[..., TargetReturnType]] = None,  # Optional[TargetFunction]
         *,
         lock_field: str = '__lock',
-        dont_synchronize: bool = False  #TODO: Why necessary?
+        dont_synchronize: bool = False
 ) -> Callable[..., Any]:
 # Union[TargetFunction, FunctionWrapperFactory[TargetFunction]]:
 #FUTURE: Union doesn't work (mypy 0.800)
@@ -295,6 +297,8 @@ def synchronized_on_function(
 
     :param lock_field: The name of the field that holds the lock.
     :param dont_synchronize: If `True`, synchronization will not be performed.
+      To be used when synchronization needs to be turned on/off depending on
+      a variable value. c.f. `@cache`
     """
     def _call_function(
             target: Callable[..., TargetReturnType],  # TargetFunction,
@@ -315,7 +319,8 @@ def synchronized_on_function(
         return result
 
 
-    if __target and not dont_synchronize:
+    if __target:
+        assert not dont_synchronize
         return partial(_call_function, __target)
         
     call_function: TargetFunctionWrapper[TargetReturnType] = (
