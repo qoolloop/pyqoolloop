@@ -39,7 +39,7 @@ def test__make_filename__index() -> None:
     assert '1.0' not in int_filename
 
 
-parametrize__assert_no_change = pytest.mark.parametrize('value, kwargs', (
+_parametrize__assert_no_change = pytest.mark.parametrize('value, kwargs', (
     (1, {}),
     (2, dict(index=0)),
     (3, dict(suffix="suffix")),
@@ -47,7 +47,7 @@ parametrize__assert_no_change = pytest.mark.parametrize('value, kwargs', (
 ))
 
 
-@parametrize__assert_no_change
+@_parametrize__assert_no_change
 def test__assert_no_change(
         value: int, kwargs: Dict[str, Any]) -> None:
     """
@@ -74,7 +74,7 @@ def test__assert_no_change(
             different_values[value], save=False, error_on_save=False, **kwargs)
 
 
-@parametrize__assert_no_change
+@_parametrize__assert_no_change
 def test__assert_no_change__no_save(
         value: int, kwargs: Dict[str, Any]) -> None:
     """
@@ -85,7 +85,7 @@ def test__assert_no_change__no_save(
         assert_no_change(value, save=False, **kwargs)
 
 
-@parametrize__assert_no_change
+@_parametrize__assert_no_change
 def test__assert_no_change__save(
         value: int, kwargs: Dict[str, Any]) -> None:
     """
@@ -96,7 +96,7 @@ def test__assert_no_change__save(
         assert_no_change(value, save=True, **kwargs)
 
 
-@parametrize__assert_no_change
+@_parametrize__assert_no_change
 def test__assert_no_change__save__no_previous(
         value: int, kwargs: Dict[str, Any]) -> None:
     """

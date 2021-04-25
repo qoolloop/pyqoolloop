@@ -45,7 +45,7 @@ DumpFunc = Callable[
     None]
 
 
-parametrize__load_dump = pytest.mark.parametrize(
+_parametrize__load_dump = pytest.mark.parametrize(
     'load_func, dump_func, value',
     (
         (fileio.load_pickle, fileio.dump_pickle, {'key': 11}),
@@ -74,7 +74,7 @@ def _test__no_file__exception(load_func: LoadFunc) -> None:
     # endwith
 
 
-@parametrize__load_dump
+@_parametrize__load_dump
 def test__load__no_file__no_exception(
         load_func: LoadFunc, dump_func: DumpFunc, value: Any) -> None:
     """
@@ -84,7 +84,7 @@ def test__load__no_file__no_exception(
     _test__no_file__no_exception(load_func)
     
 
-@parametrize__load_dump
+@_parametrize__load_dump
 def test_load_pickle__no_file__exception(
         load_func: LoadFunc, dump_func: DumpFunc, value: Any) -> None:
     """
@@ -95,7 +95,7 @@ def test_load_pickle__no_file__exception(
     _test__no_file__exception(load_func)
     
 
-@parametrize__load_dump
+@_parametrize__load_dump
 def test__regular(
         load_func: LoadFunc, dump_func: DumpFunc, value: Any) -> None:
     """
@@ -121,7 +121,7 @@ def test__regular(
     # endtry
     
 
-@parametrize__load_dump
+@_parametrize__load_dump
 def test__destination_exists__no_exception(
         load_func: LoadFunc, dump_func: DumpFunc, value: Any) -> None:
     """
@@ -141,7 +141,7 @@ def test__destination_exists__no_exception(
     assert read == value
     
 
-@parametrize__load_dump
+@_parametrize__load_dump
 def test__destination_exists__exception(
         load_func: LoadFunc, dump_func: DumpFunc, value: Any) -> None:
     """

@@ -1185,7 +1185,7 @@ def test__synchronized_on_instance__class__no_parentheses() -> None:
 
 # common cache ###
 
-parametrize__cache_test = pytest.mark.parametrize(
+_parametrize__cache_test = pytest.mark.parametrize(
     'decorator, kwargs',
     (
         (cache, dict(expire_time_secs=10)),
@@ -1194,7 +1194,7 @@ parametrize__cache_test = pytest.mark.parametrize(
 
     
 
-@parametrize__cache_test
+@_parametrize__cache_test
 def test__cache__no_args(
         decorator: DecoratorType,
         kwargs: Any
@@ -1243,7 +1243,7 @@ def test__cache__no_args(
         assert first == second
 
 
-@parametrize__cache_test
+@_parametrize__cache_test
 def test__cache__args(
         decorator: DecoratorType,
         kwargs: Any
@@ -1296,7 +1296,7 @@ def test__cache__args(
         assert first == second
 
 
-@parametrize__cache_test
+@_parametrize__cache_test
 def test__cache__kwargs(
         decorator: DecoratorType,
         kwargs: Any
@@ -1366,7 +1366,7 @@ def test__cache__kwargs(
         assert first == second
 
 
-@parametrize__cache_test
+@_parametrize__cache_test
 def test__cache__default_kwargs(
         decorator: DecoratorType,
         kwargs: Any
@@ -1436,7 +1436,7 @@ def test__cache__default_kwargs(
         assert first == second
 
 
-@parametrize__cache_test
+@_parametrize__cache_test
 def test__cache__synchronize(
         decorator: DecoratorType,
         kwargs: Any
@@ -1577,7 +1577,7 @@ def test__cache__max_entries() -> None:
         # endfor
 
 
-@parametrize__cache_test
+@_parametrize__cache_test
 def test__cache__max_entries__same_args(
         decorator: DecoratorType,
         kwargs: Any
