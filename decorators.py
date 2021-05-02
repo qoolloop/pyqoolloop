@@ -673,3 +673,6 @@ def extension(
         return extension_class
 
     return _decorator
+
+
+#FUTURE: Implement generic version of `assertion.localcontext()`
