@@ -108,11 +108,12 @@ def log_calls_on_exception(
             result = target(*args, **kwargs)
 
         except BaseException:
-            logger.info("%s args: %r %r" %
-                        (target.__name__, args, kwargs))
-
             if log_exception:
                 logger.exception("Exception")
+
+            else:
+                logger.info("%s args: %r %r" %
+                            (target.__name__, args, kwargs))
 
             raise
 
@@ -205,7 +206,7 @@ def deprecated(
 def retry(
         attempts: int,
         exceptions: Union[
-            Type[BaseException], Tuple[Type[BaseException], ...]],
+            Type[Exception], Tuple[Type[Exception], ...]],
         interval_secs: float = 0.0,
         extra_argument: bool = False
 ) -> Callable[
