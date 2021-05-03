@@ -302,7 +302,7 @@ def test__security(
 
         primary_encryptor.encrypt_to_file(value, value_filename)
 
-        with pytest.raises(RecoveredException):
+        with pytest.raises(encrypt.InvalidTokenException):
             secondary_encryptor.decrypt_from_file(value_filename)
 
         # endwith
@@ -340,7 +340,7 @@ def test__rotate_file(
 
         joint_encryptor.rotate_file(value_filename)
 
-        with pytest.raises(RecoveredException):
+        with pytest.raises(encrypt.InvalidTokenException):
             secondary_encryptor.decrypt_from_file(value_filename)
 
         loaded = primary_encryptor.decrypt_from_file(value_filename)

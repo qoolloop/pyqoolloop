@@ -19,7 +19,6 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import msgpack  #FUTURE: Can use Packer class for speed up
 
 from pyexception.exception import (
-    Reason,
     RecoveredException,
     FileExists,
 )
@@ -30,9 +29,9 @@ import pylog  # pylint: disable=wrong-import-order
 _logger = pylog.getLogger(__name__)
 
 
-class InvalidToken(Reason):
+class InvalidTokenException(cryptography.fernet.InvalidToken):
     """
-    Reason for exception raised when token is invalid
+    Exception raised when token is invalid
     """
 
 
@@ -160,8 +159,6 @@ class EncryptorDecryptor:
 
         To be used by :func:`EncryptorDecryptor()`.
         """
-
-        
         return Fernet.generate_key()
 
 
@@ -187,21 +184,6 @@ class EncryptorDecryptor:
 
         # endtry
 
-
-    @staticmethod
-    def _make__RecoveredException__InvalidToken(
-            exception: cryptography.fernet.InvalidToken) -> RecoveredException:
-        try:  # necessary for use with `from` below
-            raise RecoveredException(
-                "Could not read value",
-                reason=InvalidToken,
-                logger=_logger) from exception
-
-        except RecoveredException as raised_exception:
-            return raised_exception
-
-        # enddef
-        
 
     def encrypt(self, value: object) -> bytes:
         """
@@ -246,7 +228,7 @@ class EncryptorDecryptor:
                 encoded = fernet.decrypt(encrypted)
 
             except cryptography.fernet.InvalidToken as exception:
-                raise cls._make__RecoveredException__InvalidToken(exception)
+                raise InvalidTokenException(str(exception)) from exception
 
             return encoded
 
@@ -264,7 +246,7 @@ class EncryptorDecryptor:
 
         :return: Decrypted value.
 
-        :raises RecoveredException(InvalidToken): Could not read value.
+        :raises InvalidTokenException: Could not read value.
         """
         return self._decrypt(self._fernet, encrypted)
         
@@ -305,7 +287,7 @@ class EncryptorDecryptor:
 
         :return: Decrypted value.
 
-        :raises RecoveredException(InvalidToken): Could not read value.
+        :raises InvalidTokenException: Could not read value.
         """
         return self._decrypt_from_file(
             self._fernet, filename, use_default=use_default, default=default)
@@ -326,10 +308,7 @@ class EncryptorDecryptor:
             # try with primary key, and don't save if ok
             decrypted = self._decrypt(self._primary_fernet, encrypted)
 
-        except RecoveredException as exception:
-            if not exception.get_reason().isa(InvalidToken):
-                raise
-
+        except InvalidTokenException:
             # try with all keys
             decrypted = self.decrypt(encrypted)
             self.encrypt_to_file(decrypted, filename, overwrite=True)
