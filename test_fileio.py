@@ -17,9 +17,6 @@ import pytest
 
 from . import fileio
 
-import pylog  # pylint: disable=wrong-import-order
-logger = pylog.getLogger(__name__)
-
 
 @pytest.mark.parametrize('file_path, expected_directory_suffix', (
     ('a_file', '/pyqoolloop'),

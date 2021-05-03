@@ -20,9 +20,6 @@ import msgpack  #FUTURE: Can use Packer class for speed up
 
 from .fileio import open_write_binary
 
-import pylog  # pylint: disable=wrong-import-order
-_logger = pylog.getLogger(__name__)
-
 
 class InvalidTokenException(cryptography.fernet.InvalidToken):
     """
