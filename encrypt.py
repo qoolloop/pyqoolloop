@@ -20,7 +20,7 @@ import msgpack  #FUTURE: Can use Packer class for speed up
 
 from pyexception.exception import (
     Reason,
-    RecoveredException,  #FUTURE: Use Recoveredexception in other modules
+    RecoveredException,
     FileExists,
 )
 

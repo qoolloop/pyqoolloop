@@ -16,11 +16,6 @@ from typing import (
 
 from typing_extensions import Protocol
 
-from pyexception.exception import (
-    Reason,
-    RecoveredException,
-)
-
 import pylog  # pylint: disable=wrong-import-order
 _logger = pylog.getLogger(__name__)
 
@@ -210,12 +205,8 @@ def current_function_name(pop_stack: int = 0) -> str:
     return frame.f_code.co_name
 
 
-class EmptyResult(Reason):
-    """Result is empty"""
-
-
 def combine_lists(
-        *args: Union[object, Collection[object]],
+        *args: Union[object, Iterable[object]],
         raise_if_empty: bool = True
 ) -> Iterable[object]:
     r"""
@@ -238,19 +229,19 @@ def combine_lists(
 
     :return: combined result.
 
-    :raises RecoveredException(EmptyResult): The result is empty and
+    :raises AssertionError: The result is empty and
       `raise_if_empty` was `True` or omitted.
     """
     assert len(args) >= 1
 
-    if not isinstance(args[0], Iterable):
-        args0: Iterable[object] = [args[0]]
-
-    else:
+    if isinstance(args[0], Iterable):
         args0 = args[0]
 
+    else:
+        args0 = [args[0]]
+
     if len(args) == 1:
-        result = args0
+        result = list(args0)
 
     else:
         one_list = args0
@@ -274,13 +265,14 @@ def combine_lists(
             # endfor
         # endfor
 
-    if not raise_if_empty:
-        return result
-    
-    for _ in result:
-        return result  # `result` has element
-    
-    raise RecoveredException("Empty result", reason=EmptyResult)
+    if raise_if_empty:
+        for _ in result:  # `result` is `Iterable`
+            return result
+        # endfor
+        
+        raise AssertionError("Empty result")
+
+    return result
 
 
 def to_set(

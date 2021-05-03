@@ -10,13 +10,9 @@ from typing import (
 
 import pytest
 
-from pyexception.exception import RecoveredException
-from pyexception.testutils import raises
-
 from .testutils import (
     combine_lists,
     current_function_name,
-    EmptyResult,
     included,
     to_set,
 )
@@ -156,10 +152,10 @@ def test_combine_lists(
     expected_set = to_set(expected_result)
 
     if len(expected_result) == 0:
-        with raises(RecoveredException, EmptyResult):
+        with pytest.raises(AssertionError):
             result_list = combine_lists(*args)
 
-        with raises(RecoveredException, EmptyResult):
+        with pytest.raises(AssertionError):
             result_list = combine_lists(*args, raise_if_empty=True)
 
     else:
