@@ -347,13 +347,15 @@ class GenericDecorator:
 
         elif isinstance(target, staticmethod):
             # https://stackoverflow.com/a/5345526/2400328
-            assert False, "Put decorator after @staticmethod"
+            raise AssertionError("Put decorator after @staticmethod")
 
         elif isinstance(target, classmethod):
-            assert False, "Put decorator after @classmethod"
+            raise AssertionError("Put decorator after @classmethod")
 
         else:
-            assert False, \
-                "Unsupported target of type: %r\n" % type(target) + \
+            raise AssertionError(
+                "Unsupported target of type: %r\n"
                 "(You could have forgotten argument to decorator.)"
+                % type(target))
+        
         # endif
