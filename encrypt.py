@@ -18,11 +18,6 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import msgpack  #FUTURE: Can use Packer class for speed up
 
-from pyexception.exception import (
-    RecoveredException,
-    FileExists,
-)
-
 from .fileio import open_write_binary
 
 import pylog  # pylint: disable=wrong-import-order
@@ -173,16 +168,15 @@ class EncryptorDecryptor:
     @staticmethod
     def _write_file(
             encrypted: bytes, filename: str, overwrite: bool = False) -> None:
-        try:
-            with open_write_binary(filename, overwrite=overwrite) \
-                 as write_file:
-                write_file.write(encrypted)
+        """
+        :raises FileExistsError: Raised when file already exists and
+          `overwrite` is `False`
+        """
+        with open_write_binary(filename, overwrite=overwrite) \
+             as write_file:
+            write_file.write(encrypted)
 
-        except FileExistsError as exception:
-            raise RecoveredException(
-                "File exists", FileExists, logger=_logger) from exception
-
-        # endtry
+        # endwith
 
 
     def encrypt(self, value: object) -> bytes:
@@ -211,6 +205,9 @@ class EncryptorDecryptor:
         :param value: Value to encrypt
         :param filename: Path of file to save to.  #TODO: rename `path`
         :param overwrite: Needs to be `True` to overwrite existing file.
+
+        :raises FileExistsError: Raised when file already exists and
+          `overwrite` is `False`
         """
         encrypted = self.encrypt(value)
 

@@ -8,13 +8,6 @@ import tempfile
 
 import pytest
 
-from pyexception.exception import (
-    RecoveredException,
-    FileExists,
-)
-from pyexception import testutils
-
-
 from . import (
     encrypt,
     testregression,
@@ -66,7 +59,7 @@ def test__encrypt_to_file__overwrite() -> None:
         encryptor.encrypt_to_file(value, value_filename)
 
         new_value = ()
-        with testutils.raises(RecoveredException, FileExists):
+        with pytest.raises(FileExistsError):
             encryptor.encrypt_to_file(new_value, value_filename)
         
         loaded = encryptor.decrypt_from_file(value_filename)

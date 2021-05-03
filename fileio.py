@@ -55,6 +55,9 @@ def open_write_text(
     :param overwrite: `True` to allow overwriting existing file.
 
     :return: File object that is opened.
+
+    :raises FileExistsError: Raised when file already exists and
+      `overwrite` is `False`
     """
     
     mode = _write_mode(overwrite=overwrite)
@@ -78,6 +81,9 @@ def open_write_binary(
     :param overwrite: `True` to allow overwriting existing file.
 
     :return: File object that is opened.
+
+    :raises FileExistsError: Raised when file already exists and
+      `overwrite` is `False`
     """
     
     mode = _write_mode(overwrite=overwrite)
