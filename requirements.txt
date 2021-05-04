@@ -6,9 +6,12 @@ msgpack
 msgpack-types
 
 # pylog
+
+# test
 pytest
 pytest-cov
 pytest-mypy
+pytest-pydocstyle
 pytest-pylint
 
 # documentation
