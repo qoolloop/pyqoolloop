@@ -93,7 +93,7 @@ To be used if the wrapped class has the same methods as the target class.
 
 class GenericDecorator:
     """
-    A convenience class for creating decorators
+    A convenience class for creating decorators.
 
     Decorators created with this can decorate functions and methods.
     If they decorate classes, it will have the same effect as decorating
@@ -118,6 +118,7 @@ class GenericDecorator:
                 TargetMethodWrapper[
                     TargetReturnType, TargetClass]] = None
     ) -> None:
+        # noqa: D205,D400
         r"""
         :param wrapper_for_function:
           |   (callable(target, \*args, \**kwargs))
@@ -215,8 +216,8 @@ class GenericDecorator:
     #FUTURE: Unions don't work with `TypeVar` (mypy 0.800)
     # https://github.com/python/mypy/issues/3644
         """
-        Function object to use to return from decorator.
-
+        Return decorated function or function that decorates a function.
+        
         Return this function itself (`self.__call__`) for decorators
         with arguments.
         Return `self(target)` when there are no arguments.
@@ -226,9 +227,8 @@ class GenericDecorator:
                 target_class: Type[TargetClass]) -> Type[TargetClass]:
 
             class Descriptor(Protocol):
-                """
-                Protocol for descriptor.
-                """
+                """Protocol for descriptor."""
+                
                 def __get__(
                         self, instance: TargetClass, owner: Type[TargetClass]
                 ) -> TargetFunctionWrapper[TargetReturnType]:
@@ -236,9 +236,7 @@ class GenericDecorator:
                 
 
             class DescriptorForAllMethods:
-                """
-                Descriptor super class
-                """
+                """Descriptor super class."""
 
                 def __init__(
                         self,
@@ -269,9 +267,7 @@ class GenericDecorator:
 
             class DescriptorForInstanceMethod(DescriptorForAllMethods):
                 # pylint: disable=too-few-public-methods
-                """
-                Descriptor to be used for instance method.
-                """
+                """Descriptor to be used for instance method."""
 
                 def __init__(
                         self, method: Descriptor,
@@ -282,9 +278,7 @@ class GenericDecorator:
 
             class DescriptorForStaticmethod(DescriptorForAllMethods):
                 # pylint: disable=too-few-public-methods
-                """
-                Descriptor to be used for staticmethod.
-                """
+                """Descriptor to be used for staticmethod."""
 
                 def __init__(self, method: staticmethod) -> None:
                     super().__init__(
@@ -293,9 +287,7 @@ class GenericDecorator:
 
             class DescriptorForClassmethod(DescriptorForAllMethods):
                 # pylint: disable=too-few-public-methods
-                """
-                Descriptor to be used for classmethod.
-                """
+                """Descriptor to be used for classmethod."""
 
                 def __init__(self, method: classmethod) -> None:
                     super().__init__(

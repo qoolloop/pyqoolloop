@@ -1,6 +1,4 @@
-"""
-Functions for testing for regression
-"""
+"""Functions for testing for regression."""
 import os
 import logging
 import pickle
@@ -27,8 +25,9 @@ def make_filename(
         extension: str = '.p',
         depth: int = 1) -> str:
     """
-    Make a filename in a subdirectory named `_testregression`
-    to save values for regression test
+    Make a filename in a subdirectory to save values for regression test.
+
+    The subdirectory will be named `_testregression`.
 
     :param index: If specified, this value will be used as
         additional information to discriminate produced filename.
@@ -72,7 +71,7 @@ def _save_or_load(
 ) -> Any:
 
     class _CannotRead:  # pylint: disable=too-few-public-methods
-        """ Something that should not exist elsewhere"""
+        """Something that should not exist elsewhere."""
     
 
     filename = make_filename(index=index, suffix=suffix, depth=depth + 1)
@@ -109,7 +108,7 @@ def assert_no_change(
         _logger: logging.Logger = _logger
 ) -> None:
     """
-    Assertion to check for regression.
+    Check for regression with assertion.
 
     :param value: -- Value to check. Needs to be picklable.
     :param save: If `True`, `value` will be saved for later use.
@@ -130,8 +129,8 @@ def assert_no_change(
       the calling module.
       `value` will not be saved, if it is equal to the value that was saved
       previously. This is to avoid unnecessary commits to git.
-      #TODO: Automatically create subdirectory?
     """
+    #FUTURE: Automatically create subdirectory?
     if save:
         module_name, function_name, _ = introspect.get_function_info(
             depth=depth + 1)

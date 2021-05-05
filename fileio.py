@@ -47,8 +47,9 @@ def open_write_text(
         overwrite: bool = False
 ) -> IO[str]:
     """
-    Same as standard `open()` for writing text, but with a different way to
-      specify arguments.
+    Open text file for writing.
+
+    Same as standard `open()`, but with a different way to specify arguments.
 
     :param file_path: Path to file. If iterable of `str`, the elements will be
       joined.
@@ -59,7 +60,6 @@ def open_write_text(
     :raises FileExistsError: Raised when file already exists and
       `overwrite` is `False`
     """
-    
     mode = _write_mode(overwrite=overwrite)
 
     full_path = _join_path(file_path)
@@ -73,8 +73,9 @@ def open_write_binary(
         overwrite: bool = False
 ) -> IO[bytes]:
     """
-    Same as standard `open()` for writing binary files, but with a different
-      way to specify arguments.
+    Open binary file for writing.
+
+    Same as standard `open()`, but with a different way to specify arguments.
 
     :param file_path: Path to file. If iterable of `str`, the elements will be
       joined.
@@ -85,7 +86,6 @@ def open_write_binary(
     :raises FileExistsError: Raised when file already exists and
       `overwrite` is `False`
     """
-    
     mode = _write_mode(overwrite=overwrite)
 
     full_path = _join_path(file_path)
@@ -97,12 +97,12 @@ def open_read_text(
         file_path: Union[str, Iterable[str]],
 ) -> IO[str]:
     """
-    Same as standard `open()` for writing text, but with a different way to
-      specify arguments.
+    Open text file for reading.
+
+    Same as standard `open()`, but with a different way to specify arguments.
 
     :param file_path: Path to file. If iterable of `str`, the elements will be
       joined.
-    :param overwrite: `True` to allow overwriting existing file.
 
     :return: File object that is opened.
     """
@@ -115,15 +115,15 @@ def open_read_binary(
         file_path: Union[str, Iterable[str]],
 ) -> IO[bytes]:
     """
-    Same as standard `open()` for reading binary files, but with a different
-      way to specify arguments.
+    Open binary file for reading.
+
+    Same as standard `open()`, but with a different way to specify arguments.
 
     :param file_path: Path to file. If iterable of `str`, the elements will be
       joined.
 
     :return: File object that is opened.
     """
-    
     full_path = _join_path(file_path)
     
     return open(full_path, 'rb')

@@ -1,6 +1,4 @@
-"""
-Module with useful functions for unit testing.
-"""
+"""Module with useful functions for unit testing."""
 import inspect
 from typing import (
     Any,
@@ -27,6 +25,8 @@ _ObjectType = TypeVar('_ObjectType')
 
 def eq_operator(one: object, another: object) -> bool:
     """
+    Compare whether one value equals another.
+    
     Function equivalent to the equals (`__eq__`) operator.
 
     :param one: One value to compare
@@ -51,6 +51,8 @@ class _HasEquals(Protocol):  # pylint: disable=too-few-public-methods
 
 def equals_method(one: _HasEquals, another: object) -> bool:
     """
+    Compare whether one value equals another.
+    
     Function equivalent to the `equals()` method.
 
     :param one: Object with the `equals()` method.
@@ -68,7 +70,7 @@ def equal_set(
         # pylint: disable=redefined-outer-name
 ) -> bool:  #FUTURE: reimplement using `set()`
     """
-    Check for equality between two iterables ignoring order
+    Check for equality between two iterables ignoring order.
     
     Particularly for lists or unhashable sets
 
@@ -165,7 +167,7 @@ def included(
         equals: Operator = eq_operator  # pylint: disable=redefined-outer-name
 ) -> bool:
     """
-    Check that all elements in one is included in the other
+    Check that all elements in one is included in the other.
 
     :param one: Iterable or `dict` that could be included in `another`
     :param another: Iterable or `dict` that could include `one`.
@@ -211,6 +213,7 @@ def combine_lists(
 ) -> Iterable[object]:
     r"""
     Create a list of lists by taking one element from each of the arguments.
+
     Can be used to create test parameters from combinations.
 
     If one of the arguments is not iterable, it will be treated as though
