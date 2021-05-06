@@ -56,13 +56,16 @@ def _through_function(
     return target(*args, **kwargs)
 
 
+#FUTURE: Add examples for each decorator.
+
+
 def log_calls(
         logger: logging.Logger, log_result: bool = True
 ) -> GenericDecorator:
     """
-    Decorator to log calls to functions
+    Log calls to the decorated function.
 
-    Can be used on classes to log calls to all its methods.
+    Can also decorate classes to log calls to all its methods.
 
     :param logger: object to log to
     """
@@ -91,9 +94,9 @@ def log_calls_on_exception(
         logger: logging.Logger, log_exception: bool = True
 ) -> GenericDecorator:
     """
-    Decorator to log calls to functions, when exceptions are raised
+    Log calls to the decorated function, when exceptions are raised.
 
-    Can be used on classes to log calls to all its methods.
+    Can also decorate classes to log calls to all its methods.
 
     :param logger: object to log to
     :param log_exception: True, to log stacktrace and exception
@@ -129,8 +132,11 @@ def pass_args(
         target: Target
 ) -> Target:
     """
-    Decorator that passes arguments to the function as a dict as an additional
-    argument named `kwargs`
+    Call the decorated function with an additional argument named `kwargs`.
+
+    Can also decorate classes so that each method gets the extra argument.
+
+    `kwargs` will be a `dict` having all the arguments set by the caller.
 
     Useful for logging during debugging.
 
@@ -165,7 +171,7 @@ def deprecated(
         raise_exception: Optional[bool] = None
 ) -> GenericDecorator:
     """
-    Used to decorate deprecated functions and classes
+    Deprecate a decorated function or class.
 
     :param logger: Where to log message.
     :param message: Additional message to log.
@@ -214,8 +220,7 @@ def retry(
     Callable[..., TargetReturnType]
 ]:  # extra argument may be added to signature
     """
-    Used to decorate functions that should be retried if certain exceptions are
-    raised
+    Add retry attempts to decorated function triggered when exceptions are raised.
 
     :param attempts: Maximum number of times the function should be run
     :param exceptions: Rerun the function if these exceptions are raised
@@ -290,10 +295,15 @@ def synchronized_on_function(
 #FUTURE: Union doesn't work (mypy 0.800)
 # https://github.com/python/mypy/issues/3644
     """
+    Add synchronization lock to decorated function.
+
+    Can also be used to decorate classes, so that a lock is added to each of
+    its methods.
+
     Used to decorate function that needs thread locking for access
 
     When called for the first time, this decorator creates a field on
-    the function object named by `lock_field`, which holds the lock
+    the function object named `lock_field`, which holds the lock
     instance for synchronization.
 
     :param lock_field: The name of the field that holds the lock.
@@ -372,12 +382,17 @@ def synchronized_on_instance(
 #FUTURE: Unions don't work with `TypeVar` (mypy 0.800)
 # https://github.com/python/mypy/issues/3644
     """
+    Add a synchronization lock for calls to the decorated instance method.
+
+    Can also be used to decorate classes to add a synchronization lock to
+    methods of the decorated class.
+    
     Used to decorate instance methods and classes that need thread locking
     for access
 
     When called for the first time for an instance, this decorator creates
-    a field on self named by `lock_field`, which holds the lock instance for
-    synchronization.
+    a field on the class instance named `lock_field`, which holds the
+    lock instance for synchronization.
 
     :param lock_field: The name of the field that holds the lock.
 
@@ -511,8 +526,9 @@ def cache(
 #FUTURE: Unions don't work with `TypeVar`. (mypy 0.800)
 # https://github.com/python/mypy/issues/3644
     """
-    Decorator to cache returned values of a function that are held for at most
-    a specified amount of time since the first call
+    Cache returned values of the decorated function.
+
+    Can also decorate classes to cache returned values for each method.
     
     :param expire_time_secs: Keep value for less than this period (seconds)
     :param max_entries: Don't keep more than this number of entries
@@ -526,7 +542,6 @@ def cache(
     .. note:: Argument values for the target function must be hashable.
       Decorate each method, if a separate cache is needed for each method.
     """
-
     # holds tuples (<time>, <value>)
     cache_storage: OrderedDict[
         FrozenSet[Tuple[str, Any]], Tuple[datetime.datetime, Any]
@@ -576,7 +591,7 @@ def extend_with_method(
 ) -> Callable[[TargetFunction], TargetFunction]:
     # FunctionWrapperFactory[TargetFunction]:
     """
-    Decorator to add a global function as a method to a class
+    Add decorated function as an instance method to a class.
 
     :param __extended_class: Class to add method to.
 
@@ -600,7 +615,7 @@ def extend_with_static_method(
 ) -> Callable[[TargetFunction], TargetFunction]:
     # FunctionWrapperFactory[TargetFunction]:
     """
-    Decorator to add a global function as a static method to a class
+    Add decorated function as a static method to a class.
 
     :param __extended_class: Class to add method to.
 
@@ -625,7 +640,7 @@ def extend_with_class_method(
 ) -> Callable[[TargetFunction], TargetFunction]:
     # FunctionWrapperFactory[TargetFunction]:
     """
-    Decorator to add a function as a class method to a class
+    Add decorated function as a class method to a class.
 
     :param __extended_class: Class to add method to.
 
@@ -650,7 +665,7 @@ def extension(
 ) -> Callable[[Type[TargetClass]], Type[TargetClass]]:
     # ClassWrapperFactory[TargetClass]:
     """
-    Decorator to add all the methods in a class to another class
+    Add all the methods in the decorated class to another class.
 
     :param __extended_class: Class to add methods to.
 

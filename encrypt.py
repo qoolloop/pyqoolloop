@@ -1,6 +1,4 @@
-"""
-Convenience functions for encrypting/decrypting via json
-"""
+"""Convenience functions for encrypting/decrypting via json."""
 import base64
 from typing import (
     Iterable,
@@ -22,14 +20,12 @@ from .fileio import open_write_binary
 
 
 class InvalidTokenException(cryptography.fernet.InvalidToken):
-    """
-    Exception raised when token is invalid
-    """
+    """Exception raised when token is invalid."""
 
 
 def key_from_password(password: str, salt: bytes) -> bytes:
     """
-    Obtain (hashed) key from password
+    Obtain (hashed) key from password.
 
     :param password: Password to hash.
     :param salt: Salt to use for hashing.
@@ -104,7 +100,7 @@ def _msgpack_ext_hook(code: int, data: bytes) -> object:
 
 class EncryptorDecryptor:
     """
-    Class for encryption and decryption
+    Class for encryption and decryption.
 
     This can encrypt and decrypt various types of data.
     """
@@ -114,6 +110,7 @@ class EncryptorDecryptor:
     _primary_fernet: Fernet
 
     def __init__(self, key: Union[bytes, Sequence[bytes]]):
+        # noqa: D205,D400
         """
         :param key: The key for encryption.
           Otherwise, a list of candidate keys for decryption. Only the
@@ -147,7 +144,7 @@ class EncryptorDecryptor:
     @classmethod
     def generate_key(cls) -> bytes:
         """
-        Generate key for encryption and decryption
+        Generate key for encryption and decryption.
 
         To be used by :func:`EncryptorDecryptor()`.
         """
@@ -166,6 +163,8 @@ class EncryptorDecryptor:
     def _write_file(
             encrypted: bytes, filename: str, overwrite: bool = False) -> None:
         """
+        Write encrypted data to file.
+
         :raises FileExistsError: Raised when file already exists and
           `overwrite` is `False`
         """
@@ -178,7 +177,7 @@ class EncryptorDecryptor:
 
     def encrypt(self, value: object) -> bytes:
         """
-        Encrypt various types of data
+        Encrypt various types of data.
 
         :param value: Value to encrypt
           Supported root types:
@@ -197,7 +196,7 @@ class EncryptorDecryptor:
             self, value: object, filename: str, overwrite: bool = False
     ) -> None:
         """
-        Encrypt various types of data and save to file
+        Encrypt various types of data and save to file.
 
         :param value: Value to encrypt
         :param filename: Path of file to save to.  #TODO: rename `path`
@@ -234,7 +233,7 @@ class EncryptorDecryptor:
 
     def decrypt(self, encrypted: bytes) -> object:
         """
-        Decrypt data to same type as when the data was encrypted
+        Decrypt data to same type as when the data was encrypted.
 
         :param encrypted: -- (bytes/str) result of self.encrypt()
 
@@ -271,7 +270,7 @@ class EncryptorDecryptor:
             default: object = None
     ) -> object:
         """
-        Decrypt contents of file saved by :func:`encrypt_to_file()`
+        Decrypt contents of file saved by :func:`encrypt_to_file()`.
 
         :param filename: Path to file that stores a value  #TODO: rename `path`
         :param use_default: Whether to return `default` when file does not
@@ -289,7 +288,7 @@ class EncryptorDecryptor:
 
     def rotate_file(self, filename: str) -> None:
         """
-        Encrypt contents of a file again with the primary key
+        Encrypt contents of a file again with the primary key.
 
         .. note:: This makes encrypted files use the primary key even if they
           were encrypted with other keys.

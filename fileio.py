@@ -64,7 +64,7 @@ def open_write_text(
 
     full_path = _join_path(file_path)
     
-    return open(full_path, mode)
+    return open(full_path, mode)  # pylint: disable=consider-using-with
 
 
 def open_write_binary(
@@ -90,7 +90,7 @@ def open_write_binary(
 
     full_path = _join_path(file_path)
     
-    return open(full_path, mode + 'b')
+    return open(full_path, mode + 'b')  # pylint: disable=consider-using-with
 
 
 def open_read_text(
@@ -108,7 +108,7 @@ def open_read_text(
     """
     full_path = _join_path(file_path)
     
-    return open(full_path, 'r')
+    return open(full_path, 'r')  # pylint: disable=consider-using-with
 
 
 def open_read_binary(
@@ -126,7 +126,7 @@ def open_read_binary(
     """
     full_path = _join_path(file_path)
     
-    return open(full_path, 'rb')
+    return open(full_path, 'rb')  # pylint: disable=consider-using-with
 
 
 def load_pickle(

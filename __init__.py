@@ -1,3 +1,1 @@
-"""
-Package with useful features.
-"""
+"""Package with useful features."""
