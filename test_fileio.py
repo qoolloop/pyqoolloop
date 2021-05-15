@@ -2,6 +2,7 @@
 Test for `io` module.
 """
 import os
+from pathlib import Path
 import tempfile
 from typing import (
     Any,
@@ -29,8 +30,22 @@ def test__get_directory(
     """
     Test `get_directory()`.
     """
-    directory = fileio.get_directory(file_path)
-    assert directory.endswith(expected_directory_suffix)
+    path_list: Iterable[Union[str, bytes, Path]] = (file_path, Path(file_path))
+    for path in path_list:
+        directory = fileio.get_directory(path)
+
+        assert type(directory) is type(path)
+
+        fspath_directory = os.fspath(directory)
+        if isinstance(fspath_directory, bytes):
+            assert fspath_directory.endswith(
+                os.fsencode(expected_directory_suffix))
+
+        else:
+            assert fspath_directory.endswith(
+                expected_directory_suffix)
+
+    # endfor
     
 
 LoadFunc = Callable[
