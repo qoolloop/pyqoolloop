@@ -12,54 +12,8 @@ from typing import (
     Iterable,
     List,
     Optional,
-    overload,
     Union,
 )
-
-
-@overload
-def get_directory(
-        path: str
-) -> str:
-    ...
-
-
-@overload
-def get_directory(
-        path: bytes
-) -> bytes:
-    ...
-
-
-@overload
-def get_directory(
-        path: os.PathLike[str]
-) -> os.PathLike[str]:
-    ...
-
-
-@overload
-def get_directory(
-        path: os.PathLike[bytes]
-) -> os.PathLike[bytes]:
-    ...
-
-
-def get_directory(
-        path: Union[str, bytes, os.PathLike[str], os.PathLike[bytes]]
-) -> Union[str, bytes, os.PathLike[str], os.PathLike[bytes]]:  #TODO: accept PathLike
-    """
-    Get directory of file.
-
-    :param filename: Path to file. Specify `__file__`, for example.
-    :return: Path to directory of the file.
-    """
-    if isinstance(path, os.PathLike):
-        return path.parent.resolve()
-
-    else:
-        directory_path = os.path.dirname(os.path.abspath(path))
-        return directory_path
 
 
 def _write_mode(

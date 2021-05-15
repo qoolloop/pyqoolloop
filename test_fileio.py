@@ -19,35 +19,6 @@ import pytest
 from . import fileio
 
 
-@pytest.mark.parametrize('file_path, expected_directory_suffix', (
-    ('a_file', '/pyqoolloop'),
-    ('/root_file', '/'),
-    ('/a/b', '/a'),
-    ('/a/b/c', '/a/b'),
-))
-def test__get_directory(
-        file_path: str, expected_directory_suffix: str) -> None:
-    """
-    Test `get_directory()`.
-    """
-    path_list: Iterable[Union[str, bytes, Path]] = (file_path, Path(file_path))
-    for path in path_list:
-        directory = fileio.get_directory(path)
-
-        assert type(directory) is type(path)
-
-        fspath_directory = os.fspath(directory)
-        if isinstance(fspath_directory, bytes):
-            assert fspath_directory.endswith(
-                os.fsencode(expected_directory_suffix))
-
-        else:
-            assert fspath_directory.endswith(
-                expected_directory_suffix)
-
-    # endfor
-    
-
 LoadFunc = Callable[
     [Union[str, Iterable[str]], DefaultNamedArg(bool, 'raise_exception')],
     Any]
