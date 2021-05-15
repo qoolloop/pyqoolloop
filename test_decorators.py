@@ -62,19 +62,19 @@ DecoratorType = Callable[..., Callable[..., Any]]
 
 # FunctionDecorator ###
 
-@pass_args
-def name_of_function() -> None:
-    """
-    Function decorated with `@pass_args`.
-    """
-
-
 def test__FunctionDecorator__wraps() -> None:  # pylint: disable=invalid-name
     """
     Test that `__name__` of decorated function has the name of the decorated
     function.
     """
-    assert name_of_function.__name__ == 'name_of_function'
+    @pass_args
+    def _name_of_function() -> None:
+        """
+        Function decorated with `@pass_args`.
+        """
+
+
+    assert _name_of_function.__name__ == '_name_of_function'
     
 
 # pass_args ###
