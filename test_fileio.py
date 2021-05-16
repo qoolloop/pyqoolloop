@@ -2,7 +2,6 @@
 Test for `io` module.
 """
 import os
-from pathlib import Path
 import tempfile
 from typing import (
     Any,
