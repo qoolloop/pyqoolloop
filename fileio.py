@@ -4,6 +4,7 @@ Module for file manipulation.
 .. note::
   Note that reading pickle files from an unknown source can be a security risk.
 """
+#FUTURE: Deprecate in favor of `pathlib`, but what to do with `overwrite` argument?
 import os
 import pickle
 from typing import (
@@ -143,7 +144,7 @@ def load_pickle(
 
         return value
 
-    except:  # noqa: E722
+    except FileNotFoundError:
         if raise_exception:
             # Python 3 raises FileNotFoundError
             # https://stackoverflow.com/a/15032444/2400328
@@ -199,7 +200,7 @@ def load_text(
             return read_file.read()
         # endwith
 
-    except:  # noqa:E722
+    except:
         if raise_exception:
             # Python 3 raises FileNotFoundError
             # https://stackoverflow.com/a/15032444/2400328
