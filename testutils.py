@@ -14,8 +14,8 @@ from typing import (
 
 from typing_extensions import Protocol
 
-import pylog  # pylint: disable=wrong-import-order
-_logger = pylog.getLogger(__name__)
+import logging  # pylint: disable=wrong-import-order
+_logger = logging.getLogger(__name__)
 
 
 Operator = Callable[[Any, Any], bool]
@@ -118,7 +118,7 @@ def _included_set(
         return False
 
 
-    def _set_in(each: Any, another_set: set[Any]) -> bool:
+    def _set_in(each: Any, another_set: Set[Any]) -> bool:
         return each in another_set
 
 

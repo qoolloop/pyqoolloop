@@ -1,4 +1,4 @@
-from decorators import pass_args
+from .decorators import pass_args
 
 
 def _pass_args_function(arg0=0, arg1=1, arg2=2, kwargs=None):
