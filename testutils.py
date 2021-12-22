@@ -7,6 +7,7 @@ from typing import (
     Dict,
     Hashable,
     Iterable,
+    List,
     Set,
     TypeVar,
     Union,
@@ -210,7 +211,7 @@ def current_function_name(pop_stack: int = 0) -> str:
 def combine_lists(
         *args: Union[object, Iterable[object]],
         raise_if_empty: bool = True
-) -> Iterable[object]:
+) -> List[object]:
     r"""
     Create a list of lists by taking one element from each of the arguments.
 
