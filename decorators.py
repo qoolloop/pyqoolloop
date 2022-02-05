@@ -75,13 +75,12 @@ def log_calls(
             *args: Any,
             **kwargs: Any
     ) -> TargetReturnType:
-        logger.info("%s args: %r %r" %
-                    (target.__name__, args, kwargs))
+        logger.info(f"{target.__name__} args: {args!r} {kwargs!r}")
 
         result = target(*args, **kwargs)
 
         if log_result:
-            logger.info("%s result: %r" % (target.__name__, result))
+            logger.info(f"{target.__name__} result: {result!r}")
             
         return result
 
@@ -115,8 +114,7 @@ def log_calls_on_exception(
                 logger.exception("Exception")
 
             else:
-                logger.info("%s args: %r %r" %
-                            (target.__name__, args, kwargs))
+                logger.info(f"{target.__name__} args: {args!r} {kwargs!r}")
 
             raise
 

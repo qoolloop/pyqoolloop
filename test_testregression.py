@@ -7,9 +7,9 @@ from typing import (
     Dict,
 )
 
-import pytest
-
 import logging
+
+import pytest
 
 from .testregression import (
     assert_no_change,
@@ -132,7 +132,7 @@ def test__assert_no_change__logger() -> None:
 
         message: str
 
-        def error(
+        def error(  # type: ignore[override]
                 self, msg: str, *arg: Any, **kwargs: Any) -> None:
             self.called = True
             
@@ -150,10 +150,10 @@ def test__assert_no_change__logger() -> None:
 
             
         def check_message_content(self) -> None:
-            assert "test__assert_no_change__logger" in _logger.message, \
-                "message not as expected: %s" % self.message
-            assert "test_testregression" in _logger.message
-            assert str(value) in _logger.message
+            assert "test__assert_no_change__logger" in self.message, \
+                "message not as expected: {self.message}"
+            assert "test_testregression" in self.message
+            assert str(value) in self.message
 
 
         # endclass

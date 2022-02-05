@@ -1,9 +1,10 @@
 """Test `parallel.py`."""
 
 from dataclasses import dataclass
-import pytest
 from threading import Thread
 from time import sleep
+
+import pytest
 
 from .parallel import Guard
 
@@ -56,11 +57,11 @@ def test__Guard__lock() -> None:
             instance.variable = value
 
 
-    NUM_THREADS = 10
+    num_threads = 10
 
     guard = Guard(_Class())
     threads = [
-        Thread(target=_routine, args=(guard,)) for _ in range(NUM_THREADS)
+        Thread(target=_routine, args=(guard,)) for _ in range(num_threads)
     ]
     for each in threads:
         each.start()
@@ -69,4 +70,4 @@ def test__Guard__lock() -> None:
         each.join()
 
     with guard as instance:
-        assert instance.variable == NUM_THREADS
+        assert instance.variable == num_threads

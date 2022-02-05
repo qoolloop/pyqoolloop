@@ -71,7 +71,7 @@ def _msgpack_default(obj: Iterable[object]) -> msgpack.ExtType:
         data = _packb(list(obj))
 
     else:
-        raise TypeError("Unexpected type: %r" % (obj,))
+        raise TypeError(f"Unexpected type: {obj!r}")
     
     return msgpack.ExtType(obj_type, data)
 
@@ -120,8 +120,7 @@ class EncryptorDecryptor:
         def _check_key(key: bytes) -> None:
             decoded_key = base64.urlsafe_b64decode(key)
             assert len(decoded_key) == 32, \
-                "Key length: %d\n%s" % \
-                (len(decoded_key), decoded_key)  # type:ignore[str-bytes-safe]
+                f"Key length: {len(decoded_key)}\n{decoded_key}"  # type:ignore[str-bytes-safe]
 
 
         if isinstance(key, bytes):

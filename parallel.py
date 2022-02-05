@@ -7,7 +7,6 @@ from threading import (
 )
 from types import TracebackType
 from typing import (
-    Generic,
     Optional,
     Type,
     TypeVar,
@@ -15,14 +14,16 @@ from typing import (
 )
 
 
-T = TypeVar('T')
+T = TypeVar('T')  # pylint: disable=invalid-name
 
 
-class Guard(AbstractContextManager, Generic[T]):
+class Guard(AbstractContextManager[T]):
     """Class to guard access to an instance."""
 
     def __init__(self, variable: T, *, reentrant: bool = False) -> None:
         """
+        Initialize with variable to guard.
+
         :param variable: Variable to guard. If the variable is of a primitive
           type, assigning it a value through this `Guard` does not modify the 
           original variable.

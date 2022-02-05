@@ -40,6 +40,7 @@ def open_write_text(
     Open text file for writing.
 
     Same as standard `open()`, but with a different way to specify arguments.
+    Encoding is UTF-8.
 
     :param file_path: Path to file. If iterable of `str`, the elements will be
       joined.
@@ -54,7 +55,7 @@ def open_write_text(
 
     full_path = _join_path(file_path)
     
-    return open(full_path, mode)  # pylint: disable=consider-using-with
+    return open(full_path, mode, encoding='utf-8')  # pylint: disable=consider-using-with
 
 
 def open_write_binary(
@@ -90,6 +91,7 @@ def open_read_text(
     Open text file for reading.
 
     Same as standard `open()`, but with a different way to specify arguments.
+    Encoding is UTF-8.
 
     :param file_path: Path to file. If iterable of `str`, the elements will be
       joined.
@@ -98,7 +100,7 @@ def open_read_text(
     """
     full_path = _join_path(file_path)
     
-    return open(full_path, 'r')  # pylint: disable=consider-using-with
+    return open(full_path, 'r', encoding='utf-8')  # pylint: disable=consider-using-with
 
 
 def open_read_binary(
@@ -183,6 +185,8 @@ def load_text(
     """
     Read text from file.
 
+    Encoding is UTF-8.
+
     :param file_path: Path to directory. If `Iterable`, the elements will be
       joined.
     :param filename: Name of file in `file_path` directory.
@@ -218,6 +222,8 @@ def dump_text(
 ) -> None:
     """
     Save text to file.
+
+    Encoding is UTF-8.
 
     :param file_path: Path to directory. If `Iterable` the elements will be
       joined

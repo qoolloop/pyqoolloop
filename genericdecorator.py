@@ -118,7 +118,7 @@ class GenericDecorator:
                 TargetMethodWrapper[
                     TargetReturnType, TargetClass]] = None
     ) -> None:
-        # noqa: D205,D400
+        # noqa: D205,D400,D415
         r"""
         :param wrapper_for_function:
           |   (callable(target, \*args, \**kwargs))
@@ -280,7 +280,11 @@ class GenericDecorator:
                 # pylint: disable=too-few-public-methods
                 """Descriptor to be used for staticmethod."""
 
-                def __init__(self, method: staticmethod) -> None:
+                def __init__(
+                    self, 
+                    #FUTURE:  Adding [TargetReturnType] doesn't run yet.
+                    method: staticmethod  # type: ignore[type-arg]
+                ) -> None:
                     super().__init__(
                         method, decorator_self.wrapper_for_staticmethod)
 
@@ -289,7 +293,11 @@ class GenericDecorator:
                 # pylint: disable=too-few-public-methods
                 """Descriptor to be used for classmethod."""
 
-                def __init__(self, method: classmethod) -> None:
+                def __init__(
+                    self, 
+                    #FUTURE:  Adding [TargetReturnType] doesn't run yet.
+                    method: classmethod  # type: ignore[type-arg]
+                ) -> None:
                     super().__init__(
                         method, decorator_self.wrapper_for_classmethod)
 
@@ -346,8 +354,7 @@ class GenericDecorator:
 
         else:
             raise AssertionError(
-                "Unsupported target of type: %r\n"
-                "(You could have forgotten argument to decorator.)"
-                % type(target))
+                f"Unsupported target of type: {type(target)!r}\n"
+                "(You could have forgotten argument to decorator.)")
         
         # endif

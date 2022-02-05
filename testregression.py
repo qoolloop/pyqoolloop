@@ -1,6 +1,5 @@
 """Functions for testing for regression."""
 import os
-import logging
 import pickle
 from typing import (
     Any,
@@ -51,7 +50,7 @@ def make_filename(
         dir_name, '_testregression', split_module[-1] + '.' + function_name)
 
     if index is not None:
-        filename += '#%g' % index
+        filename += f'#{index}'
 
     if suffix is not None:
         filename += '=' + suffix
@@ -143,7 +142,7 @@ def assert_no_change(
         value, save, index=index, suffix=suffix, depth=depth + 1)
 
     assert previous_value == value, \
-        "%r\nDOES NOT EQUAL%r\n" % (previous_value, value)
+        f"{previous_value!r}\nDOES NOT EQUAL{value!r}\n"
 
     if error_on_save:
         assert not save

@@ -27,16 +27,16 @@ from .testutils import (
     (["1"], ["1", 1], True),
     (["1", 1], ["1"], False),
 
-    (dict(), dict(), True),
-    (dict(), dict(a=1), True),
-    (dict(a=1), dict(), False),
-    (dict(a=1), dict(a=1), True),
-    (dict(a=1), dict(a="1"), False),
-    (dict(a="1"), dict(a="1"), True),
-    (dict(a=1), dict(a="1"), False),
-    (dict(a="1"), dict(a="1", bcd=1), True),
-    (dict(a=1), dict(a="1", bcd=1), False),
-    (dict(a="1", bcd=1), dict(a="1"), False),
+    ({}, {}, True),
+    ({}, {"a": 1}, True),
+    ({"a": 1}, {}, False),
+    ({"a": 1}, {"a": 1}, True),
+    ({"a": 1}, {"a": "1"}, False),
+    ({"a": "1"}, {"a": "1"}, True),
+    ({"a": 1}, {"a": "1"}, False),
+    ({"a": "1"}, {"a": "1", "bcd": 1}, True),
+    ({"a": 1}, {"a": "1", "bcd": 1}, False),
+    ({"a": "1", "bcd": 1}, {"a": "1"}, False),
 
     ({}, {}, True),
     ({}, {1: 1}, True),
@@ -74,16 +74,16 @@ def test__included(
     (["1"], ["1", 1], True),
     (["1", 1], ["1"], True),  # not `False`
 
-    (dict(), dict(), True),
-    (dict(), dict(a=1), True),
-    (dict(a=1), dict(), False),
-    (dict(a=1), dict(a=1), True),
-    (dict(a=1), dict(a="1"), True),  # not `False`
-    (dict(a="1"), dict(a="1"), True),
-    (dict(a=1), dict(a="1"), True),  # not `False`
-    (dict(a="1"), dict(a="1", bcd=1), True),
-    (dict(a=1), dict(a="1", bcd=1), True),  # not `False`
-    (dict(a="1", bcd=1), dict(a="1"), False),
+    ({}, {}, True),
+    ({}, {"a": 1}, True),
+    ({"a": 1}, {}, False),
+    ({"a": 1}, {"a": 1}, True),
+    ({"a": 1}, {"a": "1"}, True),  # not `False`
+    ({"a": "1"}, {"a": "1"}, True),
+    ({"a": 1}, {"a": "1"}, True),  # not `False`
+    ({"a": "1"}, {"a": "1", "bcd": 1}, True),
+    ({"a": 1}, {"a": "1", "bcd": 1}, True),  # not `False`
+    ({"a": "1", "bcd": 1}, {"a": "1"}, False),
 
     ({}, {}, True),
     ({}, {1: 1}, True),
@@ -143,7 +143,7 @@ def test__included__equals(
      ([(5, 6), 9], [10, (7, 8)])),
 ])
 def test_combine_lists(
-        expected_result: Sequence[Iterable[object]],
+        expected_result: Sequence[object],
         args: Iterable[Union[object, Iterable[object]]]
 ) -> None:
     """

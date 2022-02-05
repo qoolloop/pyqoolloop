@@ -372,7 +372,7 @@ def test__deprecated__log() -> None:
         function_called = False
         warn_called = False
 
-        def warning(
+        def warning(  # type: ignore[override]
                 self, msg: str, *arg: Any, **kwargs: Any) -> None:
             super().warning(msg, *arg, **kwargs)
             
@@ -423,7 +423,7 @@ def test__deprecated__raise_exception_true(global_setting: bool) -> None:
         function_called = False
         warn_called = False
 
-        def warning(
+        def warning(  # type: ignore[override]
                 self, msg: str, *args: Any, **kwargs: Any) -> None:
             super().warning(msg, *args, **kwargs)
             self.warn_called = True
@@ -473,7 +473,7 @@ def test__deprecated__raise_exception_false(global_setting: bool) -> None:
         function_called = False
         warn_called = False
 
-        def warning(
+        def warning(  # type: ignore[override]
                 self, msg: str, *args: Any, **kwargs: Any) -> None:
             super().warning(msg, *args, **kwargs)
             self.warn_called = True
@@ -514,7 +514,7 @@ def test__deprecated__raise_exception_for_deprecated_true() -> None:
         function_called = False
         warn_called = False
 
-        def warning(
+        def warning(  # type: ignore[override]
                 self, msg: str, *args: Any, **kwargs: Any) -> None:
             super().warning(msg, *args, **kwargs)
             self.warn_called = True
@@ -555,7 +555,7 @@ def test__deprecated__raise_exception_for_deprecated_false() -> None:
         function_called = False
         warn_called = False
             
-        def warning(
+        def warning(  # type: ignore[override]
                 self, msg: str, *args: Any, **kwargs: Any) -> None:
             super().warning(msg, *args, **kwargs)
             self.warn_called = True
@@ -923,7 +923,7 @@ def _test_synchronized(
         expected_count: Optional[int] = None
 ) -> None:
     if kwargs is None:
-        kwargs = dict()
+        kwargs = {}
 
     num_iterations = 5
             
@@ -1704,10 +1704,10 @@ def _test_new_method(
     assert value == instance_a.new_value
 
     with pytest.raises(TypeError):
-        class_a.method(value)  # type:ignore[attr-defined, arg-type, call-arg]
+        class_a.method(value)  # type:ignore[arg-type, call-arg]
 
     with pytest.raises(TypeError):
-        class_a.new_method(value)  # type:ignore[attr-defined, arg-type, call-arg]
+        class_a.new_method(value)  # type:ignore[arg-type, call-arg]
 
 
 def test__extend_with_method() -> None:
