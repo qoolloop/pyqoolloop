@@ -37,8 +37,8 @@ from .decorators import (
     synchronized_on_instance,
 )
 
-import pylog  # pylint: disable=wrong-import-order
-logger = pylog.getLogger(__name__)
+import logging  # pylint: disable=wrong-import-order
+logger = logging.getLogger(__name__)
 
 
 # Common ###
@@ -367,7 +367,7 @@ def test__deprecated__log() -> None:
     Test `@deprecated` so that it logs the function name.
     """
 
-    class _Logger(pylog.Logger):
+    class _Logger(logging.Logger):
 
         function_called = False
         warn_called = False
@@ -418,7 +418,7 @@ def test__deprecated__raise_exception_true(global_setting: bool) -> None:
     """
     #FUTURE: lock for `raise_exception_for_deprecated`, when running parallel
 
-    class _Logger(pylog.Logger):
+    class _Logger(logging.Logger):
 
         function_called = False
         warn_called = False
@@ -468,7 +468,7 @@ def test__deprecated__raise_exception_false(global_setting: bool) -> None:
     Test `@deprecated` with argument `raise_exception` as `False`.
     """
 
-    class _Logger(pylog.Logger):
+    class _Logger(logging.Logger):
 
         function_called = False
         warn_called = False
@@ -509,7 +509,7 @@ def test__deprecated__raise_exception_for_deprecated_true() -> None:
     `True`.
     """
 
-    class _Logger(pylog.Logger):
+    class _Logger(logging.Logger):
 
         function_called = False
         warn_called = False
@@ -550,7 +550,7 @@ def test__deprecated__raise_exception_for_deprecated_false() -> None:
     Test `@deprecated` with `raise_exception_for_deprecated` as `False`.
     """
 
-    class _Logger(pylog.Logger):
+    class _Logger(logging.Logger):
 
         function_called = False
         warn_called = False

@@ -9,7 +9,7 @@ from typing import (
 
 import pytest
 
-import pylog
+import logging
 
 from .testregression import (
     assert_no_change,
@@ -126,7 +126,7 @@ def test__assert_no_change__logger() -> None:
     """
     # pylint: disable=missing-function-docstring
 
-    class _Logger(pylog.Logger):
+    class _Logger(logging.Logger):
 
         called: bool = False
 

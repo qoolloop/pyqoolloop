@@ -11,8 +11,8 @@ from typing import (
 
 from . import introspect
 
-import pylog  # pylint: disable=wrong-import-order
-_logger = pylog.getLogger(__name__)
+import logging  # pylint: disable=wrong-import-order
+_logger = logging.getLogger(__name__)
 
 
 _ParameterType = TypeVar('_ParameterType')

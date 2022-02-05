@@ -4,8 +4,6 @@ funcsigs
 msgpack
 msgpack-types
 
-# pylog
-
 # test
 pytest
 pytest-cov

@@ -13,8 +13,8 @@ from . import (
     testregression,
 )
 
-import pylog  # pylint: disable=wrong-import-order
-logger = pylog.getLogger(__name__)
+import logging  # pylint: disable=wrong-import-order
+logger = logging.getLogger(__name__)
 
 
 def _make_temporary_encryptor() -> encrypt.EncryptorDecryptor:
