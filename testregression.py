@@ -14,7 +14,7 @@ import logging  # pylint: disable=wrong-import-order
 _logger = logging.getLogger(__name__)
 
 
-_ParameterType = TypeVar('_ParameterType')
+_ParameterT = TypeVar('_ParameterT')
 
 
 def make_filename(
@@ -62,7 +62,7 @@ def make_filename(
 
 
 def _save_or_load(
-        value: _ParameterType,
+        value: _ParameterT,
         save: bool,
         index: Union[None, int, float] = None,
         suffix: Optional[str] = None,

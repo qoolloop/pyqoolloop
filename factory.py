@@ -5,6 +5,7 @@ from typing import (
     Callable,
     Dict,
     Generic,
+    Type,
     TypeVar,
     Union,
 )
@@ -12,16 +13,16 @@ from typing import (
 from .decorators import class_decorator
 
 
-TargetClass = TypeVar('TargetClass', bound=type)
+_TargetClass = TypeVar('_TargetClass')
 
 
-class RegistryFactory(Generic[TargetClass]):
+class RegistryFactory(Generic[_TargetClass]):
     """
     A factory that creates instances of different classes depending on the 
     arguments.
 
-    The parameter `T` specifies the superclass of all classes to be registered.
-    It can be `None`, if none is to be specified.
+    The parameter `_TargetClass` specifies the superclass of all classes to be 
+    registered.
     """
 
     def __init__(self) -> None:
@@ -31,7 +32,7 @@ class RegistryFactory(Generic[TargetClass]):
     @class_decorator
     def register(
         self, argument: Union[None, str, type] = None
-    ) -> Callable[[TargetClass], TargetClass]:
+    ) -> Callable[[Type[_TargetClass]], Type[_TargetClass]]:
         """
         Decorator to register class to be created.
 
@@ -46,7 +47,7 @@ class RegistryFactory(Generic[TargetClass]):
         Parentheses for this decorator can be omitted.
         """
 
-        def _wrapper(target: TargetClass) -> TargetClass:
+        def _wrapper(target: Type[_TargetClass]) -> Type[_TargetClass]:
             key_name = target.__name__ if name is None else name
 
             assert key_name not in self._registry, \
@@ -64,7 +65,7 @@ class RegistryFactory(Generic[TargetClass]):
         return _wrapper
 
 
-    def create(self, name: str, parameters: Dict[str, Any]) -> TargetClass:
+    def create(self, name: str, parameters: Dict[str, Any]) -> _TargetClass:
         """
         Create an instance of a class registered to this registry.
 
