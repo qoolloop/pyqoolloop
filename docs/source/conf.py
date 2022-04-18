@@ -13,6 +13,11 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
+
+# type: ignore
+# pylint: skip-file
+# noqa
+
 import os
 import sys
 
