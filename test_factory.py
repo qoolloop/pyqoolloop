@@ -24,9 +24,19 @@ def test__RegistryFactory() -> None:
     class _AnotherClass(_SuperClass):
         def __init__(self, parameters: Dict[str, Any]) -> None:
             ...
+
+
+    @registry.register
+    class _YetAnotherClass(_SuperClass):
+        def __init__(self, parameters: Dict[str, Any]) -> None:
+            ...
         
 
-    for name, type in (("class", _Class), ("_AnotherClass", _AnotherClass)):
+    for name, type in (
+        ("class", _Class), 
+        ("_AnotherClass", _AnotherClass), 
+        ("_YetAnotherClass", _YetAnotherClass)
+    ):
         instance = registry.create(name, {})
         assert isinstance(instance, type)
 

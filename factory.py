@@ -5,8 +5,8 @@ from typing import (
     Callable,
     Dict,
     Generic,
-    Optional,
     TypeVar,
+    Union,
 )
 
 from .decorators import class_decorator
@@ -30,7 +30,7 @@ class RegistryFactory(Generic[TargetClass]):
 
     @class_decorator
     def register(
-        self, name: Optional[str] = None
+        self, argument: Union[None, str, type] = None
     ) -> Callable[[TargetClass], TargetClass]:
         """
         Decorator to register class to be created.
@@ -41,7 +41,9 @@ class RegistryFactory(Generic[TargetClass]):
               :param parameters: A `dict` with parameters for the initializer.
 
         :param name: Name for the class that is to be specified for creation.
-          If `None', the name of the class will be used.
+          If omitted, the name of the class will be used.
+
+        Parentheses for this decorator can be omitted.
         """
 
         def _wrapper(target: TargetClass) -> TargetClass:
@@ -53,7 +55,12 @@ class RegistryFactory(Generic[TargetClass]):
             self._registry[key_name] = target
             return target
         
+        if isinstance(argument, type):
+            target = argument
+            name = None
+            return _wrapper(target)
 
+        name = argument
         return _wrapper
 
 
