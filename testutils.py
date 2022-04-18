@@ -8,7 +8,6 @@ from typing import (
     Hashable,
     Iterable,
     Set,
-    TypeVar,
     Union,
 )
 
@@ -19,8 +18,6 @@ _logger = logging.getLogger(__name__)
 
 
 Operator = Callable[[Any, Any], bool]
-
-_ObjectType = TypeVar('_ObjectType')
 
 
 def eq_operator(one: object, another: object) -> bool:
@@ -46,7 +43,6 @@ class _HasEquals(Protocol):  # pylint: disable=too-few-public-methods
 
         :returns: `True` if `self` equals `value`.
         """
-        ...
 
 
 def equals_method(one: _HasEquals, another: object) -> bool:
