@@ -1,3 +1,5 @@
+"""Test `factory.py`."""
+
 from typing import (
     Any,
     Dict,
@@ -8,6 +10,8 @@ from .factory import RegistryFactory
 
 def test__RegistryFactory() -> None:
     """Test `RegistryFactory`."""
+
+     # pylint: disable=too-few-public-methods, unused-argument
 
     class _SuperClass:
         ...
@@ -32,12 +36,10 @@ def test__RegistryFactory() -> None:
             ...
         
 
-    for name, type in (
+    for name, klass in (
         ("class", _Class), 
         ("_AnotherClass", _AnotherClass), 
         ("_YetAnotherClass", _YetAnotherClass)
     ):
         instance = registry.create(name, {})
-        assert isinstance(instance, type)
-
-    #TODO: more tesing
+        assert isinstance(instance, klass)
