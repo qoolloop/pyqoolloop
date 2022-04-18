@@ -180,7 +180,6 @@ class DifferentFunctions(Protocol):
         """
         Increment `self.func_call_count`.
         """
-        ...
         
 
     @staticmethod
@@ -190,7 +189,6 @@ class DifferentFunctions(Protocol):
         """
         Increment `cls.static_func_call_count`.
         """
-        ...
 
 
     @classmethod
@@ -200,7 +198,6 @@ class DifferentFunctions(Protocol):
         """
         Increment `cls.class_func_call_count`.
         """
-        ...
 
 
 @pass_args
@@ -591,14 +588,12 @@ class AnException(Exception):
     """
     An exception to be raised.
     """
-    ...
 
 
 class UnhandledException(Exception):
     """
     An exception that isn't handled.
     """
-    ...
 
 
 @pytest.mark.parametrize('attempts, exceptions', (
@@ -1688,13 +1683,11 @@ class NewMethodClass(Protocol):
         """
         An instance method.
         """
-        ...
         
     def new_method(self, value: int) -> None:
         """
         Sets its argument value to instance variable `new_value`.
         """
-        ...
 
 
 def _test_new_method(
@@ -1750,7 +1743,6 @@ class NewClassMethodClass(Protocol):
         Class method that sets its argument value to a static member variable
         `new_value`.
         """
-        ...
         
 
 def _test_new_class_method(
@@ -1801,7 +1793,6 @@ class NewStaticMethodClass(Protocol):
         """
         Return its argument
         """
-        ...
     
 
 def _test_new_static_method(
