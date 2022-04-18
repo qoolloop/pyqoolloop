@@ -45,11 +45,15 @@ class RegistryFactory(Generic[TargetClass]):
         """
 
         def _wrapper(target: TargetClass) -> TargetClass:
-            self._registry[name] = target
+            key_name = target.__name__ if name is None else name
+
+            assert key_name not in self._registry, \
+                f"Name ({key_name}) already registered."
+
+            self._registry[key_name] = target
             return target
         
 
-        assert name not in self._registry, f"Name ({name}) already registered."
         return _wrapper
 
 
