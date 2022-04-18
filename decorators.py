@@ -59,6 +59,22 @@ def _through_function(
 #FUTURE: Add examples for each decorator.
 
 
+def function_decorator(target: TargetFunction) -> TargetFunction:
+    """
+    A decorator just to annotate that the target function is a function 
+    decorator.
+    """
+    return target
+
+
+def class_decorator(target: TargetClass) -> TargetClass:
+    """
+    A decorator just to annotate that the target function is a class
+    decorator.
+    """
+    return target
+
+
 def log_calls(
         logger: logging.Logger, log_result: bool = True
 ) -> GenericDecorator:
