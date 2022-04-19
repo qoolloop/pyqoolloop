@@ -30,7 +30,7 @@ from mypy_extensions import (
 
 
 # https://mypy.readthedocs.io/en/stable/generics.html#declaring-decorators
-TargetReturnType = TypeVar('TargetReturnType')
+TargetReturnT = TypeVar('TargetReturnT')
 """Return type"""
 
 TargetFunction = TypeVar(
@@ -47,8 +47,8 @@ Target = TypeVar('Target', Callable[..., Any], Type[object])
 """Type for decorated function or class"""
 
 TargetFunctionWrapper = Callable[
-    [Arg(Callable[..., TargetReturnType], 'target'), VarArg(), KwArg()],
-    TargetReturnType]  # Callable[[TargetFunction, ...], TargetReturnType]
+    [Arg(Callable[..., TargetReturnT], 'target'), VarArg(), KwArg()],
+    TargetReturnT]  # Callable[[TargetFunction, ...], TargetReturnType]
 """
 Generic type for function that calls the decorated function
 
@@ -57,13 +57,13 @@ Generic type for function that calls the decorated function
 
 TargetMethodWrapper = Callable[
     [
-        Arg(Callable[..., TargetReturnType], 'target'),
+        Arg(Callable[..., TargetReturnT], 'target'),
         Arg(TargetClass, 'instance'),
         Arg(Type[TargetClass], 'cls'),
         VarArg(),
         KwArg()
     ],
-    TargetReturnType]  # Callable[[TargetFunction, ...], TargetReturnType]
+    TargetReturnT]  # Callable[[TargetFunction, ...], TargetReturnType]
 """
 Generic type for function that calls the decorated method
 
@@ -107,16 +107,16 @@ class GenericDecorator:
     # especially with the use of `TypeVar`
     def __init__(
             self,
-            wrapper_for_function: TargetFunctionWrapper[TargetReturnType],
+            wrapper_for_function: TargetFunctionWrapper[TargetReturnT],
             wrapper_for_instancemethod: Optional[
                 TargetMethodWrapper[
-                    TargetReturnType, TargetClass]] = None,
+                    TargetReturnT, TargetClass]] = None,
             wrapper_for_staticmethod: Optional[
                 TargetMethodWrapper[
-                    TargetReturnType, TargetClass]] = None,
+                    TargetReturnT, TargetClass]] = None,
             wrapper_for_classmethod: Optional[
                 TargetMethodWrapper[
-                    TargetReturnType, TargetClass]] = None
+                    TargetReturnT, TargetClass]] = None
     ) -> None:
         # noqa: D205,D400,D415
         r"""
@@ -169,12 +169,12 @@ class GenericDecorator:
         #   by extracting a function and decorating it.
 
         def default_wrapper(
-                target: Callable[..., TargetReturnType],  # TargetFunction,
+                target: Callable[..., TargetReturnT],  # TargetFunction,
                 instance: TargetClass,  # pylint: disable=unused-argument
                 cls: Type[TargetClass],  # pylint: disable=unused-argument
                 *args: Any,
                 **kwargs: Any
-        ) -> TargetReturnType:
+        ) -> TargetReturnT:
             return wrapper_for_function(target, *args, **kwargs)
 
         
@@ -231,7 +231,7 @@ class GenericDecorator:
                 
                 def __get__(
                         self, instance: TargetClass, owner: Type[TargetClass]
-                ) -> TargetFunctionWrapper[TargetReturnType]:
+                ) -> TargetFunctionWrapper[TargetReturnT]:
                     ...
                 
 
@@ -242,7 +242,7 @@ class GenericDecorator:
                         self,
                         method: Descriptor,
                         wrapper: TargetMethodWrapper[
-                            TargetReturnType, TargetClass]
+                            TargetReturnT, TargetClass]
                 ) -> None:
                     self.method = method
                     self.wrapper = wrapper
@@ -250,17 +250,17 @@ class GenericDecorator:
 
                 def __get__(
                         self, instance: TargetClass, owner: Type[TargetClass]
-                ) -> TargetFunctionWrapper[TargetReturnType]:
+                ) -> TargetFunctionWrapper[TargetReturnT]:
 
                     def call_wrapper(
                             *args: Any, **kwargs: Any
-                    ) -> TargetReturnType:
+                    ) -> TargetReturnT:
                         
                         return self.wrapper(
                             function, instance, owner, *args, **kwargs)
 
                     # TargetFunction[TargetReturnType]
-                    function: Callable[..., TargetReturnType] \
+                    function: Callable[..., TargetReturnT] \
                         = self.method.__get__(instance, owner)
                     return call_wrapper
 
@@ -320,10 +320,10 @@ class GenericDecorator:
             return target_class
             
 
-        @wraps(cast(Callable[..., TargetReturnType], target))
-        def factory_for_target(*args: Any, **kwargs: Any) -> TargetReturnType:
+        @wraps(cast(Callable[..., TargetReturnT], target))
+        def factory_for_target(*args: Any, **kwargs: Any) -> TargetReturnT:
             return cast(  # cast from another TargetReturnType
-                TargetReturnType,
+                TargetReturnT,
                 decorator_self.wrapper_for_function(
                     cast(Any, target),  # cast to another TargetReturnType
                     *args,

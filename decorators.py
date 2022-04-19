@@ -34,25 +34,25 @@ from .genericdecorator import (
     TargetClass,
     TargetFunction,
     TargetFunctionWrapper,
-    TargetReturnType,
+    TargetReturnT,
 )
 
 
 def _through_method(
-        target: Callable[..., TargetReturnType],  # TargetFunction,
+        target: Callable[..., TargetReturnT],  # TargetFunction,
         instance: TargetClass,  # pylint: disable=unused-argument
         cls: Type[TargetClass],  # pylint: disable=unused-argument
         *args: Any,
         **kwargs: Any
-) -> TargetReturnType:
+) -> TargetReturnT:
     return target(*args, **kwargs)
 
 
 def _through_function(
-        target: Callable[..., TargetReturnType],  # TargetFunction,
+        target: Callable[..., TargetReturnT],  # TargetFunction,
         *args: Any,
         **kwargs: Any
-) -> TargetReturnType:
+) -> TargetReturnT:
     return target(*args, **kwargs)
 
 
@@ -87,10 +87,10 @@ def log_calls(
     """
 
     def log_function(
-            target: Callable[..., TargetReturnType],  # TargetFunction,
+            target: Callable[..., TargetReturnT],  # TargetFunction,
             *args: Any,
             **kwargs: Any
-    ) -> TargetReturnType:
+    ) -> TargetReturnT:
         logger.info(f"{target.__name__} args: {args!r} {kwargs!r}")
 
         result = target(*args, **kwargs)
@@ -118,10 +118,10 @@ def log_calls_on_exception(
     """
 
     def log_function(
-            target: Callable[..., TargetReturnType],  # TargetFunction,
+            target: Callable[..., TargetReturnT],  # TargetFunction,
             *args: Any,
             **kwargs: Any
-    ) -> TargetReturnType:
+    ) -> TargetReturnT:
         try:
             result = target(*args, **kwargs)
 
@@ -158,10 +158,10 @@ def pass_args(
     """
 
     def passer_function(
-            target: Callable[..., TargetReturnType],  # TargetFunction,
+            target: Callable[..., TargetReturnT],  # TargetFunction,
             *args: Any,
             **kwargs: Any
-    ) -> TargetReturnType:
+    ) -> TargetReturnT:
         composed_kwargs = copy.copy(kwargs)
         
         arg_names = inspect.signature(target).parameters
@@ -194,10 +194,10 @@ def deprecated(
     """
 
     def log_function(
-            target: Callable[..., TargetReturnType],  # TargetFunction,
+            target: Callable[..., TargetReturnT],  # TargetFunction,
             *args: Any,
             **kwargs: Any
-    ) -> TargetReturnType:
+    ) -> TargetReturnT:
         message_tuple = (
             "deprecated function called: %r (%r)%s%s",
             target.__name__,
@@ -230,8 +230,8 @@ def retry(
         interval_secs: float = 0.0,
         extra_argument: bool = False
 ) -> Callable[
-    [Callable[..., TargetReturnType]],
-    Callable[..., TargetReturnType]
+    [Callable[..., TargetReturnT]],
+    Callable[..., TargetReturnT]
 ]:  # extra argument may be added to signature
     """
     Add retry attempts to decorated function triggered when exceptions are raised.
@@ -245,9 +245,9 @@ def retry(
     """
 
     def retry_function(
-            target: Callable[..., TargetReturnType],  # TargetFunction,
+            target: Callable[..., TargetReturnT],  # TargetFunction,
             *args: Any,
-            **kwargs: Any) -> TargetReturnType:
+            **kwargs: Any) -> TargetReturnT:
 
         if extra_argument and ('attempts' in kwargs):
             actual_attempts = kwargs['attempts']
@@ -300,7 +300,7 @@ def synchronized_on_function(
 
 
 def synchronized_on_function(
-        __target: Optional[Callable[..., TargetReturnType]] = None,  # Optional[TargetFunction]
+        __target: Optional[Callable[..., TargetReturnT]] = None,  # Optional[TargetFunction]
         *,
         lock_field: str = '__lock',
         dont_synchronize: bool = False
@@ -326,10 +326,10 @@ def synchronized_on_function(
       a variable value. c.f. `@cache`
     """
     def _call_function(
-            target: Callable[..., TargetReturnType],  # TargetFunction,
+            target: Callable[..., TargetReturnT],  # TargetFunction,
             *args: Any,
             **kwargs: Any
-    ) -> TargetReturnType:
+    ) -> TargetReturnT:
 
         lock_holder = target
 
@@ -348,7 +348,7 @@ def synchronized_on_function(
         assert not dont_synchronize
         return partial(_call_function, __target)
         
-    call_function: TargetFunctionWrapper[TargetReturnType] = (
+    call_function: TargetFunctionWrapper[TargetReturnT] = (
         _call_function if not dont_synchronize
         else _through_function)
 
@@ -472,14 +472,14 @@ def synchronized_on_instance(
 
 
 def _get_signature_values(
-        target: Callable[..., TargetReturnType],  # TargetFunction
+        target: Callable[..., TargetReturnT],  # TargetFunction
         args: Iterable[Any],
         kwargs: Dict[str, Any],
         exclude_kw: Iterable[str] = ()
 ) -> OrderedDict[str, Any]:
 
     def _bind_arguments(
-            target: Callable[..., TargetReturnType],  # TargetFunction,
+            target: Callable[..., TargetReturnT],  # TargetFunction,
             args: Iterable[Any],
             kwargs: Dict[str, Any]
     ) -> OrderedDict[str, Any]:
@@ -568,10 +568,10 @@ def cache(
     # a class, one `cache` is used for all the methods.
     @synchronized_on_function(dont_synchronize=dont_synchronize)
     def _cached_function(
-            target: Callable[..., TargetReturnType],  # TargetFunction,
+            target: Callable[..., TargetReturnT],  # TargetFunction,
             *args: Any,
             **kwargs: Any
-    ) -> TargetReturnType:
+    ) -> TargetReturnT:
 
         now = datetime.datetime.utcnow()
         
@@ -582,14 +582,14 @@ def cache(
             stored_time, stored_value = cache_storage[key]
 
             if (now - stored_time).total_seconds() < expire_time_secs:
-                return cast(TargetReturnType, stored_value)
+                return cast(TargetReturnT, stored_value)
 
             del cache_storage[key]
 
         if max_entries and (len(cache_storage) >= max_entries):
             cache_storage.popitem(last=False)
 
-        value: TargetReturnType = target(*args, **kwargs)
+        value: TargetReturnT = target(*args, **kwargs)
 
         cache_storage[key] = (now, value)
 

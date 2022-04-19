@@ -14,26 +14,30 @@ def test__RegistryFactory() -> None:
      # pylint: disable=too-few-public-methods, unused-argument
 
     class _SuperClass:
-        ...
+        def __init__(self, name: str, klass: type) -> None:
+            self.name = name
+            self.klass = klass
+
 
     registry = RegistryFactory[_SuperClass]()
 
+
     @registry.register("class")
     class _Class(_SuperClass):
-        def __init__(self, parameters: Dict[str, Any]) -> None:
-            ...
+        def __init__(self, name: str, klass: type) -> None:
+            super().__init__(name, klass)
 
 
     @registry.register()
     class _AnotherClass(_SuperClass):
-        def __init__(self, parameters: Dict[str, Any]) -> None:
-            ...
+        def __init__(self, *, name: str, klass: type) -> None:
+            super().__init__(name, klass)
 
 
     @registry.register
     class _YetAnotherClass(_SuperClass):
-        def __init__(self, parameters: Dict[str, Any]) -> None:
-            ...
+        def __init__(self, **kwargs: Any) -> None:
+            super().__init__(kwargs['name'], kwargs['klass'])
         
 
     for name, klass in (
@@ -41,5 +45,8 @@ def test__RegistryFactory() -> None:
         ("_AnotherClass", _AnotherClass), 
         ("_YetAnotherClass", _YetAnotherClass)
     ):
-        instance = registry.create(name, {})
+        arguments = dict(name=name, klass=klass)
+        instance = registry.create(name, arguments)
         assert isinstance(instance, klass)
+        assert instance.name == name
+        assert instance.klass == klass
