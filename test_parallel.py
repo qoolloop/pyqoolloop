@@ -40,9 +40,7 @@ def test__Guard__dataclass() -> None:
 
 @pytest.mark.unreliable
 def test__Guard__lock() -> None:
-    """
-    Test `Guard` that guards agains parallels access.
-    """
+    """Test `Guard` that guards agains parallels access."""
 
     @dataclass
     class _Class:

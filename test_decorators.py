@@ -1,7 +1,5 @@
 # pylint: disable=too-many-lines
-"""
-Tests for `decorators` module.
-"""
+"""Tests for `decorators` module."""
 import inspect
 import threading
 import time
@@ -47,35 +45,28 @@ class _Counter:
     counter = 0
 
     def inc(self) -> int:
-        """
-        Increment counter.
-        """
+        """Increment counter."""
         self.counter += 1
         return self.counter
 
-        
+
 _counter = _Counter()
 
 
 DecoratorType = Callable[..., Callable[..., Any]]
-    
+
 
 # FunctionDecorator ###
 
 def test__FunctionDecorator__wraps() -> None:  # pylint: disable=invalid-name
-    """
-    Test that `__name__` of decorated function has the name of the decorated
-    function.
-    """
+    """Test that `__name__` of decorated function is the name of the target."""
     @pass_args
     def _name_of_function() -> None:
-        """
-        Function decorated with `@pass_args`.
-        """
+        """Decorate with `@pass_args`."""
 
 
     assert _name_of_function.__name__ == '_name_of_function'
-    
+
 
 # pass_args ###
 
@@ -93,7 +84,7 @@ def _pass_args_function(
         assert kwargs is not None
         assert ((name not in kwargs) and (value == default_value)) or \
             (kwargs[name] == value)
-    
+
     _check_argument("arg0", arg0, 0, kwargs)
     _check_argument("arg1", arg1, 1, kwargs)
     _check_argument("arg2", arg2, 2, kwargs)
@@ -106,9 +97,7 @@ def pass_args_function(
         arg2: Any = 2,
         kwargs: Optional[Dict[str, Any]] = None
 ) -> None:
-    """
-    Function decorated with `@pass_args`.
-    """
+    """Decorate with `@pass_args`."""
     _pass_args_function(arg0, arg1, arg2, kwargs=kwargs)
 
 
@@ -121,9 +110,7 @@ def pass_args_function_with_mandatory_keyword(
         *,
         kwargs: Dict[str, Any]
 ) -> None:
-    """
-    Function decorated with `@pass_args` with mandatory keywords
-    """
+    """Decorate with `@pass_args` with mandatory keywords."""
     _pass_args_function(arg0, arg1, arg2, kwargs=kwargs)
 
 
@@ -140,9 +127,7 @@ def test__pass_args_to_function(
             ],
             None]
 ) -> None:
-    """
-    Test passing argument to functions decorated by `@pass_args`.
-    """    
+    """Test passing argument to functions decorated by `@pass_args`."""
     function()
     function("a")
     function("a", "b")
@@ -153,51 +138,41 @@ def test__pass_args_to_function(
 
 
 class DifferentFunctions(Protocol):
-    """
-    Protocol with instance, static, and class methods.
-    """
- 
+    """Protocol with instance, static, and class methods."""
+
     static_func_call_count: int
 
     class_func_call_count: int
 
     init_call_count: int
-    
+
     func_call_count: int
-    
+
     def __init__(
             self, arg0: Any = 0,
     ) -> None:
-        """
-        Initialize instance.
-        """
+        """Initialize instance."""
         super().__init__()
 
 
     def func(
             self, arg0: Any = 0,
     ) -> None:
-        """
-        Increment `self.func_call_count`.
-        """
-        
+        """Increment `self.func_call_count`."""
+
 
     @staticmethod
     def static_func(
             arg0: Any = 0,
     ) -> None:
-        """
-        Increment `cls.static_func_call_count`.
-        """
+        """Increment `cls.static_func_call_count`."""
 
 
     @classmethod
     def class_func(
             cls, arg0: Any = 0,
     ) -> None:
-        """
-        Increment `cls.class_func_call_count`.
-        """
+        """Increment `cls.class_func_call_count`."""
 
 
 @pass_args
@@ -208,6 +183,7 @@ class PassArgsClass:
 
     Follows DifferentFunctions protocol.
     """
+
     # pylint: disable=missing-function-docstring  # b/c follows protocol
 
     static_func_call_count = 0
@@ -217,6 +193,7 @@ class PassArgsClass:
     def __init__(
             self, arg0: Any = 0, kwargs: Optional[Dict[str, Any]] = None
     ) -> None:
+        # noqa: D107
         _pass_args_function(arg0, kwargs=kwargs)
 
         self.init_call_count = 1
@@ -231,15 +208,17 @@ class PassArgsClass:
     def func(
             self, arg0: Any = 0, kwargs: Optional[Dict[str, Any]] = None
     ) -> None:
+        """Define instance method."""
         _pass_args_function(arg0, kwargs=kwargs)
 
         self.func_call_count += 1
-        
+
 
     @staticmethod
     def static_func(
             arg0: Any = 0, kwargs: Optional[Dict[str, Any]] = None
     ) -> None:
+        """Define static method."""
         _pass_args_function(arg0, kwargs=kwargs)
 
         PassArgsClass.static_func_call_count += 1
@@ -249,19 +228,20 @@ class PassArgsClass:
     def class_func(
             cls, arg0: Any = 0, kwargs: Optional[Dict[str, Any]] = None
     ) -> None:
+        """Define class method."""
         _pass_args_function(arg0, kwargs=kwargs)
 
         cls.class_func_call_count += 1
-        
+
 
 @pass_args
 class PassArgsClassWithMandatoryKeyword:
     """
-    Test class for instance, static, and class methods with mandatory keyword
-    argument.
+    Test class for methods with mandatory keyword argument.
 
     Follows DifferentFunctions protocol.
     """
+
     # pylint: disable=missing-function-docstring  # b/c follows protocol
 
     static_func_call_count = 0
@@ -271,6 +251,10 @@ class PassArgsClassWithMandatoryKeyword:
     def __init__(
             self, arg0: Any = 0, *, kwargs: Dict[str, Any]
     ) -> None:
+        """
+        :param arg0: Optional argument.
+        :param kwargs: Mandatory keyword argument.
+        """
         _pass_args_function(arg0, kwargs=kwargs)
 
         self.init_call_count = 1
@@ -285,15 +269,17 @@ class PassArgsClassWithMandatoryKeyword:
     def func(
             self, arg0: Any = 0, *, kwargs: Dict[str, Any]
     ) -> None:
+        """Define instance function."""
         _pass_args_function(arg0, kwargs=kwargs)
 
         self.func_call_count += 1
-        
+
 
     @staticmethod
     def static_func(
             arg0: Any = 0, *, kwargs: Dict[str, Any]
     ) -> None:
+        """Define static method."""
         _pass_args_function(arg0, kwargs=kwargs)
 
         PassArgsClassWithMandatoryKeyword.static_func_call_count += 1
@@ -303,10 +289,11 @@ class PassArgsClassWithMandatoryKeyword:
     def class_func(
             cls, arg0: Any = 0, *, kwargs: Dict[str, Any]
     ) -> None:
+        """Define class method."""
         _pass_args_function(arg0, kwargs=kwargs)
 
         cls.class_func_call_count += 1
-        
+
 
 @pytest.mark.parametrize('pass_args_class', (
     PassArgsClass,
@@ -314,10 +301,7 @@ class PassArgsClassWithMandatoryKeyword:
 ))
 def test__pass_args_to_class(
         pass_args_class: Type[DifferentFunctions]) -> None:
-    """
-    Test passing arguments to methods in class decorated by `@pass_args`.
-    """
-
+    """Test passing arguments to methods in class decorated by `@pass_args`."""
     instance = pass_args_class()
 
     instance = pass_args_class("a")
@@ -325,7 +309,7 @@ def test__pass_args_to_class(
 
     instance.func(arg0="A")
     assert instance.func_call_count == 1
-    
+
     instance.func("A")
     assert instance.func_call_count == 2
 
@@ -343,7 +327,7 @@ def test__pass_args_to_class(
 
     instance.static_func("oo")
     assert instance.static_func_call_count == 4
-    
+
     pass_args_class.class_func()
     assert pass_args_class.class_func_call_count == 1
 
@@ -356,13 +340,11 @@ def test__pass_args_to_class(
     instance.class_func("")
     assert instance.class_func_call_count == 4
 
-    
+
 # deprecated ###
 
 def test__deprecated__log() -> None:
-    """
-    Test `@deprecated` so that it logs the function name.
-    """
+    """Test `@deprecated` so that it logs the function name."""
 
     class _Logger(logging.Logger):
 
@@ -372,7 +354,7 @@ def test__deprecated__log() -> None:
         def warning(  # type: ignore[override]
                 self, msg: str, *arg: Any, **kwargs: Any) -> None:
             super().warning(msg, *arg, **kwargs)
-            
+
             self.warn_called = True
 
             assert "deprecated_function" in msg % arg
@@ -392,7 +374,7 @@ def test__deprecated__log() -> None:
         assert arg2 == 2
         assert kwarg1 == 3
         assert kwarg2 == 4
-        
+
         _logger.function_called = True
 
         return 5
@@ -410,9 +392,7 @@ def test__deprecated__log() -> None:
     False,
 ))
 def test__deprecated__raise_exception_true(global_setting: bool) -> None:
-    """
-    Test `@deprecated` with argument `raise_exception` as `True`.
-    """
+    """Test `@deprecated` with argument `raise_exception` as `True`."""
     #FUTURE: lock for `raise_exception_for_deprecated`, when running parallel
 
     class _Logger(logging.Logger):
@@ -461,9 +441,7 @@ def test__deprecated__raise_exception_true(global_setting: bool) -> None:
     False,
 ))
 def test__deprecated__raise_exception_false(global_setting: bool) -> None:
-    """
-    Test `@deprecated` with argument `raise_exception` as `False`.
-    """
+    """Test `@deprecated` with argument `raise_exception` as `False`."""
 
     class _Logger(logging.Logger):
 
@@ -501,9 +479,9 @@ def test__deprecated__raise_exception_false(global_setting: bool) -> None:
 
 
 def test__deprecated__raise_exception_for_deprecated_true() -> None:
+    # noqa: D200
     """
-    Test `@deprecated` with argument `raise_exception_for_deprecated` as
-    `True`.
+    Test `@deprecated` with argument `raise_exception_for_deprecated=True`.
     """
 
     class _Logger(logging.Logger):
@@ -543,15 +521,13 @@ def test__deprecated__raise_exception_for_deprecated_true() -> None:
 
 
 def test__deprecated__raise_exception_for_deprecated_false() -> None:
-    """
-    Test `@deprecated` with `raise_exception_for_deprecated` as `False`.
-    """
+    """Test `@deprecated` with `raise_exception_for_deprecated` as `False`."""
 
     class _Logger(logging.Logger):
 
         function_called = False
         warn_called = False
-            
+
         def warning(  # type: ignore[override]
                 self, msg: str, *args: Any, **kwargs: Any) -> None:
             super().warning(msg, *args, **kwargs)
@@ -585,15 +561,11 @@ def test__deprecated__raise_exception_for_deprecated_false() -> None:
 # retry ###
 
 class AnException(Exception):
-    """
-    An exception to be raised.
-    """
+    """An exception to be raised."""
 
 
 class UnhandledException(Exception):
-    """
-    An exception that isn't handled.
-    """
+    """An exception that isn't handled."""
 
 
 @pytest.mark.parametrize('attempts, exceptions', (
@@ -605,10 +577,7 @@ def test__retry__with_exceptions(
         attempts: int,
         exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]]
 ) -> None:
-    """
-    Test `@retry` on function that raises expected exception.
-    """
-
+    """Test `@retry` on function that raises expected exception."""
     result = {'count': 0}
 
     @retry(attempts, exceptions)
@@ -642,10 +611,7 @@ def test__retry__with_unhandled_exceptions(
         attempts: int,
         exceptions: Union[Type[Exception], Tuple[Type[Exception]]]
 ) -> None:
-    """
-    Test `@retry` on function that raises an unlisted exception.
-    """
-
+    """Test `@retry` on function that raises an unlisted exception."""
     result = {'count': 0}
 
     @retry(attempts, exceptions)
@@ -679,10 +645,7 @@ def test__retry__with_no_exceptions(
         attempts: int,
         exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]]
 ) -> None:
-    """
-    Test `@retry` with function that doesn't raise exceptions.
-    """
-
+    """Test `@retry` with function that doesn't raise exceptions."""
     result = {'count': 0}
 
     @retry(attempts, exceptions)
@@ -707,17 +670,14 @@ def test__retry__with_no_exceptions(
 
     assert result['count'] == 1
 
-    
+
 @pytest.mark.parametrize('attempts', (
     1,
     2,
     3,
 ))
 def test__retry__with_extra_argument(attempts: int) -> None:
-    """
-    Test `@retry` with `attemps` argument.
-    """
-
+    """Test `@retry` with `attemps` argument."""
     result = {'count': 0}
 
     class _AnException(Exception):
@@ -757,10 +717,7 @@ def test__retry__with_extra_argument(attempts: int) -> None:
     3,
 ))
 def test__retry__without_extra_argument(attempts_value: int) -> None:
-    """
-    Test `@retry` on instance method without `attempts` argument.
-    """
-
+    """Test `@retry` on instance method without `attempts` argument."""
     result = {'count': 0}
 
     class _AnException(Exception):
@@ -801,9 +758,7 @@ def test__retry(
         attempts: int,
         exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]]
 ) -> None:
-    """
-    Test `@retry`.
-    """
+    """Test `@retry`."""
     # pylint: disable=missing-function-docstring
 
     result = {'count': 0}
@@ -878,7 +833,7 @@ def test__retry(
             each('arg1', 'arg2', 'kwarg1', 'kwarg2')
 
         assert result['count'] == attempts
-    
+
 
 # common functions ###
 
@@ -921,7 +876,7 @@ def _test_synchronized(
         kwargs = {}
 
     num_iterations = 5
-            
+
     num_threads = 5
 
     class _Thread(threading.Thread):
@@ -934,7 +889,7 @@ def _test_synchronized(
 
         def run(self) -> None:
             assert kwargs is not None
-            
+
             for _ in range(num_iterations):
                 result = self.function(*args, **kwargs)
                 assert result == "result"
@@ -962,17 +917,14 @@ def _test_synchronized(
 
     if expected_count is None:
         expected_count = len(threads) * num_iterations
-        
+
     assert variables['count'] == expected_count
 
 
 # synchronized_on_function ###
 
 def test__synchronized_on_function__no_parentheses() -> None:
-    """
-    Test `@synchronized_on_instance` on function.
-    """
-
+    """Test `@synchronized_on_instance` on function."""
     variables = _create_variables()
 
     @synchronized_on_function
@@ -985,10 +937,7 @@ def test__synchronized_on_function__no_parentheses() -> None:
 
 
 def test__synchronized_on_function() -> None:
-    """
-    Test `@synchronized_on_instance` on function.
-    """
-
+    """Test `@synchronized_on_instance` on function."""
     variables = _create_variables()
 
     @synchronized_on_function()
@@ -1001,10 +950,7 @@ def test__synchronized_on_function() -> None:
 
 
 def test__synchronized_on_function__lock_field() -> None:
-    """
-    Test `@synchronized_on_instance` on function.
-    """
-
+    """Test `@synchronized_on_instance` on function."""
     variables = _create_variables()
 
     @synchronized_on_function(lock_field='lock')
@@ -1019,10 +965,10 @@ def test__synchronized_on_function__lock_field() -> None:
 @pytest.mark.unreliable
 def test__synchronized_on_function__dont_synchronize() -> None:
     """
-    Test `@synchronized_on_instance` on instance method without
-    synchronization
-    """
+    Test `@synchronized_on_instance` on instance method.
 
+    The instance method will have no synchronization.
+    """
     variables = _create_variables()
 
     @synchronized_on_function(lock_field='lock', dont_synchronize=True)
@@ -1039,9 +985,7 @@ def test__synchronized_on_function__dont_synchronize() -> None:
 # synchronized_on_instance ###
 
 def test__synchronized_on_instance__method() -> None:
-    """
-    Test `@synchronized_on_instance` on instance method.
-    """
+    """Test `@synchronized_on_instance` on instance method."""
     # pylint: disable=missing-function-docstring
 
     class _Class:
@@ -1061,6 +1005,7 @@ def test__synchronized_on_instance__method() -> None:
 
 
 def test__synchronized_on_instance__method__no_parentheses() -> None:
+    # noqa: D200
     """
     Test `@synchronized_on_instance` on instance method with no parentheses.
     """
@@ -1084,9 +1029,7 @@ def test__synchronized_on_instance__method__no_parentheses() -> None:
 
 
 def test__synchronized_on_instance__staticmethod() -> None:
-    """
-    Test `@synchronized_on_instance` on class with static method.
-    """
+    """Test `@synchronized_on_instance` on class with static method."""
     # pylint: disable=missing-function-docstring
 
     @synchronized_on_instance(lock_field='lock')
@@ -1110,9 +1053,7 @@ def test__synchronized_on_instance__staticmethod() -> None:
 
 
 def test__synchronized_on_instance__classmethod() -> None:
-    """
-    Test `@synchronized_on_instance` on class with class method.
-    """
+    """Test `@synchronized_on_instance` on class with class method."""
     # pylint: disable=missing-function-docstring
 
     @synchronized_on_instance(lock_field='lock')
@@ -1136,9 +1077,7 @@ def test__synchronized_on_instance__classmethod() -> None:
 
 
 def test__synchronized_on_instance__class() -> None:
-    """
-    Test `@synchronized_on_instance` on class.
-    """
+    """Test `@synchronized_on_instance` on class."""
     # pylint: disable=missing-function-docstring
 
     @synchronized_on_instance(lock_field='lock')
@@ -1158,9 +1097,7 @@ def test__synchronized_on_instance__class() -> None:
 
 
 def test__synchronized_on_instance__class__no_parentheses() -> None:
-    """
-    Test `@synchronized_on_instance` with no parentheses.
-    """
+    """Test `@synchronized_on_instance` with no parentheses."""
     # pylint: disable=missing-function-docstring
 
     @synchronized_on_instance
@@ -1187,19 +1124,16 @@ _parametrize__cache_test = pytest.mark.parametrize(
     )
 )
 
-    
+
 
 @_parametrize__cache_test
 def test__cache__no_args(
         decorator: DecoratorType,
         kwargs: Any
 ) -> None:
-    """
-    Test cache decorators so that calls with no arguments
-    produces same results.
-    """
+    """Test cache decorators with no arguments."""
     # pylint: disable=missing-function-docstring
-    
+
     @decorator(**kwargs)
     def _function() -> int:
         return _counter.inc()
@@ -1243,10 +1177,7 @@ def test__cache__args(
         decorator: DecoratorType,
         kwargs: Any
 ) -> None:
-    """
-    Test cache decorators so that calls with same argument values
-    produces same results.
-    """
+    """Test cache decorators with same argument values."""
     # pylint: disable=missing-function-docstring
 
     @decorator(**kwargs)
@@ -1296,10 +1227,7 @@ def test__cache__kwargs(
         decorator: DecoratorType,
         kwargs: Any
 ) -> None:
-    """
-    Test cache decorators so that calls with same optional arguments produces
-    same results.
-    """
+    """Test cache decorators with same optional arguments."""
     # pylint: disable=missing-function-docstring
 
     @decorator(**kwargs)
@@ -1366,10 +1294,7 @@ def test__cache__default_kwargs(
         decorator: DecoratorType,
         kwargs: Any
 ) -> None:
-    """
-    Test cache decorators so that calls with same default argument values
-    produces same results.
-    """
+    """Test cache decorators with same default argument values."""
     # pylint: disable=missing-function-docstring
 
     @decorator(**kwargs)
@@ -1436,9 +1361,7 @@ def test__cache__synchronize(
         decorator: DecoratorType,
         kwargs: Any
 ) -> None:
-    """
-    Test that the cache decorators are synchronized correctly.
-    """
+    """Test that the cache decorators are synchronized correctly."""
     # pylint: disable=missing-function-docstring
 
     max_entries = 3
@@ -1474,7 +1397,7 @@ def test__cache__synchronize(
             (_Class.a_staticmethod, instance.a_staticmethod),
             (_Class.a_classmethod, instance.a_classmethod),
     ):
-        
+
         _reset_variables(variables)
 
         _test_synchronized(variables, each, expected_count=1)
@@ -1483,9 +1406,7 @@ def test__cache__synchronize(
 # cache ###
 
 def test__cache__no_args__expire() -> None:
-    """
-    Test `@cache` with no arguments expires the cache.
-    """
+    """Test `@cache` with no arguments expires the cache."""
     # pylint: disable=missing-function-docstring
 
     @cache(expire_time_secs=0)
@@ -1528,8 +1449,9 @@ def test__cache__no_args__expire() -> None:
 
 def test__cache__max_entries() -> None:
     """
-    Test cache decorators with argument `max_entries` calling method with
-    different arguments.
+    Test cache decorators with argument `max_entries`.
+
+    Calls method with different arguments.
     """
     # pylint: disable=missing-function-docstring
 
@@ -1578,8 +1500,9 @@ def test__cache__max_entries__same_args(
         kwargs: Any
 ) -> None:
     """
-    Test cache decorators with argument `max_entries` calling method with
-    same arguments.
+    Test cache decorators with argument `max_entries`.
+
+    Calls method with same arguments.
     """
     # pylint: disable=missing-function-docstring
 
@@ -1623,9 +1546,7 @@ def test__cache__max_entries__same_args(
 
 
 def test__cache__max_entries__refresh() -> None:
-    """
-    Test `@cache` with argument `max_entries`.
-    """
+    """Test `@cache` with argument `max_entries`."""
     # pylint: disable=missing-function-docstring
 
     max_entries = 3
@@ -1674,20 +1595,15 @@ def test__cache__max_entries__refresh() -> None:
 # extend_with_method ##
 
 class NewMethodClass(Protocol):
-    """
-    Protocol with 2 instance methods.
-    """
+    """Protocol with 2 instance methods."""
+
     new_value: int
 
     def method(self, value: int) -> None:
-        """
-        An instance method.
-        """
-        
+        """Define an instance method."""
+
     def new_method(self, value: int) -> None:
-        """
-        Sets its argument value to instance variable `new_value`.
-        """
+        """Set its argument value to instance variable `new_value`."""
 
 
 def _test_new_method(
@@ -1704,21 +1620,19 @@ def _test_new_method(
 
 
 def test__extend_with_method() -> None:
-    """
-    Test `@extend_with_method`.
-    """
+    """Test `@extend_with_method`."""
     # pylint: disable=missing-function-docstring
 
     class _ClassA:
         new_value: int
-        
+
         def method(self, value: int) -> None:
             pass
-    
+
 
     @extend_with_method(_ClassA)
     def new_method(self: _ClassA, value: int) -> None: \
-        # pylint: disable=unused-variable
+            # pylint: disable=unused-variable
         self.new_value = value
 
 
@@ -1732,18 +1646,14 @@ def test__extend_with_method() -> None:
 # @extend_with_class_method ##
 
 class NewClassMethodClass(Protocol):
-    """
-    Protocol with a class method.
-    """
+    """Protocol with a class method."""
+
     new_value: int
-    
+
     @classmethod
     def new_class_method(cls, value: int) -> None:
-        """
-        Class method that sets its argument value to a static member variable
-        `new_value`.
-        """
-        
+        """Set its argument value to a static member variable `new_value`."""
+
 
 def _test_new_class_method(
         class_a: Type[NewClassMethodClass], instance_a: NewClassMethodClass
@@ -1756,26 +1666,24 @@ def _test_new_class_method(
     new_value = 2
     class_a.new_class_method(new_value)
     assert new_value == class_a.new_value
-    
+
 
 def test__extend_with_class_method() -> None:
-    """
-    Test `@extend_with_class_method`.
-    """
+    """Test `@extend_with_class_method`."""
 
     class _ClassA:  # pylint: disable=too-few-public-methods
         new_value: int
-    
+
 
     @extend_with_class_method(_ClassA)
     def new_class_method(cls: Type[_ClassA], value: int) -> None:  \
-        # pylint: disable=unused-variable
+            # pylint: disable=unused-variable
         cls.new_value = value
 
 
     # Doesn't work for mypy 0.800
     # _ClassA = cast(Type[NewStaticMethodClass], _ClassA)
-    
+
     CastedA = cast(Type[NewClassMethodClass], _ClassA)
     casted_a = CastedA()
 
@@ -1785,15 +1693,12 @@ def test__extend_with_class_method() -> None:
 # @extend_with_static_method ##
 
 class NewStaticMethodClass(Protocol):
-    """
-    Protocol with static method `new_static_method()`.
-    """
+    """Protocol with static method `new_static_method()`."""
+
     @staticmethod
     def new_static_method(value: int) -> int:
-        """
-        Return its argument
-        """
-    
+        """Return its argument."""
+
 
 def _test_new_static_method(
         class_a: Type[NewStaticMethodClass], instance_a: NewStaticMethodClass
@@ -1803,12 +1708,10 @@ def _test_new_static_method(
 
     new_value = 2
     assert new_value == class_a.new_static_method(new_value)
-    
+
 
 def test__extend_with_static_method() -> None:
-    """
-    Test `@extend_with_static_method`.
-    """
+    """Test `@extend_with_static_method`."""
 
     class _ClassA:  # pylint: disable=too-few-public-methods
         ...
@@ -1816,7 +1719,7 @@ def test__extend_with_static_method() -> None:
 
     @extend_with_static_method(_ClassA)
     def new_static_method(value: int) -> int: \
-        # pylint: disable=unused-variable
+            # pylint: disable=unused-variable
         return value
 
 
@@ -1831,9 +1734,7 @@ def test__extend_with_static_method() -> None:
 # @extension ##
 
 def test__extension() -> None:
-    """
-    Test `@extension`.
-    """
+    """Test `@extension`."""
     # pylint: disable=missing-function-docstring
 
     class _ClassA:
@@ -1854,10 +1755,15 @@ def test__extension() -> None:
         def new_static_method(value: int) -> int:
             return value
 
-        
-    # _ClassA = cast(Type[NewStaticMethodClass], _ClassA)  # Doesn't work for mypy 0.800
-    # CastedA = cast(  # Doesn't work for mypy 0.800
-    #     Union[Type[NewClassMethodClass], Type[NewStaticMethodClass]], _ClassA)
+
+    # Doesn't work for mypy 0.800
+    # _ClassA = cast(Type[NewStaticMethodClass], _ClassA)
+
+    # Doesn't work for mypy 0.800
+    # CastedA = cast(
+    #     Union[Type[NewClassMethodClass], Type[NewStaticMethodClass]], _ClassA
+    # )
+
     instance_a = _ClassA()
 
     _test_new_method(

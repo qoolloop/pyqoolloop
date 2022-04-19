@@ -236,7 +236,7 @@ def retry(
     Callable[..., TargetReturnT]
 ]:  # extra argument may be added to signature
     """
-    Add retry attempts to decorated function triggered when exceptions are raised.
+    Add retry attempts to decorated function triggered with exceptions.
 
     :param attempts: Maximum number of times the function should be run
     :param exceptions: Rerun the function if these exceptions are raised
@@ -302,14 +302,15 @@ def synchronized_on_function(
 
 
 def synchronized_on_function(
-        __target: Optional[Callable[..., TargetReturnT]] = None,  # Optional[TargetFunction]
+        __target: Optional[Callable[..., TargetReturnT]] = None,
+        # Optional[TargetFunction]
         *,
         lock_field: str = '__lock',
         dont_synchronize: bool = False
 ) -> Callable[..., Any]:
-# Union[TargetFunction, FunctionWrapperFactory[TargetFunction]]:
-#FUTURE: Union doesn't work (mypy 0.800)
-# https://github.com/python/mypy/issues/3644
+    # Union[TargetFunction, FunctionWrapperFactory[TargetFunction]]:
+    #FUTURE: Union doesn't work (mypy 0.800)
+    # https://github.com/python/mypy/issues/3644
     """
     Add synchronization lock to decorated function.
 
@@ -389,14 +390,14 @@ def synchronized_on_instance(
         *,
         lock_field: str = '__lock'
 ) -> Any:
-# ) -> Union[
-#     TargetFunction,
-#     Type[TargetClass],
-#     FunctionWrapperFactory[TargetFunction],
-#     ClassWrapperFactory[TargetClass]
-# ]:
-#FUTURE: Unions don't work with `TypeVar` (mypy 0.800)
-# https://github.com/python/mypy/issues/3644
+    # ) -> Union[
+    #     TargetFunction,
+    #     Type[TargetClass],
+    #     FunctionWrapperFactory[TargetFunction],
+    #     ClassWrapperFactory[TargetClass]
+    # ]:
+    #FUTURE: Unions don't work with `TypeVar` (mypy 0.800)
+    # https://github.com/python/mypy/issues/3644
     """
     Add a synchronization lock for calls to the decorated instance method.
 
@@ -538,9 +539,9 @@ def cache(
     dont_synchronize: bool = False,
     exclude_kw: Iterable[str] = ()
 ) -> Callable[..., Any]:
-# Union[TargetFunction, FunctionWrapperFactory[TargetFunction]]:
-#FUTURE: Unions don't work with `TypeVar`. (mypy 0.800)
-# https://github.com/python/mypy/issues/3644
+    # Union[TargetFunction, FunctionWrapperFactory[TargetFunction]]:
+    #FUTURE: Unions don't work with `TypeVar`. (mypy 0.800)
+    # https://github.com/python/mypy/issues/3644
     """
     Cache returned values of the decorated function.
 
@@ -564,16 +565,16 @@ def cache(
     ] = OrderedDict()
 
 
-    # Note that synchronization is on `_cached_function()`, not each target
-    # function. This is necessary for guarding the cache, but is too much
-    # for each target function. More concretely, if `cache` decorates
-    # a class, one `cache` is used for all the methods.
     @synchronized_on_function(dont_synchronize=dont_synchronize)
     def _cached_function(
             target: Callable[..., TargetReturnT],  # TargetFunction,
             *args: Any,
             **kwargs: Any
     ) -> TargetReturnT:
+        # Note that synchronization is on `_cached_function()`, not each target
+        # function. This is necessary for guarding the cache, but is too much
+        # for each target function. More concretely, if `cache` decorates
+        # a class, one `cache` is used for all the methods.
 
         now = datetime.datetime.utcnow()
 
