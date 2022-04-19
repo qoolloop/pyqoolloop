@@ -14,37 +14,37 @@ from typing import (
 from .decorators import class_decorator
 
 
-_TargetClass = TypeVar('_TargetClass')
+_TargetClassT = TypeVar('_TargetClassT')
 
 
-class RegistryFactory(Generic[_TargetClass]):
+class RegistryFactory(Generic[_TargetClassT]):
     """
     A factory that creates instances of different classes.
 
     The classes are registered using using `@registry.register`, where
     `registry` is an instance of `RegistryFactory`.
 
-    The parameter `_TargetClass` specifies the superclass of all classes to be
+    The parameter `_TargetClassT` specifies the superclass of all classes to be
     registered.
     #FUTURE: However, mypy cannot catch wrong classes being registered. yet.
     """
 
     def __init__(self) -> None:
         # noqa: D107
-        self._registry: Dict[str, Type[_TargetClass]] = {}
+        self._registry: Dict[str, Type[_TargetClassT]] = {}
 
 
     @overload
     def register(
         self, argument: Optional[str] = None
-    ) -> Callable[[Type[_TargetClass]], Type[_TargetClass]]:
+    ) -> Callable[[Type[_TargetClassT]], Type[_TargetClassT]]:
         ...
 
 
     @overload
     def register(
         self, argument: type
-    ) -> Type[_TargetClass]:
+    ) -> Type[_TargetClassT]:
         ...
 
 
@@ -52,8 +52,8 @@ class RegistryFactory(Generic[_TargetClass]):
     def register(
         self, argument: Union[None, str, type] = None
     ) -> Union[
-            Type[_TargetClass],
-            Callable[[Type[_TargetClass]], Type[_TargetClass]]
+            Type[_TargetClassT],
+            Callable[[Type[_TargetClassT]], Type[_TargetClassT]]
     ]:
         """
         Decorate class to register.
@@ -69,7 +69,7 @@ class RegistryFactory(Generic[_TargetClass]):
         Parentheses for this decorator can be omitted.
         """
 
-        def _wrapper(target: Type[_TargetClass]) -> Type[_TargetClass]:
+        def _wrapper(target: Type[_TargetClassT]) -> Type[_TargetClassT]:
             key_name = target.__name__ if name is None else name
 
             assert key_name not in self._registry, \
@@ -87,7 +87,7 @@ class RegistryFactory(Generic[_TargetClass]):
         return _wrapper
 
 
-    def create(self, name: str, arguments: Dict[str, Any]) -> _TargetClass:
+    def create(self, name: str, arguments: Dict[str, Any]) -> _TargetClassT:
         """
         Create an instance of a class registered to this registry.
 

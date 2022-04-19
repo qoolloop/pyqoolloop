@@ -33,61 +33,61 @@ from mypy_extensions import (
 TargetReturnT = TypeVar('TargetReturnT')
 """Return type"""
 
-TargetFunction = TypeVar(
-    'TargetFunction', bound=Callable[..., Any])  # TargetReturnType])
+TargetFunctionT = TypeVar(
+    'TargetFunctionT', bound=Callable[..., Any])  # TargetReturnT])
 """Type for decorated function"""
 #FUTURE: Currently (mypy 0.800) not possible to declare generic `TypeVar`
 # https://github.com/python/mypy/issues/8278
-# Would need to use Callable[..., TargetReturnType] directly.
+# Would need to use Callable[..., TargetReturnT] directly.
 
-TargetClass = TypeVar('TargetClass', bound=object)
+TargetClassT = TypeVar('TargetClassT', bound=object)
 """Type for decorated class"""
 
-Target = TypeVar('Target', Callable[..., Any], Type[object])
+TargetT = TypeVar('TargetT', Callable[..., Any], Type[object])
 """Type for decorated function or class"""
 
 TargetFunctionWrapper = Callable[
     [Arg(Callable[..., TargetReturnT], 'target'), VarArg(), KwArg()],
-    TargetReturnT]  # Callable[[TargetFunction, ...], TargetReturnType]
+    TargetReturnT]  # Callable[[TargetFunctionT, ...], TargetReturnT]
 """
 Generic type for function that calls the decorated function
 
-:param TargetReturnType: Return type of the decorated function.
+:param TargetReturnT: Return type of the decorated function.
 """
 
 TargetMethodWrapper = Callable[
     [
         Arg(Callable[..., TargetReturnT], 'target'),
-        Arg(TargetClass, 'instance'),
-        Arg(Type[TargetClass], 'cls'),
+        Arg(TargetClassT, 'instance'),
+        Arg(Type[TargetClassT], 'cls'),
         VarArg(),
         KwArg()
     ],
-    TargetReturnT]  # Callable[[TargetFunction, ...], TargetReturnType]
+    TargetReturnT]  # Callable[[TargetFunctionT, ...], TargetReturnT]
 """
 Generic type for function that calls the decorated method
 
-:param TargetReturnType: Return type of the decorated method.
+:param TargetReturnT: Return type of the decorated method.
 """
 
 # Alias currently doesn't work https://github.com/python/mypy/issues/8273
-FunctionWrapperFactory = Callable[[TargetFunction], TargetFunction]
+FunctionWrapperFactory = Callable[[TargetFunctionT], TargetFunctionT]
 """
 Type for function that returns a wrapper for a decorated function.
 
 To be used if the wrapped function has the same signature as the target
 function.
 
-:param TargetFunction: Type for function that is being decorated.
+:param TargetFunctionT: Type for function that is being decorated.
 """
 
-ClassWrapperFactory = Callable[[Type[TargetClass]], Type[TargetClass]]
+ClassWrapperFactory = Callable[[Type[TargetClassT]], Type[TargetClassT]]
 """
 Type for function that returns a wrapper for a decorated class.
 
 To be used if the wrapped class has the same methods as the target class.
 
-:param TargetClass: Type for class that is being decorated.
+:param TargetClassT: Type for class that is being decorated.
 """
 
 
@@ -110,13 +110,13 @@ class GenericDecorator:
             wrapper_for_function: TargetFunctionWrapper[TargetReturnT],
             wrapper_for_instancemethod: Optional[
                 TargetMethodWrapper[
-                    TargetReturnT, TargetClass]] = None,
+                    TargetReturnT, TargetClassT]] = None,
             wrapper_for_staticmethod: Optional[
                 TargetMethodWrapper[
-                    TargetReturnT, TargetClass]] = None,
+                    TargetReturnT, TargetClassT]] = None,
             wrapper_for_classmethod: Optional[
                 TargetMethodWrapper[
-                    TargetReturnT, TargetClass]] = None
+                    TargetReturnT, TargetClassT]] = None
     ) -> None:
         # noqa: D205,D400,D415
         r"""
@@ -169,9 +169,9 @@ class GenericDecorator:
         #   by extracting a function and decorating it.
 
         def default_wrapper(
-                target: Callable[..., TargetReturnT],  # TargetFunction,
-                instance: TargetClass,  # pylint: disable=unused-argument
-                cls: Type[TargetClass],  # pylint: disable=unused-argument
+                target: Callable[..., TargetReturnT],  # TargetFunctionT,
+                instance: TargetClassT,  # pylint: disable=unused-argument
+                cls: Type[TargetClassT],  # pylint: disable=unused-argument
                 *args: Any,
                 **kwargs: Any
         ) -> TargetReturnT:
@@ -191,29 +191,29 @@ class GenericDecorator:
     def __call__(
             self, target: None
     ) -> Union[
-        FunctionWrapperFactory[TargetFunction],
-        ClassWrapperFactory[TargetClass]
+        FunctionWrapperFactory[TargetFunctionT],
+        ClassWrapperFactory[TargetClassT]
     ]:
         ...
 
 
     @overload
     def __call__(
-            self, target: Target) -> Target:
+            self, target: TargetT) -> TargetT:
         ...
 
 
     def __call__(
             self,
-            target: Optional[Target] = None
+            target: Optional[TargetT] = None
     ) -> Any:
         #FUTURE: Unions don't work with `TypeVar` (mypy 0.800)
         # https://github.com/python/mypy/issues/3644  # noqa: disable=E265
         # ) -> Union[
-        #     TargetFunction,
-        #     Type[TargetClass],
-        #     FunctionWrapperFactory[TargetFunction],
-        #     ClassWrapperFactory[TargetClass]
+        #     TargetFunctionT,
+        #     Type[TargetClassT],
+        #     FunctionWrapperFactory[TargetFunctionT],
+        #     ClassWrapperFactory[TargetClassT]
         # ]:
         """
         Return decorated function or function that decorates a function.
@@ -224,13 +224,13 @@ class GenericDecorator:
         """
 
         def _make_class_decorator(
-                target_class: Type[TargetClass]) -> Type[TargetClass]:
+                target_class: Type[TargetClassT]) -> Type[TargetClassT]:
 
             class Descriptor(Protocol):
                 """Protocol for descriptor."""
 
                 def __get__(
-                        self, instance: TargetClass, owner: Type[TargetClass]
+                        self, instance: TargetClassT, owner: Type[TargetClassT]
                 ) -> TargetFunctionWrapper[TargetReturnT]:
                     ...
 
@@ -242,14 +242,14 @@ class GenericDecorator:
                         self,
                         method: Descriptor,
                         wrapper: TargetMethodWrapper[
-                            TargetReturnT, TargetClass]
+                            TargetReturnT, TargetClassT]
                 ) -> None:
                     self.method = method
                     self.wrapper = wrapper
 
 
                 def __get__(
-                        self, instance: TargetClass, owner: Type[TargetClass]
+                        self, instance: TargetClassT, owner: Type[TargetClassT]
                 ) -> TargetFunctionWrapper[TargetReturnT]:
 
                     def call_wrapper(
@@ -259,7 +259,7 @@ class GenericDecorator:
                         return self.wrapper(
                             function, instance, owner, *args, **kwargs)
 
-                    # TargetFunction[TargetReturnType]
+                    # TargetFunction[TargetReturnT]
                     function: Callable[..., TargetReturnT] \
                         = self.method.__get__(instance, owner)
                     return call_wrapper
@@ -282,7 +282,7 @@ class GenericDecorator:
 
                 def __init__(
                     self,
-                    #FUTURE:  Adding [TargetReturnType] doesn't run yet.
+                    #FUTURE:  Adding [TargetReturnT] doesn't run yet.
                     method: staticmethod  # type: ignore[type-arg]
                 ) -> None:
                     super().__init__(
@@ -295,7 +295,7 @@ class GenericDecorator:
 
                 def __init__(
                     self,
-                    #FUTURE:  Adding [TargetReturnType] doesn't run yet.
+                    #FUTURE:  Adding [TargetReturnT] doesn't run yet.
                     method: classmethod  # type: ignore[type-arg]
                 ) -> None:
                     super().__init__(
@@ -322,10 +322,10 @@ class GenericDecorator:
 
         @wraps(cast(Callable[..., TargetReturnT], target))
         def factory_for_target(*args: Any, **kwargs: Any) -> TargetReturnT:
-            return cast(  # cast from another TargetReturnType
+            return cast(  # cast from another TargetReturnT
                 TargetReturnT,
                 decorator_self.wrapper_for_function(
-                    cast(Any, target),  # cast to another TargetReturnType
+                    cast(Any, target),  # cast to another TargetReturnT
                     *args,
                     **kwargs)
             )
@@ -339,7 +339,7 @@ class GenericDecorator:
         decorator_self = self
 
         if isinstance(target, type):  # pylint: disable=no-else-return
-            # Type[TargetClass]
+            # Type[TargetClassT]
             return _make_class_decorator(target)
 
         elif callable(target):

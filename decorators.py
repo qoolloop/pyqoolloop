@@ -30,18 +30,18 @@ from typing import (
 
 from .genericdecorator import (
     GenericDecorator,
-    Target,
-    TargetClass,
-    TargetFunction,
+    TargetT,
+    TargetClassT,
+    TargetFunctionT,
     TargetFunctionWrapper,
     TargetReturnT,
 )
 
 
 def _through_method(
-        target: Callable[..., TargetReturnT],  # TargetFunction,
-        instance: TargetClass,  # pylint: disable=unused-argument
-        cls: Type[TargetClass],  # pylint: disable=unused-argument
+        target: Callable[..., TargetReturnT],  # TargetFunctionT,
+        instance: TargetClassT,  # pylint: disable=unused-argument
+        cls: Type[TargetClassT],  # pylint: disable=unused-argument
         *args: Any,
         **kwargs: Any
 ) -> TargetReturnT:
@@ -49,7 +49,7 @@ def _through_method(
 
 
 def _through_function(
-        target: Callable[..., TargetReturnT],  # TargetFunction,
+        target: Callable[..., TargetReturnT],  # TargetFunctionT,
         *args: Any,
         **kwargs: Any
 ) -> TargetReturnT:
@@ -59,7 +59,7 @@ def _through_function(
 #FUTURE: Add examples for each decorator.
 
 
-def function_decorator(target: TargetFunction) -> TargetFunction:
+def function_decorator(target: TargetFunctionT) -> TargetFunctionT:
     """
     Decorate a decorator that decorates functions.
 
@@ -68,7 +68,7 @@ def function_decorator(target: TargetFunction) -> TargetFunction:
     return target
 
 
-def class_decorator(target: TargetClass) -> TargetClass:
+def class_decorator(target: TargetClassT) -> TargetClassT:
     """
     Decorate a decorator that decorates classes.
 
@@ -89,7 +89,7 @@ def log_calls(
     """
 
     def log_function(
-            target: Callable[..., TargetReturnT],  # TargetFunction,
+            target: Callable[..., TargetReturnT],  # TargetFunctionT,
             *args: Any,
             **kwargs: Any
     ) -> TargetReturnT:
@@ -120,7 +120,7 @@ def log_calls_on_exception(
     """
 
     def log_function(
-            target: Callable[..., TargetReturnT],  # TargetFunction,
+            target: Callable[..., TargetReturnT],  # TargetFunctionT,
             *args: Any,
             **kwargs: Any
     ) -> TargetReturnT:
@@ -145,8 +145,8 @@ def log_calls_on_exception(
 
 # Type hint for `kwargs` is not necessary yet with mypy 0.800
 def pass_args(
-        target: Target
-) -> Target:
+        target: TargetT
+) -> TargetT:
     """
     Call the decorated function with an additional argument named `kwargs`.
 
@@ -160,7 +160,7 @@ def pass_args(
     """
 
     def passer_function(
-            target: Callable[..., TargetReturnT],  # TargetFunction,
+            target: Callable[..., TargetReturnT],  # TargetFunctionT,
             *args: Any,
             **kwargs: Any
     ) -> TargetReturnT:
@@ -196,7 +196,7 @@ def deprecated(
     """
 
     def log_function(
-            target: Callable[..., TargetReturnT],  # TargetFunction,
+            target: Callable[..., TargetReturnT],  # TargetFunctionT,
             *args: Any,
             **kwargs: Any
     ) -> TargetReturnT:
@@ -247,7 +247,7 @@ def retry(
     """
 
     def retry_function(
-            target: Callable[..., TargetReturnT],  # TargetFunction,
+            target: Callable[..., TargetReturnT],  # TargetFunctionT,
             *args: Any,
             **kwargs: Any) -> TargetReturnT:
 
@@ -282,11 +282,11 @@ def retry(
 
 @overload
 def synchronized_on_function(
-        __target: TargetFunction,
+        __target: TargetFunctionT,
         *,
         lock_field: str = '__lock',
         dont_synchronize: bool = False
-) -> TargetFunction:
+) -> TargetFunctionT:
     ...
 
 
@@ -296,19 +296,19 @@ def synchronized_on_function(
         *,
         lock_field: str = '__lock',
         dont_synchronize: bool = False
-) -> Callable[[TargetFunction], TargetFunction]:
-    # FunctionWrapperFactory[TargetFunction]:
+) -> Callable[[TargetFunctionT], TargetFunctionT]:
+    # FunctionWrapperFactory[TargetFunctionT]:
     ...
 
 
 def synchronized_on_function(
         __target: Optional[Callable[..., TargetReturnT]] = None,
-        # Optional[TargetFunction]
+        # Optional[TargetFunctionT]
         *,
         lock_field: str = '__lock',
         dont_synchronize: bool = False
 ) -> Callable[..., Any]:
-    # Union[TargetFunction, FunctionWrapperFactory[TargetFunction]]:
+    # Union[TargetFunctionT, FunctionWrapperFactory[TargetFunctionT]]:
     #FUTURE: Union doesn't work (mypy 0.800)
     # https://github.com/python/mypy/issues/3644
     """
@@ -329,7 +329,7 @@ def synchronized_on_function(
       a variable value. c.f. `@cache`
     """
     def _call_function(
-            target: Callable[..., TargetReturnT],  # TargetFunction,
+            target: Callable[..., TargetReturnT],  # TargetFunctionT,
             *args: Any,
             **kwargs: Any
     ) -> TargetReturnT:
@@ -366,35 +366,35 @@ def synchronized_on_function(
 @overload
 def synchronized_on_instance(
         __target: None = None, *, lock_field: str = '__lock'
-) -> Callable[[Target], Target]:
+) -> Callable[[TargetT], TargetT]:
     # Union[
-    #     Callable[[TargetFunction], TargetFunction],
-    #     # FunctionWrapperFactory[TargetFunction],
-    #     Callable[[Type[TargetClass]], Type[TargetClass]],
-    #     # ClassWrapperFactory[TargetClass]
+    #     Callable[[TargetFunctionT], TargetFunctionT],
+    #     # FunctionWrapperFactory[TargetFunctionT],
+    #     Callable[[Type[TargetClassT]], Type[TargetClassT]],
+    #     # ClassWrapperFactory[TargetClassT]
     # ]:
     ...
 
 
 @overload
 def synchronized_on_instance(
-        __target: Target,
+        __target: TargetT,
         *,
         lock_field: str = '__lock'
-) -> Target:
+) -> TargetT:
     ...
 
 
 def synchronized_on_instance(
-        __target: Optional[Target] = None,
+        __target: Optional[TargetT] = None,
         *,
         lock_field: str = '__lock'
 ) -> Any:
     # ) -> Union[
-    #     TargetFunction,
-    #     Type[TargetClass],
-    #     FunctionWrapperFactory[TargetFunction],
-    #     ClassWrapperFactory[TargetClass]
+    #     TargetFunctionT,
+    #     Type[TargetClassT],
+    #     FunctionWrapperFactory[TargetFunctionT],
+    #     ClassWrapperFactory[TargetClassT]
     # ]:
     #FUTURE: Unions don't work with `TypeVar` (mypy 0.800)
     # https://github.com/python/mypy/issues/3644
@@ -418,11 +418,11 @@ def synchronized_on_instance(
       `@staticmethod` and `@classmethod` will be ignored.
     """
     def _call(
-            target: Any,  # TargetFunction,
-            lock_holder: TargetClass,
+            target: Any,  # TargetFunctionT,
+            lock_holder: TargetClassT,
             *args: Any,
             **kwargs: Any
-    ) -> Any:  # TargetReturnType:
+    ) -> Any:  # TargetReturnT:
         lock = getattr(lock_holder, lock_field, None)
         if lock is None:
             lock = threading.RLock()
@@ -435,21 +435,21 @@ def synchronized_on_instance(
 
 
     def _call_when_decorating_method(
-            target: Any,  # TargetFunction,
+            target: Any,  # TargetFunctionT,
             *args: Any,
             **kwargs: Any
-    ) -> Any:  # TargetReturnType:
+    ) -> Any:  # TargetReturnT:
         lock_holder = args[0]  # `self`
         return _call(target, lock_holder, *args, **kwargs)
 
 
     def _call_when_decorating_class(
-            target: Any,  # TargetFunction,
-            instance: TargetClass,
-            cls: Type[TargetClass],  # pylint: disable=unused-argument
+            target: Any,  # TargetFunctionT,
+            instance: TargetClassT,
+            cls: Type[TargetClassT],  # pylint: disable=unused-argument
             *args: Any,
             **kwargs: Any
-    ) -> Any:  # TargetReturnType:
+    ) -> Any:  # TargetReturnT:
         lock_holder = instance
         return _call(target, lock_holder, *args, **kwargs)
 
@@ -464,10 +464,10 @@ def synchronized_on_instance(
 
 #FUTURE:
 # def synchronized_on_class(
-#         __target: Optional[Type[TargetClass]] = None,
+#         __target: Optional[Type[TargetClassT]] = None,
 #         *,
 #         lock_field: str = '__lock'
-# ) -> Union[Type[TargetClass], ClassWrapperFactory[TargetClass]]:
+# ) -> Union[Type[TargetClassT], ClassWrapperFactory[TargetClassT]]:
     # Not sure whether locks should be on each subclass or use one for all
     # subclasses -> Should be one for all subclasses, because of how the
     # topmost class needs synchronization.
@@ -475,14 +475,14 @@ def synchronized_on_instance(
 
 
 def _get_signature_values(
-        target: Callable[..., TargetReturnT],  # TargetFunction
+        target: Callable[..., TargetReturnT],  # TargetFunctionT
         args: Iterable[Any],
         kwargs: Dict[str, Any],
         exclude_kw: Iterable[str] = ()
 ) -> OrderedDict[str, Any]:
 
     def _bind_arguments(
-            target: Callable[..., TargetReturnT],  # TargetFunction,
+            target: Callable[..., TargetReturnT],  # TargetFunctionT,
             args: Iterable[Any],
             kwargs: Dict[str, Any]
     ) -> OrderedDict[str, Any]:
@@ -508,13 +508,13 @@ def _get_signature_values(
 
 @overload
 def cache(
-        __target: TargetFunction,
+        __target: TargetFunctionT,
         *,
         expire_time_secs: float,
         max_entries: Optional[int] = None,
         dont_synchronize: bool = False,
         exclude_kw: Iterable[str] = ()
-) -> TargetFunction:
+) -> TargetFunctionT:
     ...
 
 
@@ -526,20 +526,20 @@ def cache(
         max_entries: Optional[int] = None,
         dont_synchronize: bool = False,
         exclude_kw: Iterable[str] = ()
-) -> Callable[[TargetFunction], TargetFunction]:
-    # FunctionWrapperFactory[TargetFunction]:
+) -> Callable[[TargetFunctionT], TargetFunctionT]:
+    # FunctionWrapperFactory[TargetFunctionT]:
     ...
 
 
 def cache(
-    __target: Optional[TargetFunction] = None,
+    __target: Optional[TargetFunctionT] = None,
     *,
     expire_time_secs: float,
     max_entries: Optional[int] = None,
     dont_synchronize: bool = False,
     exclude_kw: Iterable[str] = ()
 ) -> Callable[..., Any]:
-    # Union[TargetFunction, FunctionWrapperFactory[TargetFunction]]:
+    # Union[TargetFunctionT, FunctionWrapperFactory[TargetFunctionT]]:
     #FUTURE: Unions don't work with `TypeVar`. (mypy 0.800)
     # https://github.com/python/mypy/issues/3644
     """
@@ -567,7 +567,7 @@ def cache(
 
     @synchronized_on_function(dont_synchronize=dont_synchronize)
     def _cached_function(
-            target: Callable[..., TargetReturnT],  # TargetFunction,
+            target: Callable[..., TargetReturnT],  # TargetFunctionT,
             *args: Any,
             **kwargs: Any
     ) -> TargetReturnT:
@@ -604,9 +604,9 @@ def cache(
 
 
 def extend_with_method(
-        __extended_class: Type[TargetClass]
-) -> Callable[[TargetFunction], TargetFunction]:
-    # FunctionWrapperFactory[TargetFunction]:
+        __extended_class: Type[TargetClassT]
+) -> Callable[[TargetFunctionT], TargetFunctionT]:
+    # FunctionWrapperFactory[TargetFunctionT]:
     """
     Add decorated function as an instance method to a class.
 
@@ -616,7 +616,7 @@ def extend_with_method(
     """
     #FUTURE: `override=False`
 
-    def _decorator(target: TargetFunction) -> TargetFunction:
+    def _decorator(target: TargetFunctionT) -> TargetFunctionT:
         setattr(
             __extended_class,
             target.__name__,
@@ -628,9 +628,9 @@ def extend_with_method(
 
 
 def extend_with_static_method(
-        __extended_class: Type[TargetClass]
-) -> Callable[[TargetFunction], TargetFunction]:
-    # FunctionWrapperFactory[TargetFunction]:
+        __extended_class: Type[TargetClassT]
+) -> Callable[[TargetFunctionT], TargetFunctionT]:
+    # FunctionWrapperFactory[TargetFunctionT]:
     """
     Add decorated function as a static method to a class.
 
@@ -641,7 +641,7 @@ def extend_with_static_method(
     """
     #FUTURE: `override=False`
 
-    def _decorator(target: TargetFunction) -> TargetFunction:
+    def _decorator(target: TargetFunctionT) -> TargetFunctionT:
         setattr(
             __extended_class,
             target.__name__,
@@ -653,9 +653,9 @@ def extend_with_static_method(
 
 
 def extend_with_class_method(
-        __extended_class: Type[TargetClass]
-) -> Callable[[TargetFunction], TargetFunction]:
-    # FunctionWrapperFactory[TargetFunction]:
+        __extended_class: Type[TargetClassT]
+) -> Callable[[TargetFunctionT], TargetFunctionT]:
+    # FunctionWrapperFactory[TargetFunctionT]:
     """
     Add decorated function as a class method to a class.
 
@@ -666,7 +666,7 @@ def extend_with_class_method(
     """
     #FUTURE: `override=False`
 
-    def _decorator(target: TargetFunction) -> TargetFunction:
+    def _decorator(target: TargetFunctionT) -> TargetFunctionT:
         setattr(
             __extended_class,
             target.__name__,
@@ -679,8 +679,8 @@ def extend_with_class_method(
 
 def extension(
         __extended_class: Type[object]
-) -> Callable[[Type[TargetClass]], Type[TargetClass]]:
-    # ClassWrapperFactory[TargetClass]:
+) -> Callable[[Type[TargetClassT]], Type[TargetClassT]]:
+    # ClassWrapperFactory[TargetClassT]:
     """
     Add all the methods in the decorated class to another class.
 
@@ -690,7 +690,7 @@ def extension(
       `@classmethod` and `@staticmethod`.
     """
 
-    def _decorator(extension_class: Type[TargetClass]) -> Type[TargetClass]:
+    def _decorator(extension_class: Type[TargetClassT]) -> Type[TargetClassT]:
         assert isinstance(extension_class, type), \
             "@extension is only for decorating classes"
 
