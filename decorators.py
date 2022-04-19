@@ -26,6 +26,7 @@ from typing import (
     Union,
     Tuple,
     Type,
+    TypeVar,
 )
 
 from .genericdecorator import (
@@ -77,6 +78,19 @@ def class_decorator(target: TargetClassT) -> TargetClassT:
     return target
 
 
+# Defined because `TargetT` somehow doesn't work with @generic_decorator
+_T = TypeVar('_T')
+
+def generic_decorator(target: _T) -> _T:
+    """
+    Decorate both classes and functions.
+
+    Does nothing, just annotates.
+    """
+    return target
+
+
+@generic_decorator
 def log_calls(
         logger: logging.Logger, log_result: bool = True
 ) -> GenericDecorator:
@@ -107,6 +121,7 @@ def log_calls(
     return decorator
 
 
+@generic_decorator
 def log_calls_on_exception(
         logger: logging.Logger, log_exception: bool = True
 ) -> GenericDecorator:
@@ -143,7 +158,7 @@ def log_calls_on_exception(
     return decorator
 
 
-# Type hint for `kwargs` is not necessary yet with mypy 0.800
+@generic_decorator
 def pass_args(
         target: TargetT
 ) -> TargetT:
@@ -158,6 +173,7 @@ def pass_args(
 
     No arguments
     """
+    # Type hint for `kwargs` is not necessary yet with mypy 0.800
 
     def passer_function(
             target: Callable[..., TargetReturnT],  # TargetFunctionT,
@@ -181,6 +197,7 @@ def pass_args(
 raise_exception_for_deprecated = False  # pylint: disable=invalid-name
 
 
+@generic_decorator
 def deprecated(
         logger: logging.Logger,
         message: Optional[str] = None,
@@ -222,9 +239,7 @@ def deprecated(
     return decorator
 
 
-#FUTURE: Add type hint for `attempts` argument to decorated function
-# c.f. https://stackoverflow.com/a/47060298/2400328
-# c.f. https://www.python.org/dev/peps/pep-0612/
+@function_decorator
 def retry(
         attempts: int,
         exceptions: Union[
@@ -235,6 +250,9 @@ def retry(
     [Callable[..., TargetReturnT]],
     Callable[..., TargetReturnT]
 ]:  # extra argument may be added to signature
+    #FUTURE: Add type hint for `attempts` argument to decorated function
+    # c.f. https://stackoverflow.com/a/47060298/2400328
+    # c.f. https://www.python.org/dev/peps/pep-0612/
     """
     Add retry attempts to decorated function triggered with exceptions.
 
@@ -301,6 +319,7 @@ def synchronized_on_function(
     ...
 
 
+@generic_decorator
 def synchronized_on_function(
         __target: Optional[Callable[..., TargetReturnT]] = None,
         # Optional[TargetFunctionT]
@@ -385,6 +404,7 @@ def synchronized_on_instance(
     ...
 
 
+@generic_decorator
 def synchronized_on_instance(
         __target: Optional[TargetT] = None,
         *,
@@ -531,6 +551,7 @@ def cache(
     ...
 
 
+@generic_decorator
 def cache(
     __target: Optional[TargetFunctionT] = None,
     *,
@@ -603,6 +624,7 @@ def cache(
     return decorator(__target)
 
 
+@function_decorator
 def extend_with_method(
         __extended_class: Type[TargetClassT]
 ) -> Callable[[TargetFunctionT], TargetFunctionT]:
@@ -627,6 +649,7 @@ def extend_with_method(
     return _decorator
 
 
+@function_decorator
 def extend_with_static_method(
         __extended_class: Type[TargetClassT]
 ) -> Callable[[TargetFunctionT], TargetFunctionT]:
@@ -652,6 +675,7 @@ def extend_with_static_method(
     return _decorator
 
 
+@function_decorator
 def extend_with_class_method(
         __extended_class: Type[TargetClassT]
 ) -> Callable[[TargetFunctionT], TargetFunctionT]:
@@ -677,6 +701,7 @@ def extend_with_class_method(
     return _decorator
 
 
+@class_decorator
 def extension(
         __extended_class: Type[object]
 ) -> Callable[[Type[TargetClassT]], Type[TargetClassT]]:

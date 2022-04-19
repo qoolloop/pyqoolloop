@@ -364,7 +364,7 @@ def test__deprecated__log() -> None:
 
 
     @deprecated(_logger)
-    def deprecated_function(
+    def _deprecated_function(
             arg1: int,
             arg2: int,
             kwarg1: Optional[int] = None,
@@ -380,7 +380,7 @@ def test__deprecated__log() -> None:
         return 5
 
 
-    result = deprecated_function(1, 2, kwarg1=3, kwarg2=4)
+    result = _deprecated_function(1, 2, kwarg1=3, kwarg2=4)
     assert result == 5
 
     assert _logger.warn_called
@@ -410,7 +410,7 @@ def test__deprecated__raise_exception_true(global_setting: bool) -> None:
 
 
     @deprecated(_logger, raise_exception=True)
-    def deprecated_function() -> int:
+    def _deprecated_function() -> int:
         _logger.function_called = True
 
         return 5
@@ -421,7 +421,7 @@ def test__deprecated__raise_exception_true(global_setting: bool) -> None:
     try:
         with pytest.raises(DeprecationWarning):
             try:
-                result = deprecated_function()
+                result = _deprecated_function()
                 assert result is None
 
             except DeprecationWarning as exception:
@@ -458,7 +458,7 @@ def test__deprecated__raise_exception_false(global_setting: bool) -> None:
 
 
     @deprecated(_logger, raise_exception=False)
-    def deprecated_function() -> int:
+    def _deprecated_function() -> int:
         _logger.function_called = True
 
         return 5
@@ -467,7 +467,7 @@ def test__deprecated__raise_exception_false(global_setting: bool) -> None:
     decorators.raise_exception_for_deprecated = global_setting
 
     try:
-        result = deprecated_function()
+        result = _deprecated_function()
         assert result == 5
 
         assert _logger.warn_called
@@ -499,7 +499,7 @@ def test__deprecated__raise_exception_for_deprecated_true() -> None:
 
 
     @deprecated(_logger)
-    def deprecated_function() -> int:
+    def _deprecated_function() -> int:
         _logger.function_called = True
 
         return 5
@@ -509,7 +509,7 @@ def test__deprecated__raise_exception_for_deprecated_true() -> None:
 
     try:
         with pytest.raises(DeprecationWarning):
-            result = deprecated_function()
+            result = _deprecated_function()
             assert result is None
 
         assert _logger.warn_called
