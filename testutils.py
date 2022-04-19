@@ -9,7 +9,6 @@ from typing import (
     Iterable,
     List,
     Set,
-    TypeVar,
     Union,
 )
 
@@ -21,13 +20,11 @@ _logger = logging.getLogger(__name__)
 
 Operator = Callable[[Any, Any], bool]
 
-_ObjectType = TypeVar('_ObjectType')
-
 
 def eq_operator(one: object, another: object) -> bool:
     """
     Compare whether one value equals another.
-    
+
     Function equivalent to the equals (`__eq__`) operator.
 
     :param one: One value to compare
@@ -47,13 +44,12 @@ class _HasEquals(Protocol):  # pylint: disable=too-few-public-methods
 
         :returns: `True` if `self` equals `value`.
         """
-        ...
 
 
 def equals_method(one: _HasEquals, another: object) -> bool:
     """
     Compare whether one value equals another.
-    
+
     Function equivalent to the `equals()` method.
 
     :param one: Object with the `equals()` method.
@@ -72,7 +68,7 @@ def equal_set(
 ) -> bool:  #FUTURE: reimplement using `set()`
     """
     Check for equality between two iterables ignoring order.
-    
+
     Particularly for lists or unhashable sets
 
     :param one_set: An iterable to compare.
@@ -204,7 +200,7 @@ def current_function_name(pop_stack: int = 0) -> str:
     for _ in range(pop_stack + 1):
         frame = frame.f_back
         assert frame is not None
-        
+
     return frame.f_code.co_name
 
 
@@ -282,7 +278,7 @@ def combine_lists(
         for _ in result:  # `result` is `Iterable`
             return result
         # endfor
-        
+
         raise AssertionError("Empty result")
 
     return result
@@ -300,7 +296,7 @@ def to_set(
     :param iterable: Iterable.
 
     :returns: Resulting set.
-    
+
     .. note:: This is convenient for use with `@pytest.mark.parametrize`.
     """
     result = set()

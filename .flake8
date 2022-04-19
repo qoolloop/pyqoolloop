@@ -1,8 +1,0 @@
-[flake8]
-
-ignore =
-       # blank line contains whitespace [there are too many]
-       W293,
-       # too many blank lines
-       E303
-       
