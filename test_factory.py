@@ -37,6 +37,12 @@ def test__RegistryFactory() -> None:
             super().__init__(kwargs['name'], kwargs['klass'])
 
 
+    @registry.register  # Wan't mypy to show an error here.
+    class _WrongClass:
+        def __init__(self, **kwargs: Any) -> None:
+            self._kwargs = kwargs
+
+
     for name, klass in (
         ("class", _Class),
         ("_AnotherClass", _AnotherClass),

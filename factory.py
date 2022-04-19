@@ -21,11 +21,12 @@ class RegistryFactory(Generic[_TargetClass]):
     """
     A factory that creates instances of different classes.
 
-    The classes are registered using using `@registry.register`, where `registry`
-    is an instance of `RegistryFactory`.
+    The classes are registered using using `@registry.register`, where
+    `registry` is an instance of `RegistryFactory`.
 
     The parameter `_TargetClass` specifies the superclass of all classes to be
     registered.
+    #FUTURE: However, mypy cannot catch wrong classes being registered. yet.
     """
 
     def __init__(self) -> None:
