@@ -61,16 +61,18 @@ def _through_function(
 
 def function_decorator(target: TargetFunction) -> TargetFunction:
     """
-    A decorator just to annotate that the target function is a function 
-    decorator.
+    Decorate a decorator that decorates functions.
+
+    Does nothing, just annotates.
     """
     return target
 
 
 def class_decorator(target: TargetClass) -> TargetClass:
     """
-    A decorator just to annotate that the target function is a class
-    decorator.
+    Decorate a decorator that decorates classes.
+
+    Does nothing, just annotates.
     """
     return target
 
@@ -97,7 +99,7 @@ def log_calls(
 
         if log_result:
             logger.info(f"{target.__name__} result: {result!r}")
-            
+
         return result
 
 
@@ -163,14 +165,14 @@ def pass_args(
             **kwargs: Any
     ) -> TargetReturnT:
         composed_kwargs = copy.copy(kwargs)
-        
+
         arg_names = inspect.signature(target).parameters
         composed_kwargs.update(zip(arg_names, args))
-        
+
         result = target(*args, kwargs=composed_kwargs, **kwargs)
         return result
 
-    
+
     decorator = GenericDecorator(passer_function)
     return decorator(target)
 
@@ -215,7 +217,7 @@ def deprecated(
         result = target(*args, **kwargs)
         return result
 
-    
+
     decorator = GenericDecorator(log_function)
     return decorator
 
@@ -255,7 +257,7 @@ def retry(
 
         else:
             actual_attempts = attempts
-        
+
         for iteration in range(actual_attempts):
             try:
                 return target(*args, **kwargs)
@@ -273,7 +275,7 @@ def retry(
         # https://cosmicpercolator.com/2016/01/13/exception-leaks-in-python-2-and-3/
         raise AssertionError("Unexpected execution")
 
-    
+
     decorator = GenericDecorator(retry_function)
     return decorator
 
@@ -287,7 +289,7 @@ def synchronized_on_function(
 ) -> TargetFunction:
     ...
 
-    
+
 @overload
 def synchronized_on_function(
         __target: None = None,
@@ -347,7 +349,7 @@ def synchronized_on_function(
     if __target:
         assert not dont_synchronize
         return partial(_call_function, __target)
-        
+
     call_function: TargetFunctionWrapper[TargetReturnT] = (
         _call_function if not dont_synchronize
         else _through_function)
@@ -371,7 +373,7 @@ def synchronized_on_instance(
     #     # ClassWrapperFactory[TargetClass]
     # ]:
     ...
-    
+
 
 @overload
 def synchronized_on_instance(
@@ -380,7 +382,7 @@ def synchronized_on_instance(
         lock_field: str = '__lock'
 ) -> Target:
     ...
-    
+
 
 def synchronized_on_instance(
         __target: Optional[Target] = None,
@@ -400,7 +402,7 @@ def synchronized_on_instance(
 
     Can also be used to decorate classes to add a synchronization lock to
     methods of the decorated class.
-    
+
     Used to decorate instance methods and classes that need thread locking
     for access
 
@@ -438,7 +440,7 @@ def synchronized_on_instance(
     ) -> Any:  # TargetReturnType:
         lock_holder = args[0]  # `self`
         return _call(target, lock_holder, *args, **kwargs)
-    
+
 
     def _call_when_decorating_class(
             target: Any,  # TargetFunction,
@@ -495,7 +497,7 @@ def _get_signature_values(
         for each in exclude_kw:
             del arguments[each]
         # endfor
-        
+
 
     arguments = _bind_arguments(target, args, kwargs)
     arguments[''] = hash(target)
@@ -543,7 +545,7 @@ def cache(
     Cache returned values of the decorated function.
 
     Can also decorate classes to cache returned values for each method.
-    
+
     :param expire_time_secs: Keep value for less than this period (seconds)
     :param max_entries: Don't keep more than this number of entries
       If a class is decorated, one cache is held for all methods in the class.
@@ -574,7 +576,7 @@ def cache(
     ) -> TargetReturnT:
 
         now = datetime.datetime.utcnow()
-        
+
         arguments = _get_signature_values(target, args, kwargs, exclude_kw)
         # https://stackoverflow.com/a/39440252/2400328
         key = frozenset(arguments.items())
@@ -619,7 +621,7 @@ def extend_with_method(
             target.__name__,
             target)
         return target
-        
+
 
     return _decorator
 
@@ -644,7 +646,7 @@ def extend_with_static_method(
             target.__name__,
             staticmethod(target))
         return target
-        
+
 
     return _decorator
 
@@ -669,7 +671,7 @@ def extend_with_class_method(
             target.__name__,
             classmethod(target))
         return target
-        
+
 
     return _decorator
 
@@ -690,7 +692,7 @@ def extension(
     def _decorator(extension_class: Type[TargetClass]) -> Type[TargetClass]:
         assert isinstance(extension_class, type), \
             "@extension is only for decorating classes"
-        
+
         for name, value in extension_class.__dict__.items():
             # not `ismethod()` because not bound
             if inspect.isfunction(value) \

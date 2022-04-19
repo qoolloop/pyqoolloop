@@ -1,13 +1,14 @@
-
-from textwrap import wrap
+"""Defines classes related to the Factory pattern."""
 from typing import (
     Any,
     Callable,
     Dict,
     Generic,
+    Optional,
     Type,
     TypeVar,
     Union,
+    overload,
 )
 
 from .decorators import class_decorator
@@ -18,23 +19,43 @@ _TargetClass = TypeVar('_TargetClass')
 
 class RegistryFactory(Generic[_TargetClass]):
     """
-    A factory that creates instances of different classes depending on the 
-    arguments.
+    A factory that creates instances of different classes.
 
-    The parameter `_TargetClass` specifies the superclass of all classes to be 
+    The classes are registered using using `@registry.register`, where `registry`
+    is an instance of `RegistryFactory`.
+
+    The parameter `_TargetClass` specifies the superclass of all classes to be
     registered.
     """
 
     def __init__(self) -> None:
-        self._registry: Dict[str, type] = {}
+        # noqa: D107
+        self._registry: Dict[str, Type[_TargetClass]] = {}
+
+
+    @overload
+    def register(
+        self, argument: Optional[str] = None
+    ) -> Callable[[Type[_TargetClass]], Type[_TargetClass]]:
+        ...
+
+
+    @overload
+    def register(
+        self, argument: type
+    ) -> Type[_TargetClass]:
+        ...
 
 
     @class_decorator
     def register(
         self, argument: Union[None, str, type] = None
-    ) -> Callable[[Type[_TargetClass]], Type[_TargetClass]]:
+    ) -> Union[
+            Type[_TargetClass],
+            Callable[[Type[_TargetClass]], Type[_TargetClass]]
+    ]:
         """
-        Decorator to register class to be created.
+        Decorate class to register.
 
         The decorated class needs to have an initializer with the following
         signature:
@@ -55,7 +76,7 @@ class RegistryFactory(Generic[_TargetClass]):
 
             self._registry[key_name] = target
             return target
-        
+
         if isinstance(argument, type):
             target = argument
             name = None

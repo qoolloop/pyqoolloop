@@ -2,7 +2,6 @@
 
 from typing import (
     Any,
-    Dict,
 )
 
 from .factory import RegistryFactory
@@ -10,8 +9,7 @@ from .factory import RegistryFactory
 
 def test__RegistryFactory() -> None:
     """Test `RegistryFactory`."""
-
-     # pylint: disable=too-few-public-methods, unused-argument
+    # pylint: disable=too-few-public-methods
 
     class _SuperClass:
         def __init__(self, name: str, klass: type) -> None:
@@ -24,8 +22,7 @@ def test__RegistryFactory() -> None:
 
     @registry.register("class")
     class _Class(_SuperClass):
-        def __init__(self, name: str, klass: type) -> None:
-            super().__init__(name, klass)
+        ...
 
 
     @registry.register()
@@ -38,11 +35,11 @@ def test__RegistryFactory() -> None:
     class _YetAnotherClass(_SuperClass):
         def __init__(self, **kwargs: Any) -> None:
             super().__init__(kwargs['name'], kwargs['klass'])
-        
+
 
     for name, klass in (
-        ("class", _Class), 
-        ("_AnotherClass", _AnotherClass), 
+        ("class", _Class),
+        ("_AnotherClass", _AnotherClass),
         ("_YetAnotherClass", _YetAnotherClass)
     ):
         arguments = dict(name=name, klass=klass)
