@@ -73,7 +73,7 @@ class FunctionDecorator:
         def default_function(target, cls, *args, **kwargs):
             return called_function(target, *args, **kwargs)
 
-        
+
         self.called_function = called_function
         self.function_for_staticmethod = function_for_staticmethod or \
             default_function
@@ -137,7 +137,7 @@ class FunctionDecorator:
                 # endif
 
             return target_class
-            
+
 
         if target is None:
             # https://stackoverflow.com/q/653368/2400328
@@ -184,7 +184,7 @@ def log_calls(logger, log_result=True):
 
         if log_result:
             logger.info("%s result: %r" % (target.__name__, result))
-            
+
         return result
 
 
@@ -236,14 +236,14 @@ def pass_args(target):
 
     def passer_function(target, *args, **kwargs):
         composed_kwargs = copy.copy(kwargs)
-        
+
         arg_names = funcsigs.signature(target).parameters
         composed_kwargs.update(zip(arg_names, args))
-        
+
         result = target(*args, kwargs=composed_kwargs, **kwargs)
         return result
 
-    
+
     decorator = FunctionDecorator(passer_function)
     return decorator.generic_decorator(target)
 
@@ -261,6 +261,7 @@ def deprecated(logger, message=None, raise_exception=None):
     raise_exception -- (bool) True, to raise exception when function (of class)
       is called
     """
+    #TODO: Doesn't work with `@overrides`.
 
     def log_function(target, *args, **kwargs):
         message_str = "deprecated function called: %r (%r)" % \
@@ -268,7 +269,7 @@ def deprecated(logger, message=None, raise_exception=None):
 
         if message is not None:
             message_str += "\n" + message
-        
+
         logger.warning(message_str)
 
         if raise_exception or \
@@ -278,7 +279,7 @@ def deprecated(logger, message=None, raise_exception=None):
         result = target(*args, **kwargs)
         return result
 
-    
+
     decorator = FunctionDecorator(log_function)
     return decorator.generic_decorator
 
@@ -305,7 +306,7 @@ def retry(retries, exceptions, interval_secs=0, extra_argument=False):
 
         else:
             actual_retries = retries
-        
+
         for iteration in range(actual_retries):
             try:
                 return target(*args, **kwargs)
@@ -323,7 +324,7 @@ def retry(retries, exceptions, interval_secs=0, extra_argument=False):
         # https://cosmicpercolator.com/2016/01/13/exception-leaks-in-python-2-and-3/
         assert False, "Unexpected execution"
 
-    
+
     decorator = FunctionDecorator(retry_function)
     return decorator.generic_decorator
 
@@ -359,7 +360,7 @@ def synchronized_on_function(
 
     if __target and not dont_synchronize:
         return __target
-        
+
     #TODO: A little inefficient when dont_synchronize=True
     decorator = FunctionDecorator(
         _call_function
@@ -421,7 +422,7 @@ def _get_args(target, args, kwargs, exclude_kw=()):
         for each in exclude_kw:
             del arguments[each]
         # endfor
-        
+
 
     arguments = _bind_arguments(target, args, kwargs)
     _exclude(arguments, exclude_kw)
@@ -437,7 +438,7 @@ def keep_cache(
 
     Notes:
       Argument values for the target function must be hashable.
-    
+
     Arguments:
       keep_time_secs -- (float; mandatory) Keep value longer than this period
         (seconds)
@@ -453,12 +454,12 @@ def keep_cache(
 
     cache = OrderedDict()  # holds tuples (<time>, <value>)
 
-    
+
     @synchronized_on_function(dont_synchronize=dont_synchronize)
     def _cached_function(target, *args, **kwargs):
 
         now = datetime.datetime.utcnow()
-        
+
         arguments = _get_args(target, args, kwargs, exclude_kw)
         # https://stackoverflow.com/a/39440252/2400328
         key = frozenset(arguments.items())
@@ -495,7 +496,7 @@ def expire_cache(
 
     Notes:
       Argument values for the target function must be hashable.
-    
+
     Arguments:
       expire_time_secs -- (float; mandatory) Keep value for less than this
         period (seconds)
@@ -505,12 +506,12 @@ def expire_cache(
 
     cache = OrderedDict()  # holds tuples (<time>, <value>)
 
-    
+
     @synchronized_on_function(dont_synchronize=dont_synchronize)
     def _cached_function(target, *args, **kwargs):
 
         now = datetime.datetime.utcnow()
-        
+
         arguments = _get_args(target, args, kwargs)
         # https://stackoverflow.com/a/39440252/2400328
         key = frozenset(arguments.items())
@@ -561,7 +562,7 @@ def extend_with_method(__extended_class):
             target.__name__,
             target)
         return target
-        
+
 
     return _decorator
 
@@ -585,7 +586,7 @@ def extend_with_static_method(__extended_class):
             target.__name__,
             staticmethod(target))
         return target
-        
+
 
     return _decorator
 
@@ -609,7 +610,7 @@ def extend_with_class_method(__extended_class):
             target.__name__,
             classmethod(target))
         return target
-        
+
 
     return _decorator
 
@@ -629,7 +630,7 @@ def extension(__extended_class):
     def _decorator(extension_class):
         assert isinstance(extension_class, type), \
             "@extension is only for decorating classes"
-        
+
         for name, value in extension_class.__dict__.items():
             #TODO: why not `ismethod()`?
             if inspect.isfunction(value) \
