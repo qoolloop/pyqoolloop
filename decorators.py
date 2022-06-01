@@ -626,6 +626,7 @@ def extension(__extended_class):
       (class) The decorated class can have regular methods as well as
       @classmethod and @staticmethod.
     """
+    #TODO: Allow adding superclasses in extension class, including the extended class
 
     def _decorator(extension_class):
         assert isinstance(extension_class, type), \
