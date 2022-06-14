@@ -1,8 +1,9 @@
-"""Tests for `testutils` module."""
+"""
+Tests for `testutils` module.
+"""
 from typing import (
     Any,
     Iterable,
-    List,
     Sequence,
     Union,
 )
@@ -58,7 +59,9 @@ from .testutils import (
 def test__included(
         one: Iterable[Any], another: Iterable[Any], result: bool
 ) -> None:
-    """Test for `included()`."""
+    """
+    Test for `included()`.
+    """
     assert result == included(one, another)
 
 
@@ -103,7 +106,9 @@ def test__included(
 def test__included__equals(
         one: Iterable[Any], another: Iterable[Any], result: bool
 ) -> None:
-    """Test for `included()` with `equals` argument specified."""
+    """
+    Test for `included()` with `equals` argument specified.
+    """
 
     def _str_equals(one: Any, another: Any) -> bool:
         return str(one) == str(another)
@@ -137,11 +142,13 @@ def test__included__equals(
     ([[5, 6, 10], [5, 6, 7, 8], [9, 10], [9, 7, 8]],
      ([(5, 6), 9], [10, (7, 8)])),
 ])
-def test__combine_lists(
+def test_combine_lists(
         expected_result: Sequence[object],
         args: Iterable[Union[object, Iterable[object]]]
 ) -> None:
-    """Test for `combine_lists()`."""
+    """
+    Test for `combine_lists()`.
+    """
     expected_set = to_set(expected_result)
 
     if len(expected_result) == 0:
@@ -162,20 +169,10 @@ def test__combine_lists(
     # enddef
 
 
-@pytest.mark.parametrize('operand', (
-    combine_lists('c', 'd'),
-    [],
-    [1],
-))
-def test__combine_lists__add(operand: List[object]) -> None:
-    """Test that `+` operator works for result of `combine_lists()`."""
-    # Just make sure addition works
-    assert (combine_lists('a', 'b') + operand) is not None
-    assert (operand + combine_lists('a', 'b')) is not None
-
-
 def test__current_function_name() -> None:
-    """Test for `current_function_name()`."""
+    """
+    Test for `current_function_name()`.
+    """
 
     def _inner_function() -> None:
         assert current_function_name() == '_inner_function'

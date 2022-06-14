@@ -7,7 +7,6 @@ from typing import (
     Dict,
     Hashable,
     Iterable,
-    List,
     Set,
     Union,
 )
@@ -24,7 +23,7 @@ Operator = Callable[[Any, Any], bool]
 def eq_operator(one: object, another: object) -> bool:
     """
     Compare whether one value equals another.
-
+    
     Function equivalent to the equals (`__eq__`) operator.
 
     :param one: One value to compare
@@ -49,7 +48,7 @@ class _HasEquals(Protocol):  # pylint: disable=too-few-public-methods
 def equals_method(one: _HasEquals, another: object) -> bool:
     """
     Compare whether one value equals another.
-
+    
     Function equivalent to the `equals()` method.
 
     :param one: Object with the `equals()` method.
@@ -68,7 +67,7 @@ def equal_set(
 ) -> bool:  #FUTURE: reimplement using `set()`
     """
     Check for equality between two iterables ignoring order.
-
+    
     Particularly for lists or unhashable sets
 
     :param one_set: An iterable to compare.
@@ -115,7 +114,7 @@ def _included_set(
         return False
 
 
-    def _set_in(each: Any, another_set: Set[Any]) -> bool:
+    def _set_in(each: Any, another_set: set[Any]) -> bool:
         return each in another_set
 
 
@@ -200,14 +199,14 @@ def current_function_name(pop_stack: int = 0) -> str:
     for _ in range(pop_stack + 1):
         frame = frame.f_back
         assert frame is not None
-
+        
     return frame.f_code.co_name
 
 
 def combine_lists(
         *args: Union[object, Iterable[object]],
         raise_if_empty: bool = True
-) -> List[object]:
+) -> Iterable[object]:
     r"""
     Create a list of lists by taking one element from each of the arguments.
 
@@ -215,15 +214,6 @@ def combine_lists(
 
     If one of the arguments is not iterable, it will be treated as though
     it was in a list.
-
-    If both elements in the arguments are iterable, the result will be a
-    concatenation.
-
-    If one of the elements is iterable and the other is not, the non-iterable
-    will be prefixed or appended to the iterable.
-
-    If both elmenets in the arguments are not iterable, a list will be created
-    with both elments.
 
       >>> to_set( combine_lists(('a', 'b'), ('c', 'd')) ) == \
       ...  to_set( [['a', 'c'], ['a', 'd'], ['b', 'c'], ['b', 'd']] )
@@ -278,7 +268,7 @@ def combine_lists(
         for _ in result:  # `result` is `Iterable`
             return result
         # endfor
-
+        
         raise AssertionError("Empty result")
 
     return result
@@ -296,7 +286,7 @@ def to_set(
     :param iterable: Iterable.
 
     :returns: Resulting set.
-
+    
     .. note:: This is convenient for use with `@pytest.mark.parametrize`.
     """
     result = set()
