@@ -87,13 +87,18 @@ class RegistryFactory(Generic[_TargetClassT]):
         return _wrapper
 
 
-    def create(self, name: str, arguments: Dict[str, Any]) -> _TargetClassT:
+    def create(
+        self, name: str, arguments: Optional[Dict[str, Any]] = None
+    ) -> _TargetClassT:
         """
         Create an instance of a class registered to this registry.
 
         :param name: Name for the class specified with `register()`.
         :param arguments: Key/value pairs to be passed to the initializer as
-          arguments.
+          arguments. `None` for no arguments.
         """
+        if arguments is None:
+            arguments = {}
+            
         target = self._registry[name]
         return target(**arguments)
