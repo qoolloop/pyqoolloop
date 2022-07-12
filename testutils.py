@@ -174,7 +174,7 @@ def included(
         `another`.
 
     .. note::
-      Same as `one_set <= another_set`, if both arguments are `set`s.
+      Same as `one_set <= another_set`, if both arguments are `set` s.
     """
     if isinstance(one, dict):
         assert isinstance(another, dict)
