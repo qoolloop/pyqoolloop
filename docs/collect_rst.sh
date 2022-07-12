@@ -1,1 +1,1 @@
-sphinx-apidoc -o source/rst .. ../test_*.py
+sphinx-apidoc -o source/rst --separate .. ../test_*.py
