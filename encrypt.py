@@ -179,10 +179,12 @@ class EncryptorDecryptor:
         Encrypt various types of data.
 
         :param value: Value to encrypt
-          Supported root types:
-            dict, list, tuple, set, bytes, str, int, float, bool, type(None)
-          Supported value types:
-            dict, list, str, int, float, bool, type(None)
+        
+          - Supported root types:
+            `dict`, `list1`, `tuple`, `set`, `bytes`, `str`, `int`, `float`,
+            `bool`, `type(None)`
+          - Supported value types:
+            `dict`, `list`, `str`, `int`, `float`, `bool`, `type(None)`
 
         :return: Result of encryption
         """

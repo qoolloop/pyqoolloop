@@ -4,14 +4,6 @@ pyqoolloop package
 Submodules
 ----------
 
-pyqoolloop.containers module
-----------------------------
-
-.. automodule:: pyqoolloop.containers
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 pyqoolloop.decorators module
 ----------------------------
 
@@ -28,10 +20,42 @@ pyqoolloop.encrypt module
    :undoc-members:
    :show-inheritance:
 
+pyqoolloop.factory module
+-------------------------
+
+.. automodule:: pyqoolloop.factory
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 pyqoolloop.fileio module
-----------------------
+------------------------
 
 .. automodule:: pyqoolloop.fileio
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pyqoolloop.genericdecorator module
+----------------------------------
+
+.. automodule:: pyqoolloop.genericdecorator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pyqoolloop.introspect module
+----------------------------
+
+.. automodule:: pyqoolloop.introspect
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pyqoolloop.parallel module
+--------------------------
+
+.. automodule:: pyqoolloop.parallel
    :members:
    :undoc-members:
    :show-inheritance:
