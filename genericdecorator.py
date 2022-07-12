@@ -14,6 +14,7 @@ from typing import (
     Any,
     Callable,
     cast,
+    Generic,
     Optional,
     overload,
     Protocol,
@@ -22,53 +23,61 @@ from typing import (
     TypeVar,
 )
 
-from mypy_extensions import (
-    Arg,
-    KwArg,
-    VarArg,
-)
-
 
 # https://mypy.readthedocs.io/en/stable/generics.html#declaring-decorators
 TargetReturnT = TypeVar('TargetReturnT')
 """Return type"""
 
 TargetFunctionT = TypeVar(
-    'TargetFunctionT', bound=Callable[..., Any])  # TargetReturnT])
+    'TargetFunctionT', bound=Callable[..., Any]
+)  # TargetReturnT])
 """Type for decorated function"""
-#FUTURE: Currently (mypy 0.800) not possible to declare generic `TypeVar`
+# FUTURE: Currently (mypy 0.800) not possible to declare generic `TypeVar`
 # https://github.com/python/mypy/issues/8278
 # Would need to use Callable[..., TargetReturnT] directly.
 
 TargetClassT = TypeVar('TargetClassT', bound=object)
 """Type for decorated class"""
 
+TargetClassT_contra = TypeVar('TargetClassT_contra', bound=object, contravariant=True)
+"""Contravariant type for decorated class"""
+
 TargetT = TypeVar('TargetT', Callable[..., Any], Type[object])
 """Type for decorated function or class"""
 
-TargetFunctionWrapper = Callable[
-    [Arg(Callable[..., TargetReturnT], 'target'), VarArg(), KwArg()],
-    TargetReturnT]  # Callable[[TargetFunctionT, ...], TargetReturnT]
-"""
-Generic type for function that calls the decorated function
 
-:param TargetReturnT: Return type of the decorated function.
-"""
+class TargetFunctionWrapper(Protocol[TargetReturnT]):
+    """
+    Generic type for function that calls the decorated function.
 
-TargetMethodWrapper = Callable[
-    [
-        Arg(Callable[..., TargetReturnT], 'target'),
-        Arg(TargetClassT, 'instance'),
-        Arg(Type[TargetClassT], 'cls'),
-        VarArg(),
-        KwArg()
-    ],
-    TargetReturnT]  # Callable[[TargetFunctionT, ...], TargetReturnT]
-"""
-Generic type for function that calls the decorated method
+    :param TargetReturnT: Return type of the decorated function.
+    """
 
-:param TargetReturnT: Return type of the decorated method.
-"""
+    # Callable[[TargetFunctionT, ...], TargetReturnT]
+    def __call__(
+        self, target: Callable[..., TargetReturnT], *vals: Any, **kwargs: Any
+    ) -> TargetReturnT:  # noqa: D102
+        ...
+
+
+class TargetMethodWrapper(Protocol, Generic[TargetReturnT, TargetClassT_contra]):
+    """
+    Generic type for function that calls the decorated method.
+
+    :param TargetReturnT: Return type of the decorated method.
+    """
+
+    # Callable[[TargetFunctionT, ...], TargetReturnT]
+    def __call__(
+        self,
+        target: Callable[..., TargetReturnT],
+        instance: TargetClassT_contra,
+        cls: Type[TargetClassT_contra],
+        *vals: Any,
+        **kwargs: Any,
+    ) -> TargetReturnT:  # noqa: D102
+        ...
+
 
 # Alias currently doesn't work https://github.com/python/mypy/issues/8273
 FunctionWrapperFactory = Callable[[TargetFunctionT], TargetFunctionT]
@@ -103,20 +112,20 @@ class GenericDecorator:
     See implementation of decorators in this module.
     """
 
-    #FUTURE: Type hints probably aren't what they're supposed to be,
+    # FUTURE: Type hints probably aren't what they're supposed to be,
     # especially with the use of `TypeVar`
     def __init__(
-            self,
-            wrapper_for_function: TargetFunctionWrapper[TargetReturnT],
-            wrapper_for_instancemethod: Optional[
-                TargetMethodWrapper[
-                    TargetReturnT, TargetClassT]] = None,
-            wrapper_for_staticmethod: Optional[
-                TargetMethodWrapper[
-                    TargetReturnT, TargetClassT]] = None,
-            wrapper_for_classmethod: Optional[
-                TargetMethodWrapper[
-                    TargetReturnT, TargetClassT]] = None
+        self,
+        wrapper_for_function: TargetFunctionWrapper[TargetReturnT],
+        wrapper_for_instancemethod: Optional[
+            TargetMethodWrapper[TargetReturnT, TargetClassT]
+        ] = None,
+        wrapper_for_staticmethod: Optional[
+            TargetMethodWrapper[TargetReturnT, TargetClassT]
+        ] = None,
+        wrapper_for_classmethod: Optional[
+            TargetMethodWrapper[TargetReturnT, TargetClassT]
+        ] = None,
     ) -> None:
         # noqa: D205,D400,D415
         r"""
@@ -169,45 +178,33 @@ class GenericDecorator:
         #   by extracting a function and decorating it.
 
         def default_wrapper(
-                target: Callable[..., TargetReturnT],  # TargetFunctionT,
-                instance: TargetClassT,  # pylint: disable=unused-argument
-                cls: Type[TargetClassT],  # pylint: disable=unused-argument
-                *args: Any,
-                **kwargs: Any
+            target: Callable[..., TargetReturnT],  # TargetFunctionT,
+            instance: TargetClassT,  # pylint: disable=unused-argument
+            cls: Type[TargetClassT],  # pylint: disable=unused-argument
+            *args: Any,
+            **kwargs: Any,
         ) -> TargetReturnT:
             return wrapper_for_function(target, *args, **kwargs)
 
-
         self.wrapper_for_function = wrapper_for_function
-        self.wrapper_for_instancemethod = wrapper_for_instancemethod or \
-            default_wrapper
-        self.wrapper_for_staticmethod = wrapper_for_staticmethod or \
-            default_wrapper
-        self.wrapper_for_classmethod = wrapper_for_classmethod or \
-            default_wrapper
-
+        self.wrapper_for_instancemethod = wrapper_for_instancemethod or default_wrapper
+        self.wrapper_for_staticmethod = wrapper_for_staticmethod or default_wrapper
+        self.wrapper_for_classmethod = wrapper_for_classmethod or default_wrapper
 
     @overload
     def __call__(
-            self, target: None
+        self, target: None
     ) -> Union[
-        FunctionWrapperFactory[TargetFunctionT],
-        ClassWrapperFactory[TargetClassT]
+        FunctionWrapperFactory[TargetFunctionT], ClassWrapperFactory[TargetClassT]
     ]:
         ...
 
-
     @overload
-    def __call__(
-            self, target: TargetT) -> TargetT:
+    def __call__(self, target: TargetT) -> TargetT:
         ...
 
-
-    def __call__(
-            self,
-            target: Optional[TargetT] = None
-    ) -> Any:
-        #FUTURE: Unions don't work with `TypeVar` (mypy 0.800)
+    def __call__(self, target: Optional[TargetT] = None) -> Any:
+        # FUTURE: Unions don't work with `TypeVar` (mypy 0.800)
         # https://github.com/python/mypy/issues/3644  # noqa: disable=E265
         # ) -> Union[
         #     TargetFunctionT,
@@ -224,57 +221,48 @@ class GenericDecorator:
         """
 
         def _make_class_decorator(
-                target_class: Type[TargetClassT]) -> Type[TargetClassT]:
-
+            target_class: Type[TargetClassT],
+        ) -> Type[TargetClassT]:
             class Descriptor(Protocol):
                 """Protocol for descriptor."""
 
                 def __get__(
-                        self, instance: TargetClassT, owner: Type[TargetClassT]
+                    self, instance: TargetClassT, owner: Type[TargetClassT]
                 ) -> TargetFunctionWrapper[TargetReturnT]:
                     ...
-
 
             class DescriptorForAllMethods:
                 """Descriptor super class."""
 
                 def __init__(
-                        self,
-                        method: Descriptor,
-                        wrapper: TargetMethodWrapper[
-                            TargetReturnT, TargetClassT]
+                    self,
+                    method: Descriptor,
+                    wrapper: TargetMethodWrapper[TargetReturnT, TargetClassT],
                 ) -> None:
                     self.method = method
                     self.wrapper = wrapper
 
-
                 def __get__(
-                        self, instance: TargetClassT, owner: Type[TargetClassT]
+                    self, instance: TargetClassT, owner: Type[TargetClassT]
                 ) -> TargetFunctionWrapper[TargetReturnT]:
-
-                    def call_wrapper(
-                            *args: Any, **kwargs: Any
-                    ) -> TargetReturnT:
-
-                        return self.wrapper(
-                            function, instance, owner, *args, **kwargs)
+                    def call_wrapper(*args: Any, **kwargs: Any) -> TargetReturnT:
+                        return self.wrapper(function, instance, owner, *args, **kwargs)
 
                     # TargetFunction[TargetReturnT]
-                    function: Callable[..., TargetReturnT] \
-                        = self.method.__get__(instance, owner)
+                    function: Callable[..., TargetReturnT] = self.method.__get__(
+                        instance, owner
+                    )
                     return call_wrapper
-
 
             class DescriptorForInstanceMethod(DescriptorForAllMethods):
                 # pylint: disable=too-few-public-methods
                 """Descriptor to be used for instance method."""
 
                 def __init__(
-                        self, method: Descriptor,
+                    self,
+                    method: Descriptor,
                 ) -> None:
-                    super().__init__(
-                        method, decorator_self.wrapper_for_instancemethod)
-
+                    super().__init__(method, decorator_self.wrapper_for_instancemethod)
 
             class DescriptorForStaticmethod(DescriptorForAllMethods):
                 # pylint: disable=too-few-public-methods
@@ -282,12 +270,10 @@ class GenericDecorator:
 
                 def __init__(
                     self,
-                    #FUTURE:  Adding [TargetReturnT] doesn't run yet.
-                    method: staticmethod  # type: ignore[type-arg]
+                    # FUTURE:  Adding [TargetReturnT] doesn't run yet.
+                    method: staticmethod,  # type: ignore[type-arg]
                 ) -> None:
-                    super().__init__(
-                        method, decorator_self.wrapper_for_staticmethod)
-
+                    super().__init__(method, decorator_self.wrapper_for_staticmethod)
 
             class DescriptorForClassmethod(DescriptorForAllMethods):
                 # pylint: disable=too-few-public-methods
@@ -295,12 +281,10 @@ class GenericDecorator:
 
                 def __init__(
                     self,
-                    #FUTURE:  Adding [TargetReturnT] doesn't run yet.
-                    method: classmethod  # type: ignore[type-arg]
+                    # FUTURE:  Adding [TargetReturnT] doesn't run yet.
+                    method: classmethod,  # type: ignore[type-arg]
                 ) -> None:
-                    super().__init__(
-                        method, decorator_self.wrapper_for_classmethod)
-
+                    super().__init__(method, decorator_self.wrapper_for_classmethod)
 
             for name, value in target_class.__dict__.items():
                 # not `ismethod()` because not bound
@@ -319,17 +303,14 @@ class GenericDecorator:
 
             return target_class
 
-
         @wraps(cast(Callable[..., TargetReturnT], target))
         def factory_for_target(*args: Any, **kwargs: Any) -> TargetReturnT:
             return cast(  # cast from another TargetReturnT
                 TargetReturnT,
                 decorator_self.wrapper_for_function(
-                    cast(Any, target),  # cast to another TargetReturnT
-                    *args,
-                    **kwargs)
+                    cast(Any, target), *args, **kwargs  # cast to another TargetReturnT
+                ),
             )
-
 
         if target is None:
             # https://stackoverflow.com/q/653368/2400328
@@ -355,6 +336,7 @@ class GenericDecorator:
         else:
             raise AssertionError(
                 f"Unsupported target of type: {type(target)!r}\n"
-                "(You could have forgotten argument to decorator.)")
+                "(You could have forgotten argument to decorator.)"
+            )
 
         # endif

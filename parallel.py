@@ -25,7 +25,7 @@ class Guard(AbstractContextManager[T]):
         Initialize with variable to guard.
 
         :param variable: Variable to guard. If the variable is of a primitive
-          type, assigning it a value through this `Guard` does not modify the 
+          type, assigning it a value through this `Guard` does not modify the
           original variable.
         """
         self._variable = variable
@@ -36,16 +36,14 @@ class Guard(AbstractContextManager[T]):
         else:
             self._lock = Lock()
 
-
     def __enter__(self) -> T:
         self._lock.acquire()
         return self._variable
 
-
     def __exit__(
-        self, 
-        exc_type: Optional[Type[BaseException]], 
-        exc_value: Optional[BaseException], 
-        traceback: Optional[TracebackType]
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: Optional[BaseException],
+        traceback: Optional[TracebackType],
     ) -> None:
         self._lock.release()

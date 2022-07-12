@@ -7,7 +7,6 @@ from typing import (
     Dict,
     Hashable,
     Iterable,
-    List,
     Set,
     Union,
 )
@@ -15,6 +14,7 @@ from typing import (
 from typing_extensions import Protocol
 
 import logging  # pylint: disable=wrong-import-order
+
 _logger = logging.getLogger(__name__)
 
 
@@ -24,7 +24,7 @@ Operator = Callable[[Any, Any], bool]
 def eq_operator(one: object, another: object) -> bool:
     """
     Compare whether one value equals another.
-    
+
     Function equivalent to the equals (`__eq__`) operator.
 
     :param one: One value to compare
@@ -49,7 +49,7 @@ class _HasEquals(Protocol):  # pylint: disable=too-few-public-methods
 def equals_method(one: _HasEquals, another: object) -> bool:
     """
     Compare whether one value equals another.
-    
+
     Function equivalent to the `equals()` method.
 
     :param one: Object with the `equals()` method.
@@ -61,14 +61,15 @@ def equals_method(one: _HasEquals, another: object) -> bool:
 
 
 def equal_set(
-        one_set: Collection[object],
-        another_set: Collection[object],
-        equals: Callable[[object, object], bool] = eq_operator \
-        # pylint: disable=redefined-outer-name
-) -> bool:  #FUTURE: reimplement using `set()`
+    one_set: Collection[object],
+    another_set: Collection[object],
+    equals: Callable[
+        [object, object], bool
+    ] = eq_operator,  # pylint: disable=redefined-outer-name
+) -> bool:  # FUTURE: reimplement using `set()`
     """
     Check for equality between two iterables ignoring order.
-    
+
     Particularly for lists or unhashable sets
 
     :param one_set: An iterable to compare.
@@ -91,8 +92,9 @@ def equal_set(
                     break
 
                 except (KeyError, ValueError):
-                    _logger.info("Couldn't remove: %r / %d",
-                                 each_another, len(another_set_copy))
+                    _logger.info(
+                        "Couldn't remove: %r / %d", each_another, len(another_set_copy)
+                    )
                     return False
                 # endtry
         # endif
@@ -101,12 +103,10 @@ def equal_set(
 
 
 def _included_set(
-        one_set: Iterable[Any],
-        another_set: Iterable[Any],
-        equals: Operator = eq_operator \
-        # pylint: disable=redefined-outer-name
+    one_set: Iterable[Any],
+    another_set: Iterable[Any],
+    equals: Operator = eq_operator,  # pylint: disable=redefined-outer-name
 ) -> bool:
-
     def _iterable_in(each: Any, another_set: Iterable[Any]) -> bool:
         for other in another_set:
             if equals(each, other):
@@ -114,10 +114,8 @@ def _included_set(
 
         return False
 
-
     def _set_in(each: Any, another_set: set[Any]) -> bool:
         return each in another_set
-
 
     if equals == eq_operator:  # pylint: disable=comparison-with-callable
         is_in = _set_in
@@ -138,9 +136,9 @@ def _included_set(
 
 
 def _included_dict(
-        one: Dict[Any, Any],
-        another: Dict[Any, Any],
-        equals: Operator = eq_operator  # pylint: disable=redefined-outer-name
+    one: Dict[Any, Any],
+    another: Dict[Any, Any],
+    equals: Operator = eq_operator,  # pylint: disable=redefined-outer-name
 ) -> bool:
     for each_key, each_value in one.items():
         if each_key not in another:
@@ -150,7 +148,10 @@ def _included_dict(
         if not equals(each_value, another[each_key]):
             _logger.info(
                 "Values %r and %r are not equal for key %r",
-                each_value, another[each_key], each_key)
+                each_value,
+                another[each_key],
+                each_key,
+            )
             return False
 
         continue
@@ -159,9 +160,9 @@ def _included_dict(
 
 
 def included(
-        one: Iterable[Any],
-        another: Iterable[Any],
-        equals: Operator = eq_operator  # pylint: disable=redefined-outer-name
+    one: Iterable[Any],
+    another: Iterable[Any],
+    equals: Operator = eq_operator,  # pylint: disable=redefined-outer-name
 ) -> bool:
     """
     Check that all elements in one is included in the other.
@@ -200,14 +201,13 @@ def current_function_name(pop_stack: int = 0) -> str:
     for _ in range(pop_stack + 1):
         frame = frame.f_back
         assert frame is not None
-        
+
     return frame.f_code.co_name
 
 
 def combine_lists(
-        *args: Union[object, Iterable[object]],
-        raise_if_empty: bool = True
-) -> List[object]:
+    *args: Union[object, Iterable[object]], raise_if_empty: bool = True
+) -> list[object]:
     r"""
     Create a list of lists by taking one element from each of the arguments.
 
@@ -278,15 +278,13 @@ def combine_lists(
         for _ in result:  # `result` is `Iterable`
             return result
         # endfor
-        
+
         raise AssertionError("Empty result")
 
     return result
 
 
-def to_set(
-        iterable: Iterable[Hashable]
-) -> Set[Hashable]:
+def to_set(iterable: Iterable[Hashable]) -> Set[Hashable]:
     """
     Convert iterable to set.
 
@@ -296,7 +294,7 @@ def to_set(
     :param iterable: Iterable.
 
     :returns: Resulting set.
-    
+
     .. note:: This is convenient for use with `@pytest.mark.parametrize`.
     """
     result = set()
