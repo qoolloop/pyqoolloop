@@ -6,9 +6,12 @@ msgpack-types
 
 # test
 black
+flake8
+pep8-naming
 pytest
 pytest-black
 pytest-cov
+pytest-flake8
 pytest-mypy
 pytest-pydocstyle
 pytest-pylint

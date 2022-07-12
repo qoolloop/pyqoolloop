@@ -5,26 +5,36 @@ import os
 import tempfile
 from typing import (
     Any,
-    Callable,
     Iterable,
     Union,
 )
+from typing_extensions import Protocol
 
-from mypy_extensions import (
-    DefaultNamedArg,
-)
 import pytest
 
 from . import fileio
 
 
-LoadFunc = Callable[
-    [Union[str, Iterable[str]], DefaultNamedArg(bool, 'raise_exception')], Any
-]
+class LoadFunc(Protocol):
+    """Callable for loading functions in `fileio`."""
 
-DumpFunc = Callable[
-    [Union[str, Iterable[str]], Any, DefaultNamedArg(bool, 'overwrite')], None
-]
+    def __call__(
+        self, file_path: Union[str, Iterable[str]], *, raise_exception: bool = False
+    ) -> Any:
+        ...
+
+
+class DumpFunc(Protocol):
+    """Callable for dumping functions in `fileio`."""
+
+    def __call__(
+        self,
+        file_path: Union[str, Iterable[str]],
+        value: Any,
+        *,
+        overwrite: bool = False,
+    ) -> None:
+        ...
 
 
 _parametrize__load_dump = pytest.mark.parametrize(

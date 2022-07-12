@@ -16,9 +16,6 @@ from typing import (
 )
 from typing_extensions import Protocol
 
-from mypy_extensions import (
-    DefaultArg,
-)
 import pytest
 
 from . import decorators
@@ -74,6 +71,13 @@ def test__FunctionDecorator__wraps() -> None:  # pylint: disable=invalid-name
 # pass_args ###
 
 
+class PassArgsFunction(Protocol):
+    """A callable that takes 3 arguments."""
+
+    def __call__(self, arg0: Any = 0, arg1: Any = 1, arg2: Any = 2) -> None:
+        ...
+
+
 def _pass_args_function(
     arg0: Any = 0, arg1: Any = 1, arg2: Any = 2, kwargs: Optional[Dict[str, Any]] = None
 ) -> None:
@@ -121,16 +125,7 @@ def pass_args_function_with_mandatory_keyword(
         pass_args_function_with_mandatory_keyword,
     ),
 )
-def test__pass_args_to_function(
-    function: Callable[
-        [
-            DefaultArg(Any, 'arg0'),
-            DefaultArg(Any, 'arg1'),
-            DefaultArg(Any, 'arg2'),
-        ],
-        None,
-    ]
-) -> None:
+def test__pass_args_to_function(function: PassArgsFunction) -> None:
     """Test passing argument to functions decorated by `@pass_args`."""
     function()
     function("a")

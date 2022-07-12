@@ -14,18 +14,13 @@ from typing import (
     Any,
     Callable,
     cast,
+    Generic,
     Optional,
     overload,
     Protocol,
     Union,
     Type,
     TypeVar,
-)
-
-from mypy_extensions import (
-    Arg,
-    KwArg,
-    VarArg,
 )
 
 
@@ -44,33 +39,45 @@ TargetFunctionT = TypeVar(
 TargetClassT = TypeVar('TargetClassT', bound=object)
 """Type for decorated class"""
 
+TargetClassT_contra = TypeVar('TargetClassT_contra', bound=object, contravariant=True)
+"""Contravariant type for decorated class"""
+
 TargetT = TypeVar('TargetT', Callable[..., Any], Type[object])
 """Type for decorated function or class"""
 
-TargetFunctionWrapper = Callable[
-    [Arg(Callable[..., TargetReturnT], 'target'), VarArg(), KwArg()], TargetReturnT
-]  # Callable[[TargetFunctionT, ...], TargetReturnT]
-"""
-Generic type for function that calls the decorated function
 
-:param TargetReturnT: Return type of the decorated function.
-"""
+class TargetFunctionWrapper(Protocol[TargetReturnT]):
+    """
+    Generic type for function that calls the decorated function.
 
-TargetMethodWrapper = Callable[
-    [
-        Arg(Callable[..., TargetReturnT], 'target'),
-        Arg(TargetClassT, 'instance'),
-        Arg(Type[TargetClassT], 'cls'),
-        VarArg(),
-        KwArg(),
-    ],
-    TargetReturnT,
-]  # Callable[[TargetFunctionT, ...], TargetReturnT]
-"""
-Generic type for function that calls the decorated method
+    :param TargetReturnT: Return type of the decorated function.
+    """
 
-:param TargetReturnT: Return type of the decorated method.
-"""
+    # Callable[[TargetFunctionT, ...], TargetReturnT]
+    def __call__(
+        self, target: Callable[..., TargetReturnT], *vals: Any, **kwargs: Any
+    ) -> TargetReturnT:  # noqa: D102
+        ...
+
+
+class TargetMethodWrapper(Protocol, Generic[TargetReturnT, TargetClassT_contra]):
+    """
+    Generic type for function that calls the decorated method.
+
+    :param TargetReturnT: Return type of the decorated method.
+    """
+
+    # Callable[[TargetFunctionT, ...], TargetReturnT]
+    def __call__(
+        self,
+        target: Callable[..., TargetReturnT],
+        instance: TargetClassT_contra,
+        cls: Type[TargetClassT_contra],
+        *vals: Any,
+        **kwargs: Any,
+    ) -> TargetReturnT:  # noqa: D102
+        ...
+
 
 # Alias currently doesn't work https://github.com/python/mypy/issues/8273
 FunctionWrapperFactory = Callable[[TargetFunctionT], TargetFunctionT]
