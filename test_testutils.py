@@ -1,9 +1,8 @@
-"""
-Tests for `testutils` module.
-"""
+"""Tests for `testutils` module."""
 from typing import (
     Any,
     Iterable,
+    List,
     Sequence,
     Union,
 )
@@ -167,6 +166,18 @@ def test_combine_lists(
             assert expected_set == result_set
 
     # enddef
+
+
+@pytest.mark.parametrize('operand', (
+    combine_lists('c', 'd'),
+    [],
+    [1],
+))
+def test__combine_lists__add(operand: List[object]) -> None:
+    """Test that `+` operator works for result of `combine_lists()`."""
+    # Just make sure addition works
+    assert (combine_lists('a', 'b') + operand) is not None
+    assert (operand + combine_lists('a', 'b')) is not None
 
 
 def test__current_function_name() -> None:

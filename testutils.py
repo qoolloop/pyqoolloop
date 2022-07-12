@@ -7,6 +7,7 @@ from typing import (
     Dict,
     Hashable,
     Iterable,
+    List,
     Set,
     Union,
 )
@@ -206,7 +207,7 @@ def current_function_name(pop_stack: int = 0) -> str:
 def combine_lists(
         *args: Union[object, Iterable[object]],
         raise_if_empty: bool = True
-) -> Iterable[object]:
+) -> List[object]:
     r"""
     Create a list of lists by taking one element from each of the arguments.
 
@@ -214,6 +215,15 @@ def combine_lists(
 
     If one of the arguments is not iterable, it will be treated as though
     it was in a list.
+
+    If both elements in the arguments are iterable, the result will be a
+    concatenation.
+
+    If one of the elements is iterable and the other is not, the non-iterable
+    will be prefixed or appended to the iterable.
+
+    If both elmenets in the arguments are not iterable, a list will be created
+    with both elments.
 
       >>> to_set( combine_lists(('a', 'b'), ('c', 'd')) ) == \
       ...  to_set( [['a', 'c'], ['a', 'd'], ['b', 'c'], ['b', 'd']] )
