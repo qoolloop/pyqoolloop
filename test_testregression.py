@@ -39,44 +39,40 @@ def test__make_filename__index() -> None:
     assert '1.0' not in int_filename
 
 
-_parametrize__assert_no_change = pytest.mark.parametrize('value, kwargs', (
-    (1, {}),
-    (2, dict(index=0)),
-    (3, dict(suffix="suffix")),
-    (4, dict(index=0, suffix="suffix")),
-))
+_parametrize__assert_no_change = pytest.mark.parametrize(
+    'value, kwargs',
+    (
+        (1, {}),
+        (2, dict(index=0)),
+        (3, dict(suffix="suffix")),
+        (4, dict(index=0, suffix="suffix")),
+    ),
+)
 
 
 @_parametrize__assert_no_change
-def test__assert_no_change(
-        value: int, kwargs: Dict[str, Any]) -> None:
+def test__assert_no_change(value: int, kwargs: Dict[str, Any]) -> None:
     """
     Test that `assert_no_change()` raises `AssertionError`, when
     the `value` argument has changed.
     """
 
     class _NonExistent:  # pylint: disable=too-few-public-methods
-        """ Something that should not exist elsewhere"""
-
+        """Something that should not exist elsewhere"""
 
     save = False
 
-    different_values = {
-        1: False,
-        2: None,
-        3: True,
-        4: _NonExistent
-    }
+    different_values = {1: False, 2: None, 3: True, 4: _NonExistent}
 
     assert_no_change(value, save=save, error_on_save=False, **kwargs)
     with pytest.raises(AssertionError):
         assert_no_change(
-            different_values[value], save=False, error_on_save=False, **kwargs)
+            different_values[value], save=False, error_on_save=False, **kwargs
+        )
 
 
 @_parametrize__assert_no_change
-def test__assert_no_change__no_save(
-        value: int, kwargs: Dict[str, Any]) -> None:
+def test__assert_no_change__no_save(value: int, kwargs: Dict[str, Any]) -> None:
     """
     Test that `assert_no_change()` raises `FileNotFoundError` when the `save`
     argument is `False` and no previous value has been saved.
@@ -86,8 +82,7 @@ def test__assert_no_change__no_save(
 
 
 @_parametrize__assert_no_change
-def test__assert_no_change__save(
-        value: int, kwargs: Dict[str, Any]) -> None:
+def test__assert_no_change__save(value: int, kwargs: Dict[str, Any]) -> None:
     """
     Test that `assert_no_change()` raises `AssertionError` when the `save`
     argument is `True`.
@@ -98,12 +93,13 @@ def test__assert_no_change__save(
 
 @_parametrize__assert_no_change
 def test__assert_no_change__save__no_previous(
-        value: int, kwargs: Dict[str, Any]) -> None:
+    value: int, kwargs: Dict[str, Any]
+) -> None:
     """
     Test that no exception occurs with no value being saved, when  the `save`
     argument if `True`for `assert_no_change()`.
     """
-    
+
     filename = make_filename(**kwargs)
     try:
         os.remove(filename)
@@ -127,37 +123,33 @@ def test__assert_no_change__logger() -> None:
     # pylint: disable=missing-function-docstring
 
     class _Logger(logging.Logger):
-
         called: bool = False
 
         message: str
 
         def error(  # type: ignore[override]
-                self, msg: str, *arg: Any, **kwargs: Any) -> None:
+            self, msg: str, *arg: Any, **kwargs: Any
+        ) -> None:
             self.called = True
-            
-            super().error(msg, *arg, **kwargs)
-            
-            self.message += (msg % arg) + "\n"
 
+            super().error(msg, *arg, **kwargs)
+
+            self.message += (msg % arg) + "\n"
 
         def reset_message(self) -> None:
             self.message = ""
-            
 
         def check_empty_message(self) -> None:
             assert self.message == ""
 
-            
         def check_message_content(self) -> None:
-            assert "test__assert_no_change__logger" in self.message, \
-                "message not as expected: {self.message}"
+            assert (
+                "test__assert_no_change__logger" in self.message
+            ), "message not as expected: {self.message}"
             assert "test_testregression" in self.message
             assert str(value) in self.message
 
-
         # endclass
-
 
     _logger = _Logger('name')
 
@@ -169,30 +161,26 @@ def test__assert_no_change__logger() -> None:
         _logger.reset_message()
 
         with pytest.raises(AssertionError):
-            assert_no_change(
-                value, save=True, error_on_save=True, _logger=_logger)
+            assert_no_change(value, save=True, error_on_save=True, _logger=_logger)
 
         assert _logger.called
         _logger.check_message_content()
-            
+
         _logger.reset_message()
 
-        assert_no_change(
-            value, save=True, error_on_save=False, _logger=_logger)
-        
+        assert_no_change(value, save=True, error_on_save=False, _logger=_logger)
+
         _logger.check_message_content()
 
         _logger.reset_message()
 
-        assert_no_change(
-            value, save=False, error_on_save=False, _logger=_logger)
+        assert_no_change(value, save=False, error_on_save=False, _logger=_logger)
 
         _logger.check_empty_message()
-        
+
         _logger.reset_message()
 
-        assert_no_change(
-            value, save=False, error_on_save=True, _logger=_logger)
+        assert_no_change(value, save=False, error_on_save=True, _logger=_logger)
 
         _logger.check_empty_message()
 
@@ -201,16 +189,14 @@ def test__assert_no_change__logger() -> None:
         assert value is not None
 
         with pytest.raises(AssertionError):
-            assert_no_change(
-                None, save=False, error_on_save=True, _logger=_logger)
+            assert_no_change(None, save=False, error_on_save=True, _logger=_logger)
 
         _logger.check_empty_message()
 
         _logger.reset_message()
 
         with pytest.raises(AssertionError):
-            assert_no_change(
-                None, save=False, error_on_save=False, _logger=_logger)
+            assert_no_change(None, save=False, error_on_save=False, _logger=_logger)
 
         _logger.check_empty_message()
 

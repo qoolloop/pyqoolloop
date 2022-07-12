@@ -14,7 +14,7 @@ from cryptography.fernet import (
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-import msgpack  #FUTURE: Can use Packer class for speed up
+import msgpack  # FUTURE: Can use Packer class for speed up
 
 from .fileio import open_write_binary
 
@@ -36,7 +36,7 @@ def key_from_password(password: str, salt: bytes) -> bytes:
         length=32,
         salt=salt,
         iterations=100000,
-        backend=default_backend()
+        backend=default_backend(),
     )
 
     password_bytes = password.encode('utf-8')
@@ -50,9 +50,8 @@ _SET_TYPE = 101
 
 def _packb(value: object) -> bytes:
     encoded = msgpack.packb(
-        value,
-        use_bin_type=True, strict_types=True,
-        default=_msgpack_default)
+        value, use_bin_type=True, strict_types=True, default=_msgpack_default
+    )
     return encoded
 
 
@@ -72,12 +71,11 @@ def _msgpack_default(obj: Iterable[object]) -> msgpack.ExtType:
 
     else:
         raise TypeError(f"Unexpected type: {obj!r}")
-    
+
     return msgpack.ExtType(obj_type, data)
 
 
 def _msgpack_ext_hook(code: int, data: bytes) -> object:
-
     if code == _TUPLE_TYPE:
         unpacked_iterable = _unpackb(data)
         # warning: https://stackoverflow.com/a/36407550/2400328
@@ -91,7 +89,7 @@ def _msgpack_ext_hook(code: int, data: bytes) -> object:
         # Using `Iterable` to convince `mypy`
         assert isinstance(unpacked_iterable, Iterable)
         obj = set(unpacked_iterable)
-        
+
     else:
         obj = msgpack.ExtType(code, data)
 
@@ -117,11 +115,14 @@ class EncryptorDecryptor:
           first (primary) key is used for encryption. Keys must be generated
           with :func:`generate_key()`.
         """
+
         def _check_key(key: bytes) -> None:
             decoded_key = base64.urlsafe_b64decode(key)
-            assert len(decoded_key) == 32, \
-                f"Key length: {len(decoded_key)}\n{decoded_key}"  # type:ignore[str-bytes-safe]
-
+            assert (
+                len(decoded_key) == 32
+            ), (
+                f"Key length: {len(decoded_key)}\n{decoded_key}"
+            )  # type:ignore[str-bytes-safe]
 
         if isinstance(key, bytes):
             _check_key(key)
@@ -139,7 +140,6 @@ class EncryptorDecryptor:
 
         # endif
 
-
     @classmethod
     def generate_key(cls) -> bytes:
         """
@@ -149,7 +149,6 @@ class EncryptorDecryptor:
         """
         return Fernet.generate_key()
 
-
     @staticmethod
     def _read_file(filename: str) -> bytes:
         with open(filename, 'rb') as read_file:
@@ -157,29 +156,25 @@ class EncryptorDecryptor:
 
         return encrypted
 
-    
     @staticmethod
-    def _write_file(
-            encrypted: bytes, filename: str, overwrite: bool = False) -> None:
+    def _write_file(encrypted: bytes, filename: str, overwrite: bool = False) -> None:
         """
         Write encrypted data to file.
 
         :raises FileExistsError: Raised when file already exists and
           `overwrite` is `False`
         """
-        with open_write_binary(filename, overwrite=overwrite) \
-             as write_file:
+        with open_write_binary(filename, overwrite=overwrite) as write_file:
             write_file.write(encrypted)
 
         # endwith
-
 
     def encrypt(self, value: object) -> bytes:
         """
         Encrypt various types of data.
 
         :param value: Value to encrypt
-        
+
           - Supported root types:
             `dict`, `list1`, `tuple`, `set`, `bytes`, `str`, `int`, `float`,
             `bool`, `type(None)`
@@ -191,10 +186,9 @@ class EncryptorDecryptor:
         encoded = _packb(value)
         result = self._fernet.encrypt(encoded)
         return result
-        
 
     def encrypt_to_file(
-            self, value: object, filename: str, overwrite: bool = False
+        self, value: object, filename: str, overwrite: bool = False
     ) -> None:
         """
         Encrypt various types of data and save to file.
@@ -213,10 +207,8 @@ class EncryptorDecryptor:
 
         self._write_file(encrypted, filename, overwrite=overwrite)
 
-
     @classmethod
     def _decrypt(cls, fernet: _FernetType, encrypted: bytes) -> object:
-
         def _get_encoded(encrypted: bytes) -> bytes:
             try:
                 encoded = fernet.decrypt(encrypted)
@@ -226,11 +218,9 @@ class EncryptorDecryptor:
 
             return encoded
 
-
         encoded = _get_encoded(encrypted)
         value = _unpackb(encoded)
         return value
-
 
     def decrypt(self, encrypted: bytes) -> object:
         """
@@ -243,13 +233,13 @@ class EncryptorDecryptor:
         :raises InvalidTokenException: Could not read value.
         """
         return self._decrypt(self._fernet, encrypted)
-        
 
     def _decrypt_from_file(
-            self, fernet: _FernetType,
-            filename: str,
-            use_default: bool = False,
-            default: object = None
+        self,
+        fernet: _FernetType,
+        filename: str,
+        use_default: bool = False,
+        default: object = None,
     ) -> object:
         try:
             encrypted = self._read_file(filename)
@@ -259,16 +249,12 @@ class EncryptorDecryptor:
                 return default
 
             raise
-        
+
         decrypted = self._decrypt(fernet, encrypted)
         return decrypted
 
-
     def decrypt_from_file(
-            self,
-            filename: str,
-            use_default: bool = False,
-            default: object = None
+        self, filename: str, use_default: bool = False, default: object = None
     ) -> object:
         """
         Decrypt contents of file saved by :func:`encrypt_to_file()`.
@@ -284,8 +270,8 @@ class EncryptorDecryptor:
         :raises InvalidTokenException: Could not read value.
         """
         return self._decrypt_from_file(
-            self._fernet, filename, use_default=use_default, default=default)
-
+            self._fernet, filename, use_default=use_default, default=default
+        )
 
     def rotate_file(self, filename: str) -> None:
         """

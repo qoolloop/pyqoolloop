@@ -18,93 +18,93 @@ from .testutils import (
 )
 
 
-@pytest.mark.parametrize("one, another, result", (
-    ([], [], True),
-    ([], [1], True),
-    ([1], [], False),
-    ([1], [1], True),
-    (["1"], ["1"], True),
-    (["1"], ["1", 1], True),
-    (["1", 1], ["1"], False),
-
-    ({}, {}, True),
-    ({}, {"a": 1}, True),
-    ({"a": 1}, {}, False),
-    ({"a": 1}, {"a": 1}, True),
-    ({"a": 1}, {"a": "1"}, False),
-    ({"a": "1"}, {"a": "1"}, True),
-    ({"a": 1}, {"a": "1"}, False),
-    ({"a": "1"}, {"a": "1", "bcd": 1}, True),
-    ({"a": 1}, {"a": "1", "bcd": 1}, False),
-    ({"a": "1", "bcd": 1}, {"a": "1"}, False),
-
-    ({}, {}, True),
-    ({}, {1: 1}, True),
-    ({}, {"1": 1}, True),
-    ({1: 1}, {}, False),
-    ({1: 1}, {1: 1}, True),
-    ({"1": 1}, {1: 1}, False),
-    ({1: 1}, {"1": 1}, False),
-    ({1: 1}, {1: "1"}, False),
-    ({1: "1"}, {1: "1"}, True),
-    ({"1": "1"}, {1: "1"}, False),
-    ({1: "1"}, {"1": "1"}, False),
-    ({1: 1}, {1: "1"}, False),
-    ({1: "1"}, {1: "1", "bcd": 1}, True),
-    ({"1": "1"}, {1: "1", "bcd": 1}, False),
-    ({1: "1"}, {"1": "1", "bcd": 1}, False),
-    ({1: 1}, {1: "1", "bcd": 1}, False),
-    ({1: "1", "bcd": 1}, {1: "1"}, False),
-))
-def test__included(
-        one: Iterable[Any], another: Iterable[Any], result: bool
-) -> None:
+@pytest.mark.parametrize(
+    "one, another, result",
+    (
+        ([], [], True),
+        ([], [1], True),
+        ([1], [], False),
+        ([1], [1], True),
+        (["1"], ["1"], True),
+        (["1"], ["1", 1], True),
+        (["1", 1], ["1"], False),
+        ({}, {}, True),
+        ({}, {"a": 1}, True),
+        ({"a": 1}, {}, False),
+        ({"a": 1}, {"a": 1}, True),
+        ({"a": 1}, {"a": "1"}, False),
+        ({"a": "1"}, {"a": "1"}, True),
+        ({"a": 1}, {"a": "1"}, False),
+        ({"a": "1"}, {"a": "1", "bcd": 1}, True),
+        ({"a": 1}, {"a": "1", "bcd": 1}, False),
+        ({"a": "1", "bcd": 1}, {"a": "1"}, False),
+        ({}, {}, True),
+        ({}, {1: 1}, True),
+        ({}, {"1": 1}, True),
+        ({1: 1}, {}, False),
+        ({1: 1}, {1: 1}, True),
+        ({"1": 1}, {1: 1}, False),
+        ({1: 1}, {"1": 1}, False),
+        ({1: 1}, {1: "1"}, False),
+        ({1: "1"}, {1: "1"}, True),
+        ({"1": "1"}, {1: "1"}, False),
+        ({1: "1"}, {"1": "1"}, False),
+        ({1: 1}, {1: "1"}, False),
+        ({1: "1"}, {1: "1", "bcd": 1}, True),
+        ({"1": "1"}, {1: "1", "bcd": 1}, False),
+        ({1: "1"}, {"1": "1", "bcd": 1}, False),
+        ({1: 1}, {1: "1", "bcd": 1}, False),
+        ({1: "1", "bcd": 1}, {1: "1"}, False),
+    ),
+)
+def test__included(one: Iterable[Any], another: Iterable[Any], result: bool) -> None:
     """
     Test for `included()`.
     """
     assert result == included(one, another)
 
 
-@pytest.mark.parametrize("one, another, result", (
-    ([], [], True),
-    ([], [1], True),
-    ([1], [], False),
-    ([1], [1], True),
-    (["1"], ["1"], True),
-    (["1"], ["1", 1], True),
-    (["1", 1], ["1"], True),  # not `False`
-
-    ({}, {}, True),
-    ({}, {"a": 1}, True),
-    ({"a": 1}, {}, False),
-    ({"a": 1}, {"a": 1}, True),
-    ({"a": 1}, {"a": "1"}, True),  # not `False`
-    ({"a": "1"}, {"a": "1"}, True),
-    ({"a": 1}, {"a": "1"}, True),  # not `False`
-    ({"a": "1"}, {"a": "1", "bcd": 1}, True),
-    ({"a": 1}, {"a": "1", "bcd": 1}, True),  # not `False`
-    ({"a": "1", "bcd": 1}, {"a": "1"}, False),
-
-    ({}, {}, True),
-    ({}, {1: 1}, True),
-    ({}, {"1": 1}, True),
-    ({1: 1}, {}, False),
-    ({1: 1}, {1: 1}, True),
-    ({"1": 1}, {1: 1}, False),
-    ({1: 1}, {"1": 1}, False),
-    ({1: 1}, {1: "1"}, True),  # not `False`
-    ({1: "1"}, {1: "1"}, True),
-    ({"1": "1"}, {1: "1"}, False),
-    ({1: "1"}, {"1": "1"}, False),
-    ({1: 1}, {1: "1"}, True),  # not `False`
-    ({1: "1"}, {1: "1", "bcd": 1}, True),
-    ({"1": "1"}, {1: "1", "bcd": 1}, False),
-    ({1: "1"}, {"1": "1", "bcd": 1}, False),
-    ({1: 1}, {1: "1", "bcd": 1}, True),  # not `False`
-    ({1: "1", "bcd": 1}, {1: "1"}, False),
-))
+@pytest.mark.parametrize(
+    "one, another, result",
+    (
+        ([], [], True),
+        ([], [1], True),
+        ([1], [], False),
+        ([1], [1], True),
+        (["1"], ["1"], True),
+        (["1"], ["1", 1], True),
+        (["1", 1], ["1"], True),  # not `False`
+        ({}, {}, True),
+        ({}, {"a": 1}, True),
+        ({"a": 1}, {}, False),
+        ({"a": 1}, {"a": 1}, True),
+        ({"a": 1}, {"a": "1"}, True),  # not `False`
+        ({"a": "1"}, {"a": "1"}, True),
+        ({"a": 1}, {"a": "1"}, True),  # not `False`
+        ({"a": "1"}, {"a": "1", "bcd": 1}, True),
+        ({"a": 1}, {"a": "1", "bcd": 1}, True),  # not `False`
+        ({"a": "1", "bcd": 1}, {"a": "1"}, False),
+        ({}, {}, True),
+        ({}, {1: 1}, True),
+        ({}, {"1": 1}, True),
+        ({1: 1}, {}, False),
+        ({1: 1}, {1: 1}, True),
+        ({"1": 1}, {1: 1}, False),
+        ({1: 1}, {"1": 1}, False),
+        ({1: 1}, {1: "1"}, True),  # not `False`
+        ({1: "1"}, {1: "1"}, True),
+        ({"1": "1"}, {1: "1"}, False),
+        ({1: "1"}, {"1": "1"}, False),
+        ({1: 1}, {1: "1"}, True),  # not `False`
+        ({1: "1"}, {1: "1", "bcd": 1}, True),
+        ({"1": "1"}, {1: "1", "bcd": 1}, False),
+        ({1: "1"}, {"1": "1", "bcd": 1}, False),
+        ({1: 1}, {1: "1", "bcd": 1}, True),  # not `False`
+        ({1: "1", "bcd": 1}, {1: "1"}, False),
+    ),
+)
 def test__included__equals(
-        one: Iterable[Any], another: Iterable[Any], result: bool
+    one: Iterable[Any], another: Iterable[Any], result: bool
 ) -> None:
     """
     Test for `included()` with `equals` argument specified.
@@ -112,39 +112,39 @@ def test__included__equals(
 
     def _str_equals(one: Any, another: Any) -> bool:
         return str(one) == str(another)
-    
 
     assert result == included(one, another, equals=_str_equals)
 
 
-@pytest.mark.parametrize("expected_result, args", [
-    ([], ([],)),  # 1 empty argument
-    ([1], ([1],)),  # 1 single entity argument
-    ([1], (1,)),  # 1 single entity argument
-    ([1, 2], ([1, 2],)),  # 1 two entity argument
-    ([], ([], [])),
-    ([], ([1], [])),
-    ([], (1, [])),
-    ([[1]], ([1], [()])),
-    ([], ([], [2])),
-    ([], ([], 2)),
-    ([[2]], ([()], [2])),
-    ([[2]], ([()], 2)),
-    ([[3, 4]], ([[3]], [4])),
-    ([[3, 4]], ([[3]], 4)),
-    ([[3, 4]], (3, [4])),
-    ([[3, 4]], (3, 4)),
-    ([[5, 7], [5, 8]], ([5], [7, 8])),
-    ([[5, 7], [5, 8]], (5, [7, 8])),
-    ([[5, 8], [6, 8]], ([5, 6], [8])),
-    ([[5, 8], [6, 8]], ([5, 6], 8)),
-    ([[5, 7], [5, 8], [6, 7], [6, 8]], ([5, 6], [7, 8])),
-    ([[5, 6, 10], [5, 6, 7, 8], [9, 10], [9, 7, 8]],
-     ([(5, 6), 9], [10, (7, 8)])),
-])
+@pytest.mark.parametrize(
+    "expected_result, args",
+    [
+        ([], ([],)),  # 1 empty argument
+        ([1], ([1],)),  # 1 single entity argument
+        ([1], (1,)),  # 1 single entity argument
+        ([1, 2], ([1, 2],)),  # 1 two entity argument
+        ([], ([], [])),
+        ([], ([1], [])),
+        ([], (1, [])),
+        ([[1]], ([1], [()])),
+        ([], ([], [2])),
+        ([], ([], 2)),
+        ([[2]], ([()], [2])),
+        ([[2]], ([()], 2)),
+        ([[3, 4]], ([[3]], [4])),
+        ([[3, 4]], ([[3]], 4)),
+        ([[3, 4]], (3, [4])),
+        ([[3, 4]], (3, 4)),
+        ([[5, 7], [5, 8]], ([5], [7, 8])),
+        ([[5, 7], [5, 8]], (5, [7, 8])),
+        ([[5, 8], [6, 8]], ([5, 6], [8])),
+        ([[5, 8], [6, 8]], ([5, 6], 8)),
+        ([[5, 7], [5, 8], [6, 7], [6, 8]], ([5, 6], [7, 8])),
+        ([[5, 6, 10], [5, 6, 7, 8], [9, 10], [9, 7, 8]], ([(5, 6), 9], [10, (7, 8)])),
+    ],
+)
 def test_combine_lists(
-        expected_result: Sequence[object],
-        args: Iterable[Union[object, Iterable[object]]]
+    expected_result: Sequence[object], args: Iterable[Union[object, Iterable[object]]]
 ) -> None:
     """
     Test for `combine_lists()`.
@@ -161,7 +161,7 @@ def test_combine_lists(
     else:
         for raise_if_empty in [True, False]:
             result_list = combine_lists(*args, raise_if_empty=raise_if_empty)
-            
+
             result_set = to_set(result_list)
 
             assert expected_set == result_set
@@ -177,6 +177,5 @@ def test__current_function_name() -> None:
     def _inner_function() -> None:
         assert current_function_name() == '_inner_function'
         assert current_function_name(1) == 'test__current_function_name'
-
 
     _inner_function()

@@ -11,6 +11,7 @@ from typing import (
 from . import introspect
 
 import logging  # pylint: disable=wrong-import-order
+
 _logger = logging.getLogger(__name__)
 
 
@@ -18,11 +19,12 @@ _ParameterT = TypeVar('_ParameterT')
 
 
 def make_filename(
-        *,
-        index: Union[None, int, float] = None,
-        suffix: Optional[str] = None,
-        extension: str = '.p',
-        depth: int = 1) -> str:
+    *,
+    index: Union[None, int, float] = None,
+    suffix: Optional[str] = None,
+    extension: str = '.p',
+    depth: int = 1,
+) -> str:
     """
     Make a filename in a subdirectory to save values for regression test.
 
@@ -41,13 +43,13 @@ def make_filename(
       other than the fact that `extension` will be used as the extension
       and the directory will be respected.
     """
-    module_name, function_name, dir_name = introspect.get_function_info(
-        depth=depth + 1)
+    module_name, function_name, dir_name = introspect.get_function_info(depth=depth + 1)
 
     split_module = module_name.split('.')
-    
+
     filename = os.path.join(
-        dir_name, '_testregression', split_module[-1] + '.' + function_name)
+        dir_name, '_testregression', split_module[-1] + '.' + function_name
+    )
 
     if index is not None:
         filename += f'#{index}'
@@ -62,16 +64,14 @@ def make_filename(
 
 
 def _save_or_load(
-        value: _ParameterT,
-        save: bool,
-        index: Union[None, int, float] = None,
-        suffix: Optional[str] = None,
-        depth: int = 1
+    value: _ParameterT,
+    save: bool,
+    index: Union[None, int, float] = None,
+    suffix: Optional[str] = None,
+    depth: int = 1,
 ) -> Any:
-
     class _CannotRead:  # pylint: disable=too-few-public-methods
         """Something that should not exist elsewhere."""
-    
 
     filename = make_filename(index=index, suffix=suffix, depth=depth + 1)
 
@@ -97,14 +97,14 @@ def _save_or_load(
 
 
 def assert_no_change(
-        value: object,
-        *,  # too many positional arguments
-        save: bool,
-        index: Union[None, int, float] = None,
-        suffix: Optional[str] = None,
-        error_on_save: bool = True,
-        depth: int = 1,
-        _logger: logging.Logger = _logger
+    value: object,
+    *,  # too many positional arguments
+    save: bool,
+    index: Union[None, int, float] = None,
+    suffix: Optional[str] = None,
+    error_on_save: bool = True,
+    depth: int = 1,
+    _logger: logging.Logger = _logger,
 ) -> None:
     """
     Check for regression with assertion.
@@ -129,20 +129,17 @@ def assert_no_change(
       `value` will not be saved, if it is equal to the value that was saved
       previously. This is to avoid unnecessary commits to git.
     """
-    #FUTURE: Automatically create subdirectory?
+    # FUTURE: Automatically create subdirectory?
     if save:
-        module_name, function_name, _ = introspect.get_function_info(
-            depth=depth + 1)
-        _logger.error(
-            "`save` is `True` in %s (%s)", function_name, module_name)
-        _logger.error(
-            "`value` is %r", value)
+        module_name, function_name, _ = introspect.get_function_info(depth=depth + 1)
+        _logger.error("`save` is `True` in %s (%s)", function_name, module_name)
+        _logger.error("`value` is %r", value)
 
     previous_value = _save_or_load(
-        value, save, index=index, suffix=suffix, depth=depth + 1)
+        value, save, index=index, suffix=suffix, depth=depth + 1
+    )
 
-    assert previous_value == value, \
-        f"{previous_value!r}\nDOES NOT EQUAL{value!r}\n"
+    assert previous_value == value, f"{previous_value!r}\nDOES NOT EQUAL{value!r}\n"
 
     if error_on_save:
         assert not save

@@ -25,7 +25,6 @@ def test__Guard__dataclass() -> None:
     class _Class:
         variable: int = 2
 
-
     guard = Guard(_Class())
 
     with guard as instance:
@@ -46,7 +45,6 @@ def test__Guard__lock() -> None:
     class _Class:
         variable: int = 0
 
-
     def _routine(guard: Guard[_Class]) -> None:
         with guard as instance:
             value = instance.variable
@@ -54,13 +52,10 @@ def test__Guard__lock() -> None:
             value += 1
             instance.variable = value
 
-
     num_threads = 10
 
     guard = Guard(_Class())
-    threads = [
-        Thread(target=_routine, args=(guard,)) for _ in range(num_threads)
-    ]
+    threads = [Thread(target=_routine, args=(guard,)) for _ in range(num_threads)]
     for each in threads:
         each.start()
 

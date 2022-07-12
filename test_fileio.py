@@ -19,12 +19,12 @@ from . import fileio
 
 
 LoadFunc = Callable[
-    [Union[str, Iterable[str]], DefaultNamedArg(bool, 'raise_exception')],
-    Any]
+    [Union[str, Iterable[str]], DefaultNamedArg(bool, 'raise_exception')], Any
+]
 
 DumpFunc = Callable[
-    [Union[str, Iterable[str]], Any, DefaultNamedArg(bool, 'overwrite')],
-    None]
+    [Union[str, Iterable[str]], Any, DefaultNamedArg(bool, 'overwrite')], None
+]
 
 
 _parametrize__load_dump = pytest.mark.parametrize(
@@ -32,7 +32,7 @@ _parametrize__load_dump = pytest.mark.parametrize(
     (
         (fileio.load_pickle, fileio.dump_pickle, {'key': 11}),
         (fileio.load_text, fileio.dump_text, 'text'),
-    )
+    ),
 )
 
 
@@ -50,36 +50,36 @@ def _test__no_file__exception(load_func: LoadFunc) -> None:
     `raise_exception` argument is `True`
     """
     with pytest.raises(FileNotFoundError):
-        read = load_func('non-existent-file.pp',
-                         raise_exception=True)
+        read = load_func('non-existent-file.pp', raise_exception=True)
         assert read is None
     # endwith
 
 
 @_parametrize__load_dump
 def test__load__no_file__no_exception(
-        load_func: LoadFunc, dump_func: DumpFunc, value: Any) -> None:
+    load_func: LoadFunc, dump_func: DumpFunc, value: Any
+) -> None:
     """
     Test load functions that no exception is raised with default argument
     """
     # pylint: disable=unused-argument # dump_func, value
     _test__no_file__no_exception(load_func)
-    
+
 
 @_parametrize__load_dump
 def test_load_pickle__no_file__exception(
-        load_func: LoadFunc, dump_func: DumpFunc, value: Any) -> None:
+    load_func: LoadFunc, dump_func: DumpFunc, value: Any
+) -> None:
     """
     Test load functions that exception is raised when the `raise_exception`
     argument is `True`
     """
     # pylint: disable=unused-argument # dump_func, value
     _test__no_file__exception(load_func)
-    
+
 
 @_parametrize__load_dump
-def test__regular(
-        load_func: LoadFunc, dump_func: DumpFunc, value: Any) -> None:
+def test__regular(load_func: LoadFunc, dump_func: DumpFunc, value: Any) -> None:
     """
     Test regular dump and load sequence.
     """
@@ -101,11 +101,12 @@ def test__regular(
         os.rmdir(temp_dir_name)
 
     # endtry
-    
+
 
 @_parametrize__load_dump
 def test__destination_exists__no_exception(
-        load_func: LoadFunc, dump_func: DumpFunc, value: Any) -> None:
+    load_func: LoadFunc, dump_func: DumpFunc, value: Any
+) -> None:
     """
     Test that exception is not raised if the `overwrite` argument is `True`.
     """
@@ -121,11 +122,12 @@ def test__destination_exists__no_exception(
         os.remove(temp_filename)
 
     assert read == value
-    
+
 
 @_parametrize__load_dump
 def test__destination_exists__exception(
-        load_func: LoadFunc, dump_func: DumpFunc, value: Any) -> None:
+    load_func: LoadFunc, dump_func: DumpFunc, value: Any
+) -> None:
     """
     Test that `FileExistsError` is raised when destination file already
     exists.

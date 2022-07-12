@@ -33,34 +33,28 @@ class RegistryFactory(Generic[_TargetClassT]):
         # noqa: D107
         self._registry: Dict[str, Type[_TargetClassT]] = {}
 
-
     @overload
     def register(
         self, argument: Optional[str] = None
     ) -> Callable[[Type[_TargetClassT]], Type[_TargetClassT]]:
         ...
 
-
     @overload
-    def register(
-        self, argument: type
-    ) -> Type[_TargetClassT]:
+    def register(self, argument: type) -> Type[_TargetClassT]:
         ...
-
 
     @class_decorator
     def register(
         self, argument: Union[None, str, type] = None
     ) -> Union[
-            Type[_TargetClassT],
-            Callable[[Type[_TargetClassT]], Type[_TargetClassT]]
+        Type[_TargetClassT], Callable[[Type[_TargetClassT]], Type[_TargetClassT]]
     ]:
         """
         Decorate class to register.
 
         The decorated class needs to have an initializer with the following
         signature:
-        
+
           def __init__(self, parameters: Dict[str, Any]) -> None:
               :param parameters: A `dict` with parameters for the initializer.
 
@@ -73,8 +67,9 @@ class RegistryFactory(Generic[_TargetClassT]):
         def _wrapper(target: Type[_TargetClassT]) -> Type[_TargetClassT]:
             key_name = target.__name__ if name is None else name
 
-            assert key_name not in self._registry, \
-                f"Name ({key_name}) already registered."
+            assert (
+                key_name not in self._registry
+            ), f"Name ({key_name}) already registered."
 
             self._registry[key_name] = target
             return target
@@ -86,7 +81,6 @@ class RegistryFactory(Generic[_TargetClassT]):
 
         name = argument
         return _wrapper
-
 
     def create(
         self, name: str, arguments: Optional[Dict[str, Any]] = None
@@ -100,6 +94,6 @@ class RegistryFactory(Generic[_TargetClassT]):
         """
         if arguments is None:
             arguments = {}
-            
+
         target = self._registry[name]
         return target(**arguments)

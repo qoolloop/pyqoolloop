@@ -10,7 +10,7 @@ FunctionInfo = namedtuple('FunctionInfo', ('module', 'function', 'dir'))
 def get_function_info(depth: int = 1) -> FunctionInfo:
     """
     Get information about a function on the call stack.
-    
+
     :param depth: -- How much up the stack to look. 1 for the caller.
 
     :return:

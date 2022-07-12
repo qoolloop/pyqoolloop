@@ -4,7 +4,7 @@ Module for file manipulation.
 .. note::
   Note that reading pickle files from an unknown source can be a security risk.
 """
-#FUTURE: Deprecate in favor of `pathlib`, but what to do with `overwrite` argument?
+# FUTURE: Deprecate in favor of `pathlib`, but what to do with `overwrite` argument?
 import os
 import pickle
 from typing import (
@@ -17,9 +17,7 @@ from typing import (
 )
 
 
-def _write_mode(
-        overwrite: bool = False
-) -> str:
+def _write_mode(overwrite: bool = False) -> str:
     mode = 'w' if overwrite else 'x'
     return mode
 
@@ -32,9 +30,7 @@ def _join_path(file_path: Union[str, Iterable[str]]) -> str:
 
 
 def open_write_text(
-        file_path: Union[str, Iterable[str]],
-        *,
-        overwrite: bool = False
+    file_path: Union[str, Iterable[str]], *, overwrite: bool = False
 ) -> IO[str]:
     """
     Open text file for writing.
@@ -54,14 +50,14 @@ def open_write_text(
     mode = _write_mode(overwrite=overwrite)
 
     full_path = _join_path(file_path)
-    
-    return open(full_path, mode, encoding='utf-8')  # pylint: disable=consider-using-with
+
+    return open(
+        full_path, mode, encoding='utf-8'
+    )  # pylint: disable=consider-using-with
 
 
 def open_write_binary(
-        file_path: Union[str, Iterable[str]],
-        *,
-        overwrite: bool = False
+    file_path: Union[str, Iterable[str]], *, overwrite: bool = False
 ) -> IO[bytes]:
     """
     Open binary file for writing.
@@ -80,12 +76,12 @@ def open_write_binary(
     mode = _write_mode(overwrite=overwrite)
 
     full_path = _join_path(file_path)
-    
+
     return open(full_path, mode + 'b')  # pylint: disable=consider-using-with
 
 
 def open_read_text(
-        file_path: Union[str, Iterable[str]],
+    file_path: Union[str, Iterable[str]],
 ) -> IO[str]:
     """
     Open text file for reading.
@@ -99,12 +95,12 @@ def open_read_text(
     :return: File object that is opened.
     """
     full_path = _join_path(file_path)
-    
+
     return open(full_path, 'r', encoding='utf-8')  # pylint: disable=consider-using-with
 
 
 def open_read_binary(
-        file_path: Union[str, Iterable[str]],
+    file_path: Union[str, Iterable[str]],
 ) -> IO[bytes]:
     """
     Open binary file for reading.
@@ -117,14 +113,12 @@ def open_read_binary(
     :return: File object that is opened.
     """
     full_path = _join_path(file_path)
-    
+
     return open(full_path, 'rb')  # pylint: disable=consider-using-with
 
 
 def load_pickle(
-        file_path: Union[str, Iterable[str]],
-        *,
-        raise_exception: bool = False
+    file_path: Union[str, Iterable[str]], *, raise_exception: bool = False
 ) -> Any:
     """
     Load from pickle file.
@@ -157,10 +151,7 @@ def load_pickle(
 
 
 def dump_pickle(
-        file_path: Union[str, Iterable[str]],
-        value: object,
-        *,
-        overwrite: bool = False
+    file_path: Union[str, Iterable[str]], value: object, *, overwrite: bool = False
 ) -> None:
     """
     Save to pickle file.
@@ -173,8 +164,7 @@ def dump_pickle(
     :raises FileExistsError: Raised when file already exists and
       `overwrite` is `False`
     """
-    with open_write_binary(file_path, overwrite=overwrite) \
-         as write_file:
+    with open_write_binary(file_path, overwrite=overwrite) as write_file:
         pickle.dump(value, write_file)
     # endwith
 
@@ -215,10 +205,7 @@ def load_text(
 
 
 def dump_text(
-        file_path: Union[str, Iterable[str]],
-        value: str,
-        *,
-        overwrite: bool = False
+    file_path: Union[str, Iterable[str]], value: str, *, overwrite: bool = False
 ) -> None:
     """
     Save text to file.
@@ -239,8 +226,7 @@ def dump_text(
     # endwith
 
 
-def list_directories(
-        path: str, exclusion: Iterable[str] = ()) -> List[str]:
+def list_directories(path: str, exclusion: Iterable[str] = ()) -> List[str]:
     """
     List directories in directory.
 
@@ -248,7 +234,7 @@ def list_directories(
     :param exclusion: Directories to ignore.  #TODO: rename `exclude`
     """
     exclusion = set(exclusion)
-    
+
     result = []
     for each in os.scandir(path):
         if each.is_dir() and (each.name not in exclusion):
