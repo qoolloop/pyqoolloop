@@ -195,6 +195,7 @@ def deprecated(
     message: Optional[str] = None,
     raise_exception: Optional[bool] = None,
 ) -> GenericDecorator:
+    # FUTURE: Doesn't work with `@overrides`.
     """
     Deprecate a decorated function or class.
 
@@ -666,6 +667,8 @@ def extension(
     __extended_class: Type[object],
 ) -> Callable[[Type[TargetClassT]], Type[TargetClassT]]:
     # ClassWrapperFactory[TargetClassT]:
+    # FUTURE: Allow adding superclasses in extension class, including the extended \
+    # class
     """
     Add all the methods in the decorated class to another class.
 
