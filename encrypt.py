@@ -101,6 +101,11 @@ class EncryptorDecryptor:
     Class for encryption and decryption.
 
     This can encrypt and decrypt various types of data.
+
+    :param key: The key for encryption.
+        Otherwise, a list of candidate keys for decryption. Only the
+        first (primary) key is used for encryption. Keys must be generated
+        with :func:`generate_key()`.
     """
 
     _FernetType = Union[Fernet, MultiFernet]
@@ -109,12 +114,6 @@ class EncryptorDecryptor:
 
     def __init__(self, key: Union[bytes, Sequence[bytes]]):
         # noqa: D205,D400
-        """
-        :param key: The key for encryption.
-          Otherwise, a list of candidate keys for decryption. Only the
-          first (primary) key is used for encryption. Keys must be generated
-          with :func:`generate_key()`.
-        """
 
         def _check_key(key: bytes) -> None:
             decoded_key = base64.urlsafe_b64decode(key)

@@ -151,7 +151,6 @@ class DifferentFunctions(Protocol):
         self,
         arg0: Any = 0,
     ) -> None:
-        """Initialize instance."""
         super().__init__()
 
     def func(
@@ -190,7 +189,6 @@ class PassArgsClass:
     class_func_call_count = 0
 
     def __init__(self, arg0: Any = 0, kwargs: Optional[Dict[str, Any]] = None) -> None:
-        # noqa: D107
         _pass_args_function(arg0, kwargs=kwargs)
 
         self.init_call_count = 1

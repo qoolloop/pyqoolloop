@@ -20,7 +20,7 @@ class LoadFunc(Protocol):
 
     def __call__(
         self, file_path: Union[str, Iterable[str]], *, raise_exception: bool = False
-    ) -> Any:
+    ) -> Any:  # noqa: D102
         ...
 
 
@@ -33,7 +33,7 @@ class DumpFunc(Protocol):
         value: Any,
         *,
         overwrite: bool = False,
-    ) -> None:
+    ) -> None:  # noqa: D102
         ...
 
 

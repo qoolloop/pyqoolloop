@@ -30,7 +30,6 @@ class RegistryFactory(Generic[_TargetClassT]):
     """
 
     def __init__(self) -> None:
-        # noqa: D107
         self._registry: Dict[str, Type[_TargetClassT]] = {}
 
     @overload
