@@ -28,6 +28,8 @@ class Guard(AbstractContextManager[T]):
           type, assigning it a value through this `Guard` does not modify the
           original variable.
         """
+        assert not isinstance(variable, type)
+
         self._variable = variable
 
         if reentrant:

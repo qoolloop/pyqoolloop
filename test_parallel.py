@@ -10,7 +10,7 @@ from .parallel import Guard
 
 
 def test__Guard__int() -> None:
-    """Test `Guard` with `int`."""
+    """Test :class:`Guard` with `int`."""
     guarded_variable = 1
     guard = Guard(guarded_variable)
 
@@ -19,7 +19,7 @@ def test__Guard__int() -> None:
 
 
 def test__Guard__dataclass() -> None:
-    """Test `Guard` with `dataclass`."""
+    """Test :class:`Guard` with `dataclass`."""
 
     @dataclass
     class _Class:
@@ -37,9 +37,19 @@ def test__Guard__dataclass() -> None:
         assert instance.variable == 3
 
 
+def test__Guard__type() -> None:
+    """Test that :class:`Guard` doesn't accept types (only instances)."""
+
+    class _Class:  # pylint: disable=too-few-public-methods
+        ...
+
+    with pytest.raises(AssertionError):
+        _ = Guard(_Class)
+
+
 @pytest.mark.unreliable
 def test__Guard__lock() -> None:
-    """Test `Guard` that guards agains parallels access."""
+    """Test :class:`Guard` that guards agains parallels access."""
 
     @dataclass
     class _Class:
