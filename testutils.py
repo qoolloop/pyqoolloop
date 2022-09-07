@@ -243,7 +243,7 @@ def combine_lists(
     """
     assert len(args) >= 1
 
-    if isinstance(args[0], Iterable):
+    if isinstance(args[0], Iterable) and not isinstance(args[0], dict):
         args0 = args[0]
 
     else:
@@ -258,11 +258,11 @@ def combine_lists(
 
         result = []
         for another in another_list:
-            if not isinstance(another, Iterable):
+            if (not isinstance(another, Iterable)) or isinstance(another, dict):
                 another = [another]
 
             for one in one_list:
-                if not isinstance(one, Iterable):
+                if (not isinstance(one, Iterable)) or isinstance(one, dict):
                     one = [one]
 
                 else:

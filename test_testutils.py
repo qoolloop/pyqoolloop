@@ -13,8 +13,8 @@ import pytest
 from .testutils import (
     combine_lists,
     current_function_name,
+    equal_set,
     included,
-    to_set,
 )
 
 
@@ -141,16 +141,52 @@ def test__included__equals(
         ([[5, 8], [6, 8]], ([5, 6], 8)),
         ([[5, 7], [5, 8], [6, 7], [6, 8]], ([5, 6], [7, 8])),
         ([[5, 6, 10], [5, 6, 7, 8], [9, 10], [9, 7, 8]], ([(5, 6), 9], [10, (7, 8)])),
+        ([{}], ([{}],)),  # 1 single empty dict argument
+        ([{}], ({},)),  # 1 single empty dict argument
+        (
+            [{}, {"a": 1}],
+            (
+                [
+                    {},
+                    {"a": 1},
+                ],
+            ),
+        ),  # 1 two dict argument
+        ([], ([{}], [])),
+        ([], ({}, [])),
+        ([[{}]], ([{}], [()])),
+        ([], ([], [{}])),
+        ([], ([], {})),
+        ([[{}]], ([()], [{}])),
+        ([[{}]], ([()], {})),
+        ([[{}, {"a": 4}]], ([[{}]], [{"a": 4}])),
+        ([[{}, {"a": 4}]], ([[{}]], {"a": 4})),
+        ([[{}, {"a": 4}]], ({}, [{"a": 4}])),
+        ([[{}, {"a": 4}]], ({}, {"a": 4})),
+        (
+            [[{"a": 5}, {"b": 7}], [{"a": 5}, {"c": 8}]],
+            ([{"a": 5}], [{"b": 7}, {"c": 8}]),
+        ),
+        (
+            [[{"a": 5}, {"b": 7}], [{"a": 5}, {"c": 8}]],
+            ({"a": 5}, [{"b": 7}, {"c": 8}]),
+        ),
+        ([[{"a": 5}, {"c": 8}], [6, {"c": 8}]], ([{"a": 5}, 6], [{"c": 8}])),
+        ([[{"a": 5}, {"c": 8}], [6, {"c": 8}]], ([{"a": 5}, 6], {"c": 8})),
+        (
+            [[{"a": 5}, 7], [{"a": 5}, {"c": 8}], [6, 7], [6, {"c": 8}]],
+            ([{"a": 5}, 6], [7, {"c": 8}]),
+        ),
+        (
+            [[{"a": 5}, 6, 10], [{"a": 5}, 6, 7, {"c": 8}], [9, 10], [9, 7, {"c": 8}]],
+            ([({"a": 5}, 6), 9], [10, (7, {"c": 8})]),
+        ),
     ],
 )
 def test_combine_lists(
     expected_result: Sequence[object], args: Iterable[Union[object, Iterable[object]]]
 ) -> None:
-    """
-    Test for `combine_lists()`.
-    """
-    expected_set = to_set(expected_result)
-
+    """Test for `combine_lists()`."""
     if len(expected_result) == 0:
         with pytest.raises(AssertionError):
             result_list = combine_lists(*args)
@@ -162,9 +198,7 @@ def test_combine_lists(
         for raise_if_empty in [True, False]:
             result_list = combine_lists(*args, raise_if_empty=raise_if_empty)
 
-            result_set = to_set(result_list)
-
-            assert expected_set == result_set
+            assert equal_set(expected_result, result_list)
 
     # enddef
 
