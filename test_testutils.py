@@ -214,6 +214,10 @@ def test_combine_lists(
         with pytest.raises(AssertionError):
             result_list = combine_lists(*args, raise_if_empty=True)
 
+        result_list = combine_lists(*args, raise_if_empty=False)
+        assert len(result_list) == 0
+
+
     else:
         for raise_if_empty in [True, False]:
             result_list = combine_lists(*args, raise_if_empty=raise_if_empty)
