@@ -254,7 +254,7 @@ def combine_lists(
 
     else:
         one_list = args0
-        another_list = combine_lists(*args[1:])
+        another_list = combine_lists(*args[1:], raise_if_empty=raise_if_empty)
 
         result = []
         for another in another_list:
