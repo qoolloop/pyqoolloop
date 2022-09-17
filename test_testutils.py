@@ -1,6 +1,4 @@
-"""
-Tests for `testutils` module.
-"""
+"""Tests for `testutils` module."""
 from typing import (
     Any,
     Iterable,
@@ -58,9 +56,7 @@ from .testutils import (
     ),
 )
 def test__included(one: Iterable[Any], another: Iterable[Any], result: bool) -> None:
-    """
-    Test for `included()`.
-    """
+    """Test for `included()`."""
     assert result == included(one, another)
 
 
@@ -106,9 +102,7 @@ def test__included(one: Iterable[Any], another: Iterable[Any], result: bool) -> 
 def test__included__equals(
     one: Iterable[Any], another: Iterable[Any], result: bool
 ) -> None:
-    """
-    Test for `included()` with `equals` argument specified.
-    """
+    """Test for `included()` with `equals` argument specified."""
 
     def _str_equals(one: Any, another: Any) -> bool:
         return str(one) == str(another)
@@ -217,7 +211,6 @@ def test_combine_lists(
         result_list = combine_lists(*args, raise_if_empty=False)
         assert len(result_list) == 0
 
-
     else:
         for raise_if_empty in [True, False]:
             result_list = combine_lists(*args, raise_if_empty=raise_if_empty)
@@ -243,9 +236,7 @@ def test__combine_lists__add(operand: list[object]) -> None:
 
 
 def test__current_function_name() -> None:
-    """
-    Test for `current_function_name()`.
-    """
+    """Test for `current_function_name()`."""
 
     def _inner_function() -> None:
         assert current_function_name() == '_inner_function'
