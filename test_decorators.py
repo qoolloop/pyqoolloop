@@ -75,7 +75,7 @@ class PassArgsFunction(Protocol):
     """A callable that takes 3 arguments."""
 
     def __call__(self, arg0: Any = 0, arg1: Any = 1, arg2: Any = 2) -> None:
-        ...
+        """Take 3 arguments."""
 
 
 def _pass_args_function(
@@ -151,7 +151,6 @@ class DifferentFunctions(Protocol):
         self,
         arg0: Any = 0,
     ) -> None:
-        """Initialize instance."""
         super().__init__()
 
     def func(
@@ -190,7 +189,6 @@ class PassArgsClass:
     class_func_call_count = 0
 
     def __init__(self, arg0: Any = 0, kwargs: Optional[Dict[str, Any]] = None) -> None:
-        # noqa: D107
         _pass_args_function(arg0, kwargs=kwargs)
 
         self.init_call_count = 1
@@ -227,6 +225,9 @@ class PassArgsClassWithMandatoryKeyword:
     Test class for methods with mandatory keyword argument.
 
     Follows DifferentFunctions protocol.
+
+    :param arg0: Optional argument.
+    :param kwargs: Mandatory keyword argument.
     """
 
     # pylint: disable=missing-function-docstring  # b/c follows protocol
@@ -236,10 +237,6 @@ class PassArgsClassWithMandatoryKeyword:
     class_func_call_count = 0
 
     def __init__(self, arg0: Any = 0, *, kwargs: Dict[str, Any]) -> None:
-        """
-        :param arg0: Optional argument.
-        :param kwargs: Mandatory keyword argument.
-        """
         _pass_args_function(arg0, kwargs=kwargs)
 
         self.init_call_count = 1
@@ -1560,7 +1557,7 @@ def test__extend_with_class_method() -> None:
     # Doesn't work for mypy 0.800
     # _ClassA = cast(Type[NewStaticMethodClass], _ClassA)
 
-    CastedA = cast(Type[NewClassMethodClass], _ClassA)
+    CastedA = cast(Type[NewClassMethodClass], _ClassA)  # noqa: N806 # naming
     casted_a = CastedA()
 
     _test_new_class_method(CastedA, casted_a)
@@ -1599,7 +1596,7 @@ def test__extend_with_static_method() -> None:
 
     # Doesn't work for mypy 0.800
     # _ClassA = cast(Type[NewStaticMethodClass], _ClassA)
-    CastedA = cast(Type[NewStaticMethodClass], _ClassA)
+    CastedA = cast(Type[NewStaticMethodClass], _ClassA)  # noqa: N806 # naming
     casted_a = CastedA()
 
     _test_new_static_method(CastedA, casted_a)

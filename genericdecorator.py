@@ -101,7 +101,7 @@ To be used if the wrapped class has the same methods as the target class.
 
 
 class GenericDecorator:
-    """
+    r"""
     A convenience class for creating decorators.
 
     Decorators created with this can decorate functions and methods.
@@ -110,6 +110,40 @@ class GenericDecorator:
     decorated.
 
     See implementation of decorators in this module.
+
+    :param wrapper_for_function:
+        |   (callable(target, \*args, \**kwargs))
+        | Function to be called when decorating a regular function or method.
+        | `target` will have the following signature:
+        |   callable(\*args, \**kwargs)
+
+    :param wrapper_for_instancemethod:
+        |   (callable(target, instance, cls, \*args, \**kwargs))
+        | Function to be called when decorating an instance method.
+        | `target` will have the following signature:
+        |   callable(\*args, \**kwargs)
+        | If `None`, `wrapper_for_function()` will be called with
+        | appropriate arguments.
+
+    :param wrapper_for_staticmethod:
+        |   (callable(target, instance, cls, \*args, \**kwargs))
+        | Function to be called when decorating a static method.
+        | `target` will have the following signature:
+        |   callable(\*args, \**kwargs)
+        | If `None`, `wrapper_for_function()` will be called with
+        | appropriate arguments.
+
+    :param wrapper_for_classmethod:
+        |   (callable(target, instance, cls, \*args, \**kwargs))
+        | Function to be called when decorating a class method.
+        | `target` will have the following signature:
+        |   callable(\*args, \**kwargs)
+        | If `None`, `wrapper_for_function()` will be called with
+        | appropriate arguments.
+
+    .. note::
+        `wrapper_for_instancemethod`, `wrapper_for_staticmethod` and
+        `wrapper_for_classmethod` are only used for class decorators.
     """
 
     # FUTURE: Type hints probably aren't what they're supposed to be,
@@ -128,42 +162,6 @@ class GenericDecorator:
         ] = None,
     ) -> None:
         # noqa: D205,D400,D415
-        r"""
-        :param wrapper_for_function:
-          |   (callable(target, \*args, \**kwargs))
-          | Function to be called when decorating a regular function or method.
-          | `target` will have the following signature:
-          |   callable(\*args, \**kwargs)
-
-        :param wrapper_for_instancemethod:
-          |   (callable(target, instance, cls, \*args, \**kwargs))
-          | Function to be called when decorating an instance method.
-          | `target` will have the following signature:
-          |   callable(\*args, \**kwargs)
-          | If `None`, `wrapper_for_function()` will be called with
-          | appropriate arguments.
-
-        :param wrapper_for_staticmethod:
-          |   (callable(target, instance, cls, \*args, \**kwargs))
-          | Function to be called when decorating a static method.
-          | `target` will have the following signature:
-          |   callable(\*args, \**kwargs)
-          | If `None`, `wrapper_for_function()` will be called with
-          | appropriate arguments.
-
-        :param wrapper_for_classmethod:
-          |   (callable(target, instance, cls, \*args, \**kwargs))
-          | Function to be called when decorating a class method.
-          | `target` will have the following signature:
-          |   callable(\*args, \**kwargs)
-          | If `None`, `wrapper_for_function()` will be called with
-          | appropriate arguments.
-
-        .. note::
-          `wrapper_for_instancemethod`, `wrapper_for_staticmethod` and
-          `wrapper_for_classmethod` are only used for class decorators.
-
-        """
         # Attempt to use this class also as a context manager (for use with
         # `with` statements) has been abandoned, because:
         # - It is not possible to write loops with context managers.
@@ -304,9 +302,9 @@ class GenericDecorator:
             return target_class
 
         @wraps(cast(Callable[..., TargetReturnT], target))
-        def factory_for_target(*args: Any, **kwargs: Any) -> TargetReturnT:
+        def factory_for_target(*args: Any, **kwargs: Any) -> Any:  # TargetReturnT:
             return cast(  # cast from another TargetReturnT
-                TargetReturnT,
+                Any,  # TargetReturnT,
                 decorator_self.wrapper_for_function(
                     cast(Any, target), *args, **kwargs  # cast to another TargetReturnT
                 ),
