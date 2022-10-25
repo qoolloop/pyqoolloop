@@ -302,9 +302,9 @@ class GenericDecorator:
             return target_class
 
         @wraps(cast(Callable[..., TargetReturnT], target))
-        def factory_for_target(*args: Any, **kwargs: Any) -> TargetReturnT:
+        def factory_for_target(*args: Any, **kwargs: Any) -> Any:  # TargetReturnT:
             return cast(  # cast from another TargetReturnT
-                TargetReturnT,
+                Any,  # TargetReturnT,
                 decorator_self.wrapper_for_function(
                     cast(Any, target), *args, **kwargs  # cast to another TargetReturnT
                 ),
