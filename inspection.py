@@ -74,13 +74,10 @@ def autoimport_modules(
     imported = dict[str, ModuleType]()
 
     assert path.exists(), f"Path '{path.absolute()}' does not exist"
-    print(path)  # TODO: remove
     for each_path in path.glob('*.py'):
-        print("Checking %s" % each_path.name)  # TODO: remove
         if _to_ignore(each_path.name, ignore_prefixes):
             continue
 
-        print("Importing %s from %s" % ('.' + each_path.stem, package))  # TODO: remove
         module = import_module('.' + each_path.stem, package)
         if logger is not None:
             logger.info("Imported %s", module.__name__)
