@@ -6,7 +6,11 @@ from typing import Tuple
 from .inspection import (
     FunctionInfo,
     get_function_info,
+    autoimport_modules,
 )
+
+
+### get_function()
 
 
 def test__get_function_info() -> None:
@@ -58,3 +62,27 @@ def test__get_function_info__depth__namedtuple() -> None:
     assert function_info.module == 'pyqoolloop.test_inspection'
     assert function_info.function == 'test__get_function_info__depth__namedtuple'
     assert function_info.dir.endswith('/pyqoolloop')
+
+
+# import_modules()
+
+
+def test__autoimport_modules() -> None:
+    """Test for `autoimport_modules()`."""
+    print("Scanning ", __package__ + '._test_autoimport_modules')
+    imported = autoimport_modules(__package__ + '.test_autoimport_modules')
+    print(imported)  # TODO: remove
+    assert imported['a_module'].a_variable == 1
+    assert imported['may_ignore'].maybe_ignored is False
+
+
+def test__autoimport_modules__ignore_prefixes() -> None:
+    """Test for `autoimport_modules()` with `ignore_prefixes` specified."""
+    print("Scanning ", __package__ + '._test_autoimport_modules')
+    imported = autoimport_modules(
+        __package__ + '.test_autoimport_modules',
+        ignore_prefixes=('test_', '__', 'may_ignore'),
+    )
+    print(imported)  # TODO: remove
+    assert imported['a_module'].a_variable == 1
+    assert 'may_ignore' not in imported
