@@ -8,7 +8,7 @@ from typing import (
     Union,
 )
 
-from . import introspect
+from . import inspection
 
 import logging  # pylint: disable=wrong-import-order
 
@@ -43,7 +43,7 @@ def make_filename(
       other than the fact that `extension` will be used as the extension
       and the directory will be respected.
     """
-    module_name, function_name, dir_name = introspect.get_function_info(depth=depth + 1)
+    module_name, function_name, dir_name = inspection.get_function_info(depth=depth + 1)
 
     split_module = module_name.split('.')
 
@@ -131,7 +131,7 @@ def assert_no_change(
     """
     # FUTURE: Automatically create subdirectory?
     if save:
-        module_name, function_name, _ = introspect.get_function_info(depth=depth + 1)
+        module_name, function_name, _ = inspection.get_function_info(depth=depth + 1)
         _logger.error("`save` is `True` in %s (%s)", function_name, module_name)
         _logger.error("`value` is %r", value)
 

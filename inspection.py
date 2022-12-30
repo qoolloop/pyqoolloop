@@ -1,4 +1,4 @@
-"""Defines functions for introspection."""
+"""Defines functions for processing Python internals."""
 from collections import namedtuple
 import inspect
 import os
