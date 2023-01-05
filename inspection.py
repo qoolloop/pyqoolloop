@@ -6,8 +6,9 @@ import inspect
 import logging
 import os
 from pathlib import Path
+import re
 from types import ModuleType
-from typing import Iterable, Optional
+from typing import Optional
 
 
 FunctionInfo = namedtuple('FunctionInfo', ('module', 'function', 'dir'))
@@ -44,27 +45,17 @@ def get_function_info(depth: int = 1) -> FunctionInfo:
 def autoimport_modules(
     package: str,
     *,
-    ignore_prefixes: Iterable[str] = ('test_', '__'),
+    ignore_pattern: str = '(test_.*)|(__.*)',
     logger: Optional[logging.Logger] = None,
 ) -> dict[str, ModuleType]:
     """
     Import modules in a package.
 
     :param package: Name of package to import modules from.
-    :param ignore_prefix: Prefixes of modules to ignore.
+    :param ignore_pattern: Regular expression for names of modules to ignore.
 
     :returns: A `dict` of imported modules, with their names as keys.
-
-    # TODO: `inspection` may not be the right module for this.
     """
-
-    def _to_ignore(name: str, ignore_prefixes: Iterable[str]) -> bool:
-        for each_prefix in ignore_prefixes:
-            if name.startswith(each_prefix):
-                return True
-
-        return False
-
     spec = find_spec(package)
     assert spec is not None, f"'{package}' not found."
     assert (
@@ -73,11 +64,13 @@ def autoimport_modules(
     assert len(spec.submodule_search_locations) == 1
     path = Path(spec.submodule_search_locations[0])
 
+    ignore = re.compile(ignore_pattern)
+
     imported = dict[str, ModuleType]()
 
     assert path.exists(), f"Path '{path.absolute()}' does not exist"
     for each_path in path.glob('*.py'):
-        if _to_ignore(each_path.name, ignore_prefixes):
+        if ignore.match(each_path.name):
             continue
 
         module = import_module('.' + each_path.stem, package)

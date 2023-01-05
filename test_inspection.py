@@ -64,7 +64,7 @@ def test__autoimport_modules__ignore_prefixes() -> None:
     """Test for `autoimport_modules()` with `ignore_prefixes` specified."""
     imported = autoimport_modules(
         __package__ + '.test_autoimport_modules',
-        ignore_prefixes=('test_', '__', 'may_ignore'),
+        ignore_pattern='(test_.*)|(__.*)|(may_ignore\\.py)',
     )
     assert imported['a_module'].A_CONSTANT == 1
     assert 'may_ignore' not in imported
