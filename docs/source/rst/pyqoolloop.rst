@@ -1,6 +1,14 @@
 pyqoolloop package
 ==================
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   pyqoolloop.test_autoimport_modules
+
 Submodules
 ----------
 
@@ -10,7 +18,9 @@ Submodules
    pyqoolloop.decorators
    pyqoolloop.factory
    pyqoolloop.genericdecorator
+   pyqoolloop.inspection
    pyqoolloop.parallel
+   pyqoolloop.testregression
    pyqoolloop.testutils
 
 Module contents
