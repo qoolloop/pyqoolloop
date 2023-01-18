@@ -3,6 +3,7 @@ import os
 import pickle
 from typing import (
     Any,
+    Callable,
     Optional,
     TypeVar,
     Union,
@@ -96,14 +97,19 @@ def _save_or_load(
     return previous_value
 
 
+def _equals(one: object, another: object) -> bool:
+    return one == another
+
+
 def assert_no_change(
     value: object,
-    *,  # too many positional arguments
+    *,
     save: bool,
     index: Union[None, int, float] = None,
     suffix: Optional[str] = None,
     error_on_save: bool = True,
     depth: int = 1,
+    equals: Callable[[object, object], bool] = _equals,
     _logger: logging.Logger = _logger,
 ) -> None:
     """
@@ -117,8 +123,9 @@ def assert_no_change(
     :param suffix: Extra `str` to discriminate the values.
     :param error_on_save: If `True`, raises class:`AssertionError` if
         `save == True`. This can be used to avoid leaving `save` as True.
-    :para depth: (For internal use)  #TODO: rename with prefix `_`
-    :para _logger: (For test) Logger to use.
+    :param depth: (For internal use)  #TODO: rename with prefix `_`
+    :param equals: Function to check that values are equal.
+    :param _logger: (For test) Logger to use.
 
     :raises AssertionError: If `value` does not equal saved value
     :raises FileNotFoundError: If `value` has not been saved before
@@ -139,7 +146,9 @@ def assert_no_change(
         value, save, index=index, suffix=suffix, depth=depth + 1
     )
 
-    assert previous_value == value, f"{previous_value!r}\nDOES NOT EQUAL{value!r}\n"
+    assert equals(
+        previous_value, value
+    ), f"{previous_value!r}\nDOES NOT EQUAL{value!r}\n"
 
     if error_on_save:
         assert not save
