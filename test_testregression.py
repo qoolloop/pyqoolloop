@@ -43,9 +43,9 @@ _parametrize__assert_no_change = pytest.mark.parametrize(
     'value, kwargs',
     (
         (1, {}),
-        (2, dict(index=0)),
-        (3, dict(suffix="suffix")),
-        (4, dict(index=0, suffix="suffix")),
+        (2, {'index': 0}),
+        (3, {'suffix': "suffix"}),
+        (4, {'index': 0, 'suffix': "suffix"}),
     ),
 )
 

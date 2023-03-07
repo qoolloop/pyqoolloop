@@ -42,7 +42,7 @@ def test__RegistryFactory() -> None:
         ("_AnotherClass", _AnotherClass),
         ("_YetAnotherClass", _YetAnotherClass),
     ):
-        arguments = dict(name=name, klass=klass)
+        arguments = {'name': name, 'klass': klass}
         instance = registry.create(name, arguments)
         assert isinstance(instance, klass)
         assert instance.name == name
