@@ -30,7 +30,6 @@ class RegistryFactory(Generic[_TargetClassT]):
     """
 
     def __init__(self) -> None:
-        # noqa: D107
         self._registry: Dict[str, Type[_TargetClassT]] = {}
 
     @overload
@@ -82,6 +81,15 @@ class RegistryFactory(Generic[_TargetClassT]):
         name = argument
         return _wrapper
 
+    def get_class(self, name: str) -> Type[_TargetClassT]:
+        """
+        Get a class registered to this registry.
+
+        :param name: Name for the class specified with `register()`.
+        """
+        target = self._registry[name]
+        return target
+
     def create(
         self, name: str, arguments: Optional[Dict[str, Any]] = None
     ) -> _TargetClassT:
@@ -95,5 +103,5 @@ class RegistryFactory(Generic[_TargetClassT]):
         if arguments is None:
             arguments = {}
 
-        target = self._registry[name]
+        target = self.get_class(name)
         return target(**arguments)
