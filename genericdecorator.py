@@ -224,7 +224,7 @@ class GenericDecorator:
             class Descriptor(Protocol):
                 """Protocol for descriptor."""
 
-                def __get__(
+                def __get__(  # type: ignore[empty-body]  # mypy 1.0.1 problem
                     self, instance: TargetClassT, owner: Type[TargetClassT]
                 ) -> TargetFunctionWrapper[TargetReturnT]:
                     ...

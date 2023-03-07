@@ -1059,7 +1059,7 @@ def test__synchronized_on_instance__class__no_parentheses() -> None:
 # common cache ###
 
 _parametrize__cache_test = pytest.mark.parametrize(
-    'decorator, kwargs', ((cache, dict(expire_time_secs=10)),)
+    'decorator, kwargs', ((cache, {'expire_time_secs': 10}),)
 )
 
 

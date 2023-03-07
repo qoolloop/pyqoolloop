@@ -5,7 +5,7 @@ msgpack
 msgpack-types
 
 # test
-mypy==0.982
+mypy==1.0.1
 black
 flake8 < 5  # https://github.com/tholo/pytest-flake8/issues/87
 pep8-naming
