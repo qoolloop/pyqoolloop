@@ -1,0 +1,10 @@
+@startuml RegistryFactory
+set namespaceSeparator none
+class "pyqoolloop.factory.RegistryFactory" as pyqoolloop.factory.RegistryFactory {
+  create(name: str, arguments: Optional[Dict[str, Any]]) -> _TargetClassT
+  register(argument: Optional[str]) -> Callable[[Type[_TargetClassT]], Type[_TargetClassT]]
+}
+class "typing.Generic" as typing.Generic {
+}
+pyqoolloop.factory.RegistryFactory --|> typing.Generic
+@enduml
