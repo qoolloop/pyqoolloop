@@ -55,6 +55,8 @@ def autoimport_modules(
     :param ignore_pattern: Regular expression for names of modules to ignore.
 
     :returns: A `dict` of imported modules, with their names as keys.
+
+    .. note:: Will import Python files ('*.py') and directories (packages).
     """
     spec = find_spec(package)
     assert spec is not None, f"'{package}' not found."
@@ -65,11 +67,15 @@ def autoimport_modules(
     path = Path(spec.submodule_search_locations[0])
 
     ignore = re.compile(ignore_pattern)
+    python_files = re.compile('.*\\.py')
 
     imported = dict[str, ModuleType]()
 
     assert path.exists(), f"Path '{path.absolute()}' does not exist"
-    for each_path in path.glob('*.py'):
+    for each_path in path.glob('*'):
+        if not (python_files.match(each_path.name) or each_path.is_dir()):
+            continue
+
         if ignore.match(each_path.name):
             continue
 
