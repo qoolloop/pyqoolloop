@@ -67,7 +67,7 @@ def autoimport_modules(
     path = Path(spec.submodule_search_locations[0])
 
     ignore = re.compile(ignore_pattern)
-    python_files = re.compile('.*\.py')
+    python_files = re.compile('.*\\.py')
 
     imported = dict[str, ModuleType]()
 
