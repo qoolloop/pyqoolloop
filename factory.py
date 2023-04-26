@@ -51,12 +51,6 @@ class RegistryFactory(Generic[_TargetClassT]):
         """
         Decorate class to register.
 
-        The decorated class needs to have an initializer with the following
-        signature:
-
-          def __init__(self, parameters: Dict[str, Any]) -> None:
-              :param parameters: A `dict` with parameters for the initializer.
-
         :param name: Name for the class that is to be specified for creation.
           If omitted, the name of the class will be used.
 
