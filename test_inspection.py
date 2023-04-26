@@ -58,13 +58,25 @@ def test__autoimport_modules() -> None:
     imported = autoimport_modules(__package__ + '.test_autoimport_modules')
     assert imported['a_module'].A_CONSTANT == 1
     assert imported['may_ignore'].MAYBE_IGNORED is False
+    assert imported['subdirectory'].SUBDIRECTORY_CONTENT is True
+    assert imported['subdirectory'].submodule.SOMETHING_IN_A_SUBMODULE == 'imported'
 
 
-def test__autoimport_modules__ignore_prefixes() -> None:
-    """Test for `autoimport_modules()` with `ignore_prefixes` specified."""
+def test__autoimport_modules__ignore_pattern__file() -> None:
+    """Test `autoimport_modules()` with `ignore_pattern` specified for files."""
     imported = autoimport_modules(
         __package__ + '.test_autoimport_modules',
         ignore_pattern='(test_.*)|(__.*)|(may_ignore\\.py)',
     )
     assert imported['a_module'].A_CONSTANT == 1
     assert 'may_ignore' not in imported
+
+
+def test__autoimport_modules__ignore_pattern__directory() -> None:
+    """Test `autoimport_modules()` with `ignore_pattern` specified for directories."""
+    imported = autoimport_modules(
+        __package__ + '.test_autoimport_modules',
+        ignore_pattern='(test_.*)|(__.*)|(subdirectory)',
+    )
+    assert imported['a_module'].A_CONSTANT == 1
+    assert 'subdirectory' not in imported
