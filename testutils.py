@@ -209,26 +209,27 @@ def combine_lists(
     *args: Union[object, Iterable[object]], raise_if_empty: bool = True
 ) -> list[object]:
     r"""
-    Create a list of lists by taking one element from each of the arguments.
+    Create a list of entries created by taking one element from each of the arguments.
 
     Can be used to create test parameters from combinations.
 
-    If one of the arguments is not iterable, it will be treated as though
+    If one of the arguments is not an iterable, it will be treated as though
     it was in a list.
 
-    If both elements in the arguments are iterable, the result will be a
+    If both elements in the arguments are lists, the result will be a
     concatenation.
 
-    If one of the elements is iterable and the other is not, the non-iterable
-    will be prefixed or appended to the iterable.
+    If one of the elements is a list and the other is not, the non-list element
+    will be prefixed or appended to the list.
 
-    If both elmenets in the arguments are not iterable, a list will be created
-    with both elments.
+    If both elements are not lists, a list will be created with both elments.
 
-      >>> to_set( combine_lists(('a', 'b'), ('c', 'd')) ) == \
+    If there is only one argument, that argument will be returned as is.
+
+      >>> to_set( combine_lists(['a', 'b'], ['c', 'd']) == \
       ...  to_set( [['a', 'c'], ['a', 'd'], ['b', 'c'], ['b', 'd']] )
       True
-      >>> to_set( combine_lists(('a', 'b'), 'c') ) == \
+      >>> to_set( combine_lists(['a', 'b'], 'c') ) == \
       ...  to_set( [['a', 'c'], ['b', 'c']] )
       True
 
@@ -243,7 +244,7 @@ def combine_lists(
     """
     assert len(args) >= 1
 
-    if isinstance(args[0], Iterable) and not isinstance(args[0], dict):
+    if isinstance(args[0], list):
         args0 = args[0]
 
     else:
@@ -258,11 +259,11 @@ def combine_lists(
 
         result = []
         for another in another_list:
-            if (not isinstance(another, Iterable)) or isinstance(another, dict):
+            if not isinstance(another, list):
                 another = [another]
 
             for one in one_list:
-                if (not isinstance(one, Iterable)) or isinstance(one, dict):
+                if not isinstance(one, list):
                     one = [one]
 
                 else:
