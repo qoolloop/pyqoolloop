@@ -226,7 +226,7 @@ def combine_lists(
 
     If there is only one argument, that argument will be returned as is.
 
-      >>> to_set( combine_lists(['a', 'b'], ['c', 'd']) == \
+      >>> to_set( combine_lists(['a', 'b'], ['c', 'd']) ) == \
       ...  to_set( [['a', 'c'], ['a', 'd'], ['b', 'c'], ['b', 'd']] )
       True
       >>> to_set( combine_lists(['a', 'b'], 'c') ) == \
