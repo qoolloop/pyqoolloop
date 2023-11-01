@@ -9,7 +9,7 @@ Declares convenient decorators.
 from collections import OrderedDict
 import copy
 import datetime
-from functools import partial
+from functools import partial, wraps
 import inspect
 import logging
 import threading
@@ -255,36 +255,40 @@ def retry(
       decorator
     """
 
-    def retry_function(
+    def decorator(
         target: Callable[..., TargetReturnT],  # TargetFunctionT,
-        *args: Any,
-        **kwargs: Any,
-    ) -> TargetReturnT:
-        if extra_argument and ('attempts' in kwargs):
-            actual_attempts = kwargs['attempts']
-            del kwargs['attempts']
+    ) -> Callable[..., TargetReturnT]:  # TargetFunctionT
+        @wraps(target)
+        def retry_function(
+            *args: Any,
+            **kwargs: Any,
+        ) -> TargetReturnT:
+            if extra_argument and ('attempts' in kwargs):
+                actual_attempts = kwargs['attempts']
+                del kwargs['attempts']
 
-        else:
-            actual_attempts = attempts
+            else:
+                actual_attempts = attempts
 
-        for iteration in range(actual_attempts):
-            try:
-                return target(*args, **kwargs)
+            for iteration in range(actual_attempts):
+                try:
+                    return target(*args, **kwargs)
 
-            except exceptions:
-                if iteration < actual_attempts - 1:
-                    time.sleep(interval_secs)
+                except exceptions:
+                    if iteration < actual_attempts - 1:
+                        time.sleep(interval_secs)
 
-                else:
-                    raise
-                # endif
-            # endtry
+                    else:
+                        raise
+                    # endif
+                # endtry
 
-        # exception is not available outside except clause in Python 3
-        # https://cosmicpercolator.com/2016/01/13/exception-leaks-in-python-2-and-3/
-        raise AssertionError("Unexpected execution")
+            # exception is not available outside except clause in Python 3
+            # https://cosmicpercolator.com/2016/01/13/exception-leaks-in-python-2-and-3/
+            raise AssertionError("Unexpected execution")
 
-    decorator = GenericDecorator(retry_function)
+        return retry_function
+
     return decorator
 
 

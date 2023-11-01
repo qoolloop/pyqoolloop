@@ -521,6 +521,18 @@ def test__deprecated__raise_exception_for_deprecated_false() -> None:
     # endtry
 
 
+def test__deprecated__name() -> None:
+    """Test that the name of the function decorated with `@retry` is correct."""
+
+    _logger = logging.Logger('name')
+
+    @deprecated(_logger)
+    def target() -> None:
+        pass
+
+    assert target.__name__ == 'target'
+
+
 # retry ###
 
 
@@ -789,6 +801,16 @@ def test__retry(
             each('arg1', 'arg2', 'kwarg1', 'kwarg2')
 
         assert result['count'] == attempts
+
+
+def test__retry__name() -> None:
+    """Test that the name of the function decorated with `@retry` is correct."""
+
+    @retry(1, Exception)
+    def target() -> None:
+        pass
+
+    assert target.__name__ == 'target'
 
 
 # common functions ###
