@@ -67,7 +67,7 @@ def function_decorator(target: TargetFunctionT) -> TargetFunctionT:
     return target
 
 
-def class_decorator(target: TargetClassT) -> TargetClassT:
+def class_decorator(target: TargetFunctionT) -> TargetFunctionT:
     """
     Decorate a decorator that decorates classes.
 
