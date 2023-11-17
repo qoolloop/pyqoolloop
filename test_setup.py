@@ -1,4 +1,5 @@
 """Tests for settings in `setup.cfg`."""
+
 import re
 
 import pytest

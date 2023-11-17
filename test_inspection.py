@@ -1,4 +1,5 @@
 """Tests for `introspect.py`."""
+
 from typing import Tuple
 
 from .inspection import (

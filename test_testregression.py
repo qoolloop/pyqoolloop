@@ -1,4 +1,5 @@
 """Tests for the `testregression` module."""
+
 import logging
 import os
 from typing import (

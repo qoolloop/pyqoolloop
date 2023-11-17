@@ -654,8 +654,7 @@ def test__retry__with_extra_argument(attempts: int) -> None:
     """Test `@retry` with `attemps` argument."""
     result = {'count': 0}
 
-    class _AnException(Exception):
-        ...
+    class _AnException(Exception): ...
 
     @retry(1, _AnException, extra_argument=True)
     def _func(
@@ -690,8 +689,7 @@ def test__retry__without_extra_argument(attempts_value: int) -> None:
     """Test `@retry` on instance method without `attempts` argument."""
     result = {'count': 0}
 
-    class _AnException(Exception):
-        ...
+    class _AnException(Exception): ...
 
     @retry(1, _AnException, extra_argument=False)
     def _func(

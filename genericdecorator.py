@@ -193,12 +193,10 @@ class GenericDecorator:
         self, target: None
     ) -> Union[
         FunctionWrapperFactory[TargetFunctionT], ClassWrapperFactory[TargetClassT]
-    ]:
-        ...
+    ]: ...
 
     @overload
-    def __call__(self, target: TargetT) -> TargetT:
-        ...
+    def __call__(self, target: TargetT) -> TargetT: ...
 
     def __call__(self, target: Optional[TargetT] = None) -> Any:
         # FUTURE: Unions don't work with `TypeVar` (mypy 0.800)
@@ -225,8 +223,7 @@ class GenericDecorator:
 
                 def __get__(  # type: ignore[empty-body]  # mypy 1.0.1 problem
                     self, instance: TargetClassT, owner: Type[TargetClassT]
-                ) -> TargetFunctionWrapper[TargetReturnT]:
-                    ...
+                ) -> TargetFunctionWrapper[TargetReturnT]: ...
 
             class DescriptorForAllMethods:
                 """Descriptor super class."""

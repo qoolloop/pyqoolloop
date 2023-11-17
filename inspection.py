@@ -1,4 +1,5 @@
 """Defines functions for processing Python internals."""
+
 from collections import namedtuple
 from importlib import import_module
 from importlib.util import find_spec

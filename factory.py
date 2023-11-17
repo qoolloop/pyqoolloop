@@ -1,4 +1,5 @@
 """Defines classes related to the Factory pattern."""
+
 from typing import (
     Any,
     Callable,
@@ -34,12 +35,10 @@ class RegistryFactory(Generic[_TargetClassT]):
     @overload
     def register(
         self, argument: Optional[str] = None
-    ) -> Callable[[Type[_TargetClassT]], Type[_TargetClassT]]:
-        ...
+    ) -> Callable[[Type[_TargetClassT]], Type[_TargetClassT]]: ...
 
     @overload
-    def register(self, argument: type) -> Type[_TargetClassT]:
-        ...
+    def register(self, argument: type) -> Type[_TargetClassT]: ...
 
     @class_decorator
     def register(
