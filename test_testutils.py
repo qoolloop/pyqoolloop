@@ -1,4 +1,5 @@
 """Tests for `testutils` module."""
+
 from typing import (
     Any,
     Iterable,

@@ -1,6 +1,7 @@
 [tool.black]
-# Using black instead of ruff for now until start using gettext
-# Currently strings shown the user are quoted with double quotation marks.
+# Using black instead of ruff for now until start using gettext.
+# https://github.com/astral-sh/ruff/issues/7525
+# Currently strings not shown to the user are quoted with single quotation marks.
 line-length = 88
 skip-string-normalization = true
 target-version = ['py310']
@@ -11,7 +12,6 @@ preview = true
 line-length = 88
 
 [tool.ruff.format]
-quote-style = "single"
 
 [tool.ruff.lint]
 select = [
@@ -51,6 +51,7 @@ ignore = [
 
 [tool.ruff.lint.flake8-pytest-style]
 parametrize-names-type = "csv"
+parametrize-values-type = "tuple"  # TODO: Will switch to `list`, because `combine_lists()` returns `list`.
 
 [tool.ruff.lint.isort]
 force-sort-within-sections = true

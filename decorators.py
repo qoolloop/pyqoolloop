@@ -298,8 +298,7 @@ def synchronized_on_function(
     *,
     lock_field: str = '__lock',
     dont_synchronize: bool = False,
-) -> TargetFunctionT:
-    ...
+) -> TargetFunctionT: ...
 
 
 @overload
@@ -389,8 +388,7 @@ def synchronized_on_instance(
 @overload
 def synchronized_on_instance(
     __target: TargetT, *, lock_field: str = '__lock'
-) -> TargetT:
-    ...
+) -> TargetT: ...
 
 
 @generic_decorator
@@ -513,8 +511,7 @@ def cache(
     max_entries: Optional[int] = None,
     dont_synchronize: bool = False,
     exclude_kw: Iterable[str] = (),
-) -> TargetFunctionT:
-    ...
+) -> TargetFunctionT: ...
 
 
 @overload
