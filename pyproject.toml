@@ -1,4 +1,6 @@
 [tool.black]
+# Using black instead of ruff for now until start using gettext
+# Currently strings shown the user are quoted with double quotation marks.
 line-length = 88
 skip-string-normalization = true
 target-version = ['py310']
@@ -54,7 +56,7 @@ parametrize-names-type = "csv"
 force-sort-within-sections = true
 
 [tool.pytest.ini_options]
-addopts = "--mypy --ruff --ruff-format --doctest-modules --strict-markers"
+addopts = "--mypy --ruff --black --doctest-modules --strict-markers"
 markers = [
     "unreliable: mark a test that doesn't always pass"
 ]

@@ -1,5 +1,7 @@
 """Module with useful functions for unit testing."""
+
 import inspect
+import logging
 from typing import (
     Any,
     Callable,
@@ -12,8 +14,6 @@ from typing import (
 )
 
 from typing_extensions import Protocol
-
-import logging  # pylint: disable=wrong-import-order
 
 _logger = logging.getLogger(__name__)
 
