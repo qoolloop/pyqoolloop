@@ -1,5 +1,7 @@
 """Module with useful functions for unit testing."""
+
 import inspect
+import logging
 from typing import (
     Any,
     Callable,
@@ -12,8 +14,6 @@ from typing import (
 )
 
 from typing_extensions import Protocol
-
-import logging  # pylint: disable=wrong-import-order
 
 _logger = logging.getLogger(__name__)
 
@@ -107,14 +107,14 @@ def _included_set(
     another_set: Iterable[Any],
     equals: Operator = eq_operator,  # pylint: disable=redefined-outer-name
 ) -> bool:
-    def _iterable_in(each: Any, another_set: Iterable[Any]) -> bool:
+    def _iterable_in(each: Any, another_set: Iterable[Any]) -> bool:  # noqa: ANN401
         for other in another_set:
             if equals(each, other):
                 return True
 
         return False
 
-    def _set_in(each: Any, another_set: set[Any]) -> bool:
+    def _set_in(each: Any, another_set: set[Any]) -> bool:  # noqa: ANN401
         return each in another_set
 
     if equals == eq_operator:  # pylint: disable=comparison-with-callable

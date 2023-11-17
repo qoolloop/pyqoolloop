@@ -1,5 +1,5 @@
 """Defines functions for processing Python internals."""
-from collections import namedtuple
+
 from importlib import import_module
 from importlib.util import find_spec
 import inspect
@@ -8,10 +8,19 @@ import os
 from pathlib import Path
 import re
 from types import ModuleType
-from typing import Optional
+from typing import NamedTuple, Optional
 
 
-FunctionInfo = namedtuple('FunctionInfo', ('module', 'function', 'dir'))
+class FunctionInfo(NamedTuple):
+    """
+    Information about a function.
+
+    See :func:`get_function_info()`
+    """
+
+    module_name: str
+    function_name: str
+    dir_name: str
 
 
 def get_function_info(depth: int = 1) -> FunctionInfo:

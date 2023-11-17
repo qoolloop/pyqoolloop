@@ -1,13 +1,11 @@
-"""
-Tests for the `testregression` module.
-"""
+"""Tests for the `testregression` module."""
+
+import logging
 import os
 from typing import (
     Any,
     Dict,
 )
-
-import logging
 
 import pytest
 
@@ -18,10 +16,7 @@ from .testregression import (
 
 
 def test__make_filename__float_index() -> None:
-    """
-    Test that the `index` argument is treated differently is different types
-    are passed to `make_filename()`.
-    """
+    """Test `index` argument with different types for `make_filename()`."""
     int_filename = make_filename(index=1)
     float_filename = make_filename(index=1.1)
 
@@ -29,10 +24,7 @@ def test__make_filename__float_index() -> None:
 
 
 def test__make_filename__index() -> None:
-    """
-    Test that the `index` argument is treated as a `int`, when an `int` is
-    passed to `make_filename()`.
-    """
+    """Test `index` argument with `int` for `make_filename()`."""
     int_filename = make_filename(index=1)
 
     assert '1' in int_filename
@@ -52,13 +44,10 @@ _parametrize__assert_no_change = pytest.mark.parametrize(
 
 @_parametrize__assert_no_change
 def test__assert_no_change(value: int, kwargs: Dict[str, Any]) -> None:
-    """
-    Test that `assert_no_change()` raises `AssertionError`, when
-    the `value` argument has changed.
-    """
+    """Test that `assert_no_change()` raises `AssertionError` with change in `value`."""
 
     class _NonExistent:  # pylint: disable=too-few-public-methods
-        """Something that should not exist elsewhere"""
+        """Something that should not exist elsewhere."""
 
     save = False
 
@@ -74,8 +63,9 @@ def test__assert_no_change(value: int, kwargs: Dict[str, Any]) -> None:
 @_parametrize__assert_no_change
 def test__assert_no_change__no_save(value: int, kwargs: Dict[str, Any]) -> None:
     """
-    Test that `assert_no_change()` raises `FileNotFoundError` when the `save`
-    argument is `False` and no previous value has been saved.
+    Test that `assert_no_change()` raises `FileNotFoundError`.
+
+    When the `save` is `False` and no previous value has been saved.
     """
     with pytest.raises(FileNotFoundError):
         assert_no_change(value, save=False, **kwargs)
@@ -84,8 +74,9 @@ def test__assert_no_change__no_save(value: int, kwargs: Dict[str, Any]) -> None:
 @_parametrize__assert_no_change
 def test__assert_no_change__save(value: int, kwargs: Dict[str, Any]) -> None:
     """
-    Test that `assert_no_change()` raises `AssertionError` when the `save`
-    argument is `True`.
+    Test that `assert_no_change()` raises `AssertionError`.
+
+    When the `save` is `True`.
     """
     with pytest.raises(AssertionError):
         assert_no_change(value, save=True, **kwargs)
@@ -96,10 +87,10 @@ def test__assert_no_change__save__no_previous(
     value: int, kwargs: Dict[str, Any]
 ) -> None:
     """
-    Test that no exception occurs with no value being saved, when  the `save`
-    argument if `True`for `assert_no_change()`.
-    """
+    Test that no exception occurs with no value being saved.
 
+    When  the `save` if `True`for `assert_no_change()`.
+    """
     filename = make_filename(**kwargs)
     try:
         os.remove(filename)
@@ -117,9 +108,7 @@ def test__assert_no_change__save__no_previous(
 
 
 def test__assert_no_change__logger() -> None:
-    """
-    Test that logging is as expected for `assert_no_change()`.
-    """
+    """Test that logging is as expected for `assert_no_change()`."""
     # pylint: disable=missing-function-docstring
 
     class _Logger(logging.Logger):

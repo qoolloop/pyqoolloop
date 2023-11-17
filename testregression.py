@@ -1,4 +1,6 @@
 """Functions for testing for regression."""
+
+import logging
 import os
 import pickle
 from typing import (
@@ -11,8 +13,6 @@ from typing import (
 
 from . import inspection
 
-import logging  # pylint: disable=wrong-import-order
-
 _logger = logging.getLogger(__name__)
 
 
@@ -21,7 +21,7 @@ _ParameterT = TypeVar('_ParameterT')
 
 def make_filename(
     *,
-    index: Union[None, int, float] = None,
+    index: Union[None, float] = None,
     suffix: Optional[str] = None,
     extension: str = '.p',
     depth: int = 1,
@@ -66,11 +66,12 @@ def make_filename(
 
 def _save_or_load(
     value: _ParameterT,
+    *,
     save: bool,
-    index: Union[None, int, float] = None,
+    index: Union[None, float] = None,
     suffix: Optional[str] = None,
     depth: int = 1,
-) -> Any:
+) -> Any:  # noqa: ANN401
     class _CannotRead:  # pylint: disable=too-few-public-methods
         """Something that should not exist elsewhere."""
 
@@ -78,9 +79,9 @@ def _save_or_load(
 
     try:
         with open(filename, 'rb') as read_file:
-            previous_value = pickle.load(read_file)
+            previous_value = pickle.load(read_file)  # noqa: S301
 
-    except IOError:
+    except OSError:
         if save:
             previous_value = _CannotRead
 
@@ -101,11 +102,11 @@ def _equals(one: object, another: object) -> bool:
     return one == another
 
 
-def assert_no_change(
+def assert_no_change(  # noqa: PLR0913  # FUTURE: Until keyword arguments are handled separtely
     value: object,
     *,
     save: bool,
-    index: Union[None, int, float] = None,
+    index: Union[None, float] = None,
     suffix: Optional[str] = None,
     error_on_save: bool = True,
     depth: int = 1,
@@ -143,7 +144,7 @@ def assert_no_change(
         _logger.error("`value` is %r", value)
 
     previous_value = _save_or_load(
-        value, save, index=index, suffix=suffix, depth=depth + 1
+        value, save=save, index=index, suffix=suffix, depth=depth + 1
     )
 
     assert equals(

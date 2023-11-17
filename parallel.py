@@ -13,21 +13,21 @@ from typing import (
     Union,
 )
 
-
 T = TypeVar('T')  # pylint: disable=invalid-name
 
 
 class Guard(AbstractContextManager[T]):
-    """Class to guard access to an instance."""
+    """
+    Class to guard access to an instance.
+
+    :param variable: Variable to guard. If the variable is of a primitive
+        type, assigning it a value through this `Guard` does not modify the
+        original variable.
+    """
 
     def __init__(self, variable: T, *, reentrant: bool = False) -> None:
-        """
-        Initialize with variable to guard.
+        assert not isinstance(variable, type)
 
-        :param variable: Variable to guard. If the variable is of a primitive
-          type, assigning it a value through this `Guard` does not modify the
-          original variable.
-        """
         self._variable = variable
 
         if reentrant:

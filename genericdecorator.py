@@ -13,16 +13,15 @@ import inspect
 from typing import (
     Any,
     Callable,
-    cast,
     Generic,
     Optional,
-    overload,
     Protocol,
-    Union,
     Type,
     TypeVar,
+    Union,
+    cast,
+    overload,
 )
-
 
 # https://mypy.readthedocs.io/en/stable/generics.html#declaring-decorators
 TargetReturnT = TypeVar('TargetReturnT')
@@ -54,10 +53,9 @@ class TargetFunctionWrapper(Protocol[TargetReturnT]):
     """
 
     # Callable[[TargetFunctionT, ...], TargetReturnT]
-    def __call__(
+    def __call__(  # noqa: D102  # D105 doesn't seem to work here
         self, target: Callable[..., TargetReturnT], *vals: Any, **kwargs: Any
-    ) -> TargetReturnT:  # noqa: D102
-        ...
+    ) -> TargetReturnT: ...
 
 
 class TargetMethodWrapper(Protocol, Generic[TargetReturnT, TargetClassT_contra]):
@@ -68,15 +66,14 @@ class TargetMethodWrapper(Protocol, Generic[TargetReturnT, TargetClassT_contra])
     """
 
     # Callable[[TargetFunctionT, ...], TargetReturnT]
-    def __call__(
+    def __call__(  # noqa: D102  # D105 doesn't seem to work here
         self,
         target: Callable[..., TargetReturnT],
         instance: TargetClassT_contra,
         cls: Type[TargetClassT_contra],
         *vals: Any,
         **kwargs: Any,
-    ) -> TargetReturnT:  # noqa: D102
-        ...
+    ) -> TargetReturnT: ...
 
 
 # Alias currently doesn't work https://github.com/python/mypy/issues/8273
@@ -161,7 +158,6 @@ class GenericDecorator:
             TargetMethodWrapper[TargetReturnT, TargetClassT]
         ] = None,
     ) -> None:
-        # noqa: D205,D400,D415
         # Attempt to use this class also as a context manager (for use with
         # `with` statements) has been abandoned, because:
         # - It is not possible to write loops with context managers.
@@ -177,8 +173,8 @@ class GenericDecorator:
 
         def default_wrapper(
             target: Callable[..., TargetReturnT],  # TargetFunctionT,
-            instance: TargetClassT,  # pylint: disable=unused-argument
-            cls: Type[TargetClassT],  # pylint: disable=unused-argument
+            instance: TargetClassT,  # pylint: disable=unused-argument  # noqa: ARG001
+            cls: Type[TargetClassT],  # pylint: disable=unused-argument  # noqa: ARG001
             *args: Any,
             **kwargs: Any,
         ) -> TargetReturnT:
@@ -194,12 +190,10 @@ class GenericDecorator:
         self, target: None
     ) -> Union[
         FunctionWrapperFactory[TargetFunctionT], ClassWrapperFactory[TargetClassT]
-    ]:
-        ...
+    ]: ...
 
     @overload
-    def __call__(self, target: TargetT) -> TargetT:
-        ...
+    def __call__(self, target: TargetT) -> TargetT: ...
 
     def __call__(self, target: Optional[TargetT] = None) -> Any:
         # FUTURE: Unions don't work with `TypeVar` (mypy 0.800)
@@ -226,8 +220,7 @@ class GenericDecorator:
 
                 def __get__(  # type: ignore[empty-body]  # mypy 1.0.1 problem
                     self, instance: TargetClassT, owner: Type[TargetClassT]
-                ) -> TargetFunctionWrapper[TargetReturnT]:
-                    ...
+                ) -> TargetFunctionWrapper[TargetReturnT]: ...
 
             class DescriptorForAllMethods:
                 """Descriptor super class."""
@@ -302,7 +295,9 @@ class GenericDecorator:
             return target_class
 
         @wraps(cast(Callable[..., TargetReturnT], target))
-        def factory_for_target(*args: Any, **kwargs: Any) -> Any:  # TargetReturnT:
+        def factory_for_target(
+            *args: Any, **kwargs: Any
+        ) -> Any:  # TargetReturnT:  # noqa: ANN401
             return cast(  # cast from another TargetReturnT
                 Any,  # TargetReturnT,
                 decorator_self.wrapper_for_function(
@@ -321,20 +316,17 @@ class GenericDecorator:
             # Type[TargetClassT]
             return _make_class_decorator(target)
 
-        elif callable(target):
+        if callable(target):
             return factory_for_target
 
-        elif isinstance(target, staticmethod):
+        if isinstance(target, staticmethod):
             # https://stackoverflow.com/a/5345526/2400328
-            raise AssertionError("Put decorator after @staticmethod")
+            raise AssertionError("Put decorator after @staticmethod")  # noqa: TRY004
 
-        elif isinstance(target, classmethod):
-            raise AssertionError("Put decorator after @classmethod")
+        if isinstance(target, classmethod):
+            raise AssertionError("Put decorator after @classmethod")  # noqa: TRY004
 
-        else:
-            raise AssertionError(
-                f"Unsupported target of type: {type(target)!r}\n"
-                "(You could have forgotten argument to decorator.)"
-            )
-
-        # endif
+        raise AssertionError(
+            f"Unsupported target of type: {type(target)!r}\n"
+            "(You could have forgotten argument to decorator.)"
+        )

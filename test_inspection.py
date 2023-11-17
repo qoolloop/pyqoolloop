@@ -1,10 +1,11 @@
 """Tests for `introspect.py`."""
+
 from typing import Tuple
 
 from .inspection import (
     FunctionInfo,
-    get_function_info,
     autoimport_modules,
+    get_function_info,
 )
 
 
@@ -21,9 +22,9 @@ def test__get_function_info__namedtuple() -> None:
     """Test for `get_function_info()`."""
     function_info = get_function_info()
 
-    assert function_info.module == 'pyqoolloop.test_inspection'
-    assert function_info.function == 'test__get_function_info__namedtuple'
-    assert function_info.dir.endswith('/pyqoolloop')
+    assert function_info.module_name == 'pyqoolloop.test_inspection'
+    assert function_info.function_name == 'test__get_function_info__namedtuple'
+    assert function_info.dir_name.endswith('/pyqoolloop')
 
 
 def test__get_function_info__depth() -> None:
@@ -48,9 +49,9 @@ def test__get_function_info__depth__namedtuple() -> None:
 
     function_info = _deep_function()
 
-    assert function_info.module == 'pyqoolloop.test_inspection'
-    assert function_info.function == 'test__get_function_info__depth__namedtuple'
-    assert function_info.dir.endswith('/pyqoolloop')
+    assert function_info.module_name == 'pyqoolloop.test_inspection'
+    assert function_info.function_name == 'test__get_function_info__depth__namedtuple'
+    assert function_info.dir_name.endswith('/pyqoolloop')
 
 
 def test__autoimport_modules() -> None:

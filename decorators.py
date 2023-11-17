@@ -17,32 +17,32 @@ import time
 from typing import (
     Any,
     Callable,
-    cast,
     Dict,
     FrozenSet,
     Iterable,
     Optional,
-    overload,
-    Union,
     Tuple,
     Type,
     TypeVar,
+    Union,
+    cast,
+    overload,
 )
 
 from .genericdecorator import (
     GenericDecorator,
-    TargetT,
     TargetClassT,
     TargetFunctionT,
     TargetFunctionWrapper,
     TargetReturnT,
+    TargetT,
 )
 
 
 def _through_method(
     target: Callable[..., TargetReturnT],  # TargetFunctionT,
-    instance: TargetClassT,  # pylint: disable=unused-argument
-    cls: Type[TargetClassT],  # pylint: disable=unused-argument
+    instance: TargetClassT,  # pylint: disable=unused-argument  # noqa: ARG001
+    cls: Type[TargetClassT],  # pylint: disable=unused-argument  # noqa: ARG001
     *args: Any,
     **kwargs: Any,
 ) -> TargetReturnT:
@@ -90,7 +90,7 @@ def generic_decorator(target: _T) -> _T:
 
 
 @generic_decorator
-def log_calls(logger: logging.Logger, log_result: bool = True) -> GenericDecorator:
+def log_calls(logger: logging.Logger, *, log_result: bool = True) -> GenericDecorator:
     """
     Log calls to the decorated function.
 
@@ -119,7 +119,7 @@ def log_calls(logger: logging.Logger, log_result: bool = True) -> GenericDecorat
 
 @generic_decorator
 def log_calls_on_exception(
-    logger: logging.Logger, log_exception: bool = True
+    logger: logging.Logger, *, log_exception: bool = True
 ) -> GenericDecorator:
     """
     Log calls to the decorated function, when exceptions are raised.
@@ -236,6 +236,7 @@ def deprecated(
 def retry(
     attempts: int,
     exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]],
+    *,
     interval_secs: float = 0.0,
     extra_argument: bool = False,
 ) -> Callable[
@@ -298,8 +299,7 @@ def synchronized_on_function(
     *,
     lock_field: str = '__lock',
     dont_synchronize: bool = False,
-) -> TargetFunctionT:
-    ...
+) -> TargetFunctionT: ...
 
 
 @overload
@@ -389,8 +389,7 @@ def synchronized_on_instance(
 @overload
 def synchronized_on_instance(
     __target: TargetT, *, lock_field: str = '__lock'
-) -> TargetT:
-    ...
+) -> TargetT: ...
 
 
 @generic_decorator
@@ -426,11 +425,11 @@ def synchronized_on_instance(
     """
 
     def _call(
-        target: Any,  # TargetFunctionT,
+        target: Any,  # TargetFunctionT,  # noqa: ANN401
         lock_holder: TargetClassT,
         *args: Any,
         **kwargs: Any,
-    ) -> Any:  # TargetReturnT:
+    ) -> Any:  # TargetReturnT:  # noqa: ANN401
         lock = getattr(lock_holder, lock_field, None)
         if lock is None:
             lock = threading.RLock()
@@ -442,18 +441,18 @@ def synchronized_on_instance(
         return result
 
     def _call_when_decorating_method(
-        target: Any, *args: Any, **kwargs: Any  # TargetFunctionT,
-    ) -> Any:  # TargetReturnT:
+        target: Any, *args: Any, **kwargs: Any  # TargetFunctionT,  # noqa: ANN401
+    ) -> Any:  # TargetReturnT:  # noqa: ANN401
         lock_holder = args[0]  # `self`
         return _call(target, lock_holder, *args, **kwargs)
 
     def _call_when_decorating_class(
-        target: Any,  # TargetFunctionT,
+        target: Any,  # TargetFunctionT,  # noqa: ANN401
         instance: TargetClassT,
-        cls: Type[TargetClassT],  # pylint: disable=unused-argument
+        cls: Type[TargetClassT],  # pylint: disable=unused-argument  # noqa: ARG001
         *args: Any,
         **kwargs: Any,
-    ) -> Any:  # TargetReturnT:
+    ) -> Any:  # TargetReturnT:  # noqa: ANN401
         lock_holder = instance
         return _call(target, lock_holder, *args, **kwargs)
 
@@ -513,8 +512,7 @@ def cache(
     max_entries: Optional[int] = None,
     dont_synchronize: bool = False,
     exclude_kw: Iterable[str] = (),
-) -> TargetFunctionT:
-    ...
+) -> TargetFunctionT: ...
 
 
 @overload
@@ -575,7 +573,7 @@ def cache(
         # for each target function. More concretely, if `cache` decorates
         # a class, one `cache` is used for all the methods.
 
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(tz=datetime.timezone.utc)
 
         arguments = _get_signature_values(target, args, kwargs, exclude_kw)
         # https://stackoverflow.com/a/39440252/2400328

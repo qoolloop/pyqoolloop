@@ -1,4 +1,5 @@
 """Tests for `testutils` module."""
+
 from typing import (
     Any,
     Iterable,
@@ -32,11 +33,9 @@ from .testutils import (
         ({"a": 1}, {"a": 1}, True),
         ({"a": 1}, {"a": "1"}, False),
         ({"a": "1"}, {"a": "1"}, True),
-        ({"a": 1}, {"a": "1"}, False),
         ({"a": "1"}, {"a": "1", "bcd": 1}, True),
         ({"a": 1}, {"a": "1", "bcd": 1}, False),
         ({"a": "1", "bcd": 1}, {"a": "1"}, False),
-        ({}, {}, True),
         ({}, {1: 1}, True),
         ({}, {"1": 1}, True),
         ({1: 1}, {}, False),
@@ -47,7 +46,6 @@ from .testutils import (
         ({1: "1"}, {1: "1"}, True),
         ({"1": "1"}, {1: "1"}, False),
         ({1: "1"}, {"1": "1"}, False),
-        ({1: 1}, {1: "1"}, False),
         ({1: "1"}, {1: "1", "bcd": 1}, True),
         ({"1": "1"}, {1: "1", "bcd": 1}, False),
         ({1: "1"}, {"1": "1", "bcd": 1}, False),
@@ -55,7 +53,7 @@ from .testutils import (
         ({1: "1", "bcd": 1}, {1: "1"}, False),
     ),
 )
-def test__included(one: Iterable[Any], another: Iterable[Any], result: bool) -> None:
+def test__included(one: Iterable[Any], another: Iterable[Any], *, result: bool) -> None:
     """Test for `included()`."""
     assert result == included(one, another)
 
@@ -76,11 +74,9 @@ def test__included(one: Iterable[Any], another: Iterable[Any], result: bool) -> 
         ({"a": 1}, {"a": 1}, True),
         ({"a": 1}, {"a": "1"}, True),  # not `False`
         ({"a": "1"}, {"a": "1"}, True),
-        ({"a": 1}, {"a": "1"}, True),  # not `False`
         ({"a": "1"}, {"a": "1", "bcd": 1}, True),
         ({"a": 1}, {"a": "1", "bcd": 1}, True),  # not `False`
         ({"a": "1", "bcd": 1}, {"a": "1"}, False),
-        ({}, {}, True),
         ({}, {1: 1}, True),
         ({}, {"1": 1}, True),
         ({1: 1}, {}, False),
@@ -91,7 +87,6 @@ def test__included(one: Iterable[Any], another: Iterable[Any], result: bool) -> 
         ({1: "1"}, {1: "1"}, True),
         ({"1": "1"}, {1: "1"}, False),
         ({1: "1"}, {"1": "1"}, False),
-        ({1: 1}, {1: "1"}, True),  # not `False`
         ({1: "1"}, {1: "1", "bcd": 1}, True),
         ({"1": "1"}, {1: "1", "bcd": 1}, False),
         ({1: "1"}, {"1": "1", "bcd": 1}, False),
@@ -100,11 +95,11 @@ def test__included(one: Iterable[Any], another: Iterable[Any], result: bool) -> 
     ),
 )
 def test__included__equals(
-    one: Iterable[Any], another: Iterable[Any], result: bool
+    one: Iterable[Any], another: Iterable[Any], *, result: bool
 ) -> None:
     """Test for `included()` with `equals` argument specified."""
 
-    def _str_equals(one: Any, another: Any) -> bool:
+    def _str_equals(one: Any, another: Any) -> bool:  # noqa: ANN401
         return str(one) == str(another)
 
     assert result == included(one, another, equals=_str_equals)
@@ -112,7 +107,7 @@ def test__included__equals(
 
 @pytest.mark.parametrize(
     "expected_result, args",
-    [
+    (
         ([], ([],)),  # 1 empty argument
         ([1], ([1],)),  # 1 single entity argument
         ([1], (1,)),  # 1 single entity argument
@@ -241,7 +236,7 @@ def test__included__equals(
             ],
             ([1, ()], [2, ()], [(), 3]),
         ),
-    ],
+    ),
 )
 def test_combine_lists(
     expected_result: Sequence[object], args: Iterable[Union[object, Iterable[object]]]
