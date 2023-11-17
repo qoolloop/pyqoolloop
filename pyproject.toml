@@ -30,7 +30,7 @@ ignore = [
     "EXE",  # flake8-executable
     "FA",  # flake8-future-annotations
     "INT",  # flake8-gettext
-    "NP",  # NumPy-specific rules
+    "NPY",  # NumPy-specific rules
     "PD",  # pandas-vet
 
     # Not included in black
