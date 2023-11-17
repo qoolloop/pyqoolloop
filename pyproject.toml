@@ -8,6 +8,11 @@ target-version = ['py310']
 preview = true
 
 
+[tool.mypy]
+strict = true
+show_error_codes = true
+
+
 [tool.ruff]
 line-length = 88
 
@@ -88,12 +93,6 @@ mark-parentheses = false
 
 [tool.ruff.lint.isort]
 force-sort-within-sections = true
-
-[tool.ruff.lint.pylint]
-# TODO: `max-args` is temporarily increased, because behavior was changed.
-# https://github.com/pylint-dev/pylint/issues/8667
-# https://github.com/pylint-dev/pylint/issues/9099
-# max-args = 7
 
 [tool.pytest.ini_options]
 addopts = "--mypy --ruff --black --doctest-modules --strict-markers"
