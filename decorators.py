@@ -17,25 +17,25 @@ import time
 from typing import (
     Any,
     Callable,
-    cast,
     Dict,
     FrozenSet,
     Iterable,
     Optional,
-    overload,
-    Union,
     Tuple,
     Type,
     TypeVar,
+    Union,
+    cast,
+    overload,
 )
 
 from .genericdecorator import (
     GenericDecorator,
-    TargetT,
     TargetClassT,
     TargetFunctionT,
     TargetFunctionWrapper,
     TargetReturnT,
+    TargetT,
 )
 
 

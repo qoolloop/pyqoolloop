@@ -3,8 +3,8 @@ from typing import Tuple
 
 from .inspection import (
     FunctionInfo,
-    get_function_info,
     autoimport_modules,
+    get_function_info,
 )
 
 

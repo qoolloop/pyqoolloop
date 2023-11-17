@@ -1,13 +1,10 @@
-"""
-Tests for the `testregression` module.
-"""
+"""Tests for the `testregression` module."""
+import logging
 import os
 from typing import (
     Any,
     Dict,
 )
-
-import logging
 
 import pytest
 

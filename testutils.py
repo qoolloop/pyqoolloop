@@ -107,14 +107,14 @@ def _included_set(
     another_set: Iterable[Any],
     equals: Operator = eq_operator,  # pylint: disable=redefined-outer-name
 ) -> bool:
-    def _iterable_in(each: Any, another_set: Iterable[Any]) -> bool:
+    def _iterable_in(each: Any, another_set: Iterable[Any]) -> bool:  # noqa: ANN401
         for other in another_set:
             if equals(each, other):
                 return True
 
         return False
 
-    def _set_in(each: Any, another_set: set[Any]) -> bool:
+    def _set_in(each: Any, another_set: set[Any]) -> bool:  # noqa: ANN401
         return each in another_set
 
     if equals == eq_operator:  # pylint: disable=comparison-with-callable

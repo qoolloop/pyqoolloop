@@ -9,8 +9,8 @@ Module for file manipulation.
 import os
 import pickle
 from typing import (
-    Any,
     IO,
+    Any,
     Iterable,
     List,
     Optional,

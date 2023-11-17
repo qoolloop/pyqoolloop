@@ -1,6 +1,4 @@
-"""
-Test for `io` module.
-"""
+"""Test for `io` module."""
 
 import os
 import tempfile
@@ -9,9 +7,9 @@ from typing import (
     Iterable,
     Union,
 )
-from typing_extensions import Protocol
 
 import pytest
+from typing_extensions import Protocol
 
 from . import fileio
 

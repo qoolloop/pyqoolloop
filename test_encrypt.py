@@ -1,6 +1,4 @@
-"""
-Tests for `encrypt` module.
-"""
+"""Tests for `encrypt` module."""
 
 import math
 import os
@@ -14,7 +12,7 @@ from . import (
     testregression,
 )
 
-import logging  # pylint: disable=wrong-import-order
+import logging
 
 logger = logging.getLogger(__name__)
 

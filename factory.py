@@ -13,7 +13,6 @@ from typing import (
 
 from .decorators import class_decorator
 
-
 _TargetClassT = TypeVar('_TargetClassT')
 
 

@@ -1,5 +1,6 @@
 """Functions for testing for regression."""
 
+import logging
 import os
 import pickle
 from typing import (
@@ -11,8 +12,6 @@ from typing import (
 )
 
 from . import inspection
-
-import logging  # pylint: disable=wrong-import-order
 
 _logger = logging.getLogger(__name__)
 

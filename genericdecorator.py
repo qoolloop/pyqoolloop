@@ -13,16 +13,15 @@ import inspect
 from typing import (
     Any,
     Callable,
-    cast,
     Generic,
     Optional,
-    overload,
     Protocol,
-    Union,
     Type,
     TypeVar,
+    Union,
+    cast,
+    overload,
 )
-
 
 # https://mypy.readthedocs.io/en/stable/generics.html#declaring-decorators
 TargetReturnT = TypeVar('TargetReturnT')

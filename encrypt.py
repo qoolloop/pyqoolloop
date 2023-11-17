@@ -41,8 +41,7 @@ def key_from_password(password: str, salt: bytes) -> bytes:
     )
 
     password_bytes = password.encode('utf-8')
-    key = base64.urlsafe_b64encode(kdf.derive(password_bytes))
-    return key
+    return base64.urlsafe_b64encode(kdf.derive(password_bytes))
 
 
 _TUPLE_TYPE = 100

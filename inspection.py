@@ -10,7 +10,6 @@ import re
 from types import ModuleType
 from typing import Optional
 
-
 FunctionInfo = namedtuple('FunctionInfo', ('module', 'function', 'dir'))
 
 

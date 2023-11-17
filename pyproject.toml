@@ -49,6 +49,9 @@ ignore = [
     "N802",  # Function name {name} should be lowercase
 ]
 
+[tool.ruff.lint.flake8-annotations]
+allow-star-arg-any = true
+
 [tool.ruff.lint.flake8-pytest-style]
 parametrize-names-type = "csv"
 parametrize-values-type = "tuple"  # TODO: Will switch to `list`, because `combine_lists()` returns `list`.

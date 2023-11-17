@@ -1,29 +1,30 @@
 # pylint: disable=too-many-lines
 """Tests for `decorators` module."""
 import inspect
+import logging
 import threading
 import time
 from typing import (
     Any,
     Callable,
-    cast,
     Dict,
     Iterable,
     Optional,
-    Type,
     Tuple,
+    Type,
     Union,
+    cast,
 )
-from typing_extensions import Protocol
 
 import pytest
+from typing_extensions import Protocol
 
 from . import decorators
 from .decorators import (
-    deprecated,
     cache,
-    extend_with_method,
+    deprecated,
     extend_with_class_method,
+    extend_with_method,
     extend_with_static_method,
     extension,
     pass_args,
@@ -31,8 +32,6 @@ from .decorators import (
     synchronized_on_function,
     synchronized_on_instance,
 )
-
-import logging  # pylint: disable=wrong-import-order
 
 logger = logging.getLogger(__name__)
 

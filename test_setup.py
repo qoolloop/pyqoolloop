@@ -1,10 +1,7 @@
-"""
-Tests for settings in `setup.cfg`.
-"""
+"""Tests for settings in `setup.cfg`."""
 import re
 
 import pytest
-
 
 # snake_case, but Capitals allowed after `__`
 FUNCTION_RGX = '(([a-z_][a-z0-9_]{2,30}$)|([a-z_][a-z0-9_]*__[a-zA-Z0-9_]*$))'
