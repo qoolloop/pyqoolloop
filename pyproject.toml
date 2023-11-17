@@ -3,3 +3,58 @@ line-length = 88
 skip-string-normalization = true
 target-version = ['py310']
 preview = true
+
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ruff.lint]
+select = [
+    "A", "ANN", "ARG", "ASYNC", "B", "BLE", "C4", "C90", "CPY", "D", "DTZ", "E", "EM", "ERA", "F", "FBT", "FIX", "FLY", "FURB", "G", "I", "ICN", "INP", "ISC", "LOG", "N", "PERF", "PGH", "PIE", "PL", "PT", "PTH", "PYI", "RET", "RSE", "RUF", "S", "SIM", "SLF", "SLOT", "T10", "T20", "TID", "TD", "TRIO", "TRY", "UP", "W", "YTT",
+    "COM818"  # Trailing comma on bare tuple prohibited
+]
+ignore = [
+    "ANN101",  # Missing type annotation for {name} in method
+    "D107",  # Missing docstring in __init__  # Will write in class docstring
+    "D212",  # Multi-line docstring summary should start at the first line
+    "EM101",  # Exception must not use a string literal, assign to variable first
+    "S101",  # Use of assert detected
+    "TID252",  # Relative imports from parent modules are banned
+
+    # Not for pyqoolloop
+    "AIR",  # Airflow
+    "DJ",  #
+    "EXE",  # flake8-executable
+    "FA",  # flake8-future-annotations
+    "INT",  # flake8-gettext
+    "NP",  # NumPy-specific rules
+    "PD",  # pandas-vet
+
+    # Not included in black
+    "COM",  # flake8-commas
+
+    # Not now
+    "TD002",  # Missing author in TODO
+    "TD003",  # Missing issue link on the line following this TODO
+    "TRY003",  # Avoid specifying long messages outside the exception class
+]
+
+[tool.ruff.lint.extend-per-file-ignores]
+"test_*.py" = [
+    "N802",  # Function name {name} should be lowercase
+]
+
+[tool.ruff.lint.flake8-pytest-style]
+parametrize-names-type = "csv"
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+
+[tool.pytest.ini_options]
+addopts = "--mypy --ruff --ruff-format --doctest-modules --strict-markers"
+markers = [
+    "unreliable: mark a test that doesn't always pass"
+]

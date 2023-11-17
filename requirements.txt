@@ -6,17 +6,12 @@ msgpack-types
 
 # test
 mypy==1.0.1
-black
-flake8 < 5  # https://github.com/tholo/pytest-flake8/issues/87
-pep8-naming
 pytest
-pytest-black
 pytest-cov
-pytest-flake8
 pytest-mypy
-pytest-pydocstyle
-pytest-pylint
+pytest-ruff
 pytest-xdist
+ruff
 
 # documentation
 sphinx
