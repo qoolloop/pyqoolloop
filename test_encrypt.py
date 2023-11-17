@@ -1,5 +1,6 @@
 """Tests for `encrypt` module."""
 
+import logging
 import math
 import os
 import sys
@@ -11,8 +12,6 @@ from . import (
     encrypt,
     testregression,
 )
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -39,9 +38,7 @@ def _make_temporary_encryptor() -> encrypt.EncryptorDecryptor:
     ),
 )
 def test__key_from_password(index: int, password: str, salt: bytes) -> None:
-    """
-    Test that `key_from_password()` produces consistent results.
-    """
+    """Test that `key_from_password()` produces consistent results."""
     save = False
 
     key = encrypt.key_from_password(password, salt)
@@ -53,9 +50,7 @@ def test__key_from_password(index: int, password: str, salt: bytes) -> None:
 
 
 def test__encrypt_to_file__overwrite() -> None:
-    """
-    Test behavior of `encrypt_to_file()` when file already exists.
-    """
+    """Test behavior of `encrypt_to_file()` when file already exists."""
     encryptor = _make_temporary_encryptor()
 
     with tempfile.TemporaryDirectory() as directory:

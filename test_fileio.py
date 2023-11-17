@@ -17,23 +17,22 @@ from . import fileio
 class LoadFunc(Protocol):
     """Callable for loading functions in `fileio`."""
 
-    def __call__(
+    def __call__(  # noqa: D102
         self, file_path: Union[str, Iterable[str]], *, raise_exception: bool = False
-    ) -> Any:  # noqa: D102
+    ) -> Any:  # noqa: ANN401
         ...
 
 
 class DumpFunc(Protocol):
     """Callable for dumping functions in `fileio`."""
 
-    def __call__(
+    def __call__(  # noqa: D102
         self,
         file_path: Union[str, Iterable[str]],
-        value: Any,
+        value: Any,  # noqa: ANN401
         *,
         overwrite: bool = False,
-    ) -> None:  # noqa: D102
-        ...
+    ) -> None: ...
 
 
 _parametrize__load_dump = pytest.mark.parametrize(
@@ -46,17 +45,16 @@ _parametrize__load_dump = pytest.mark.parametrize(
 
 
 def _test__no_file__no_exception(load_func: LoadFunc) -> None:
-    """
-    Subtest to check that no exception is raised
-    """
+    """Subtest to check that no exception is raised."""
     read = load_func(('non-existent-file.pp',))
     assert read is None
 
 
 def _test__no_file__exception(load_func: LoadFunc) -> None:
     """
-    Subtest to check that `FileNotFoundError` is raised when the
-    `raise_exception` argument is `True`
+    Subtest to check that `FileNotFoundError` is raised.
+
+    When the `raise_exception` argument is `True`.
     """
     with pytest.raises(FileNotFoundError):
         read = load_func('non-existent-file.pp', raise_exception=True)
@@ -66,32 +64,27 @@ def _test__no_file__exception(load_func: LoadFunc) -> None:
 
 @_parametrize__load_dump
 def test__load__no_file__no_exception(
-    load_func: LoadFunc, dump_func: DumpFunc, value: Any
+    load_func: LoadFunc, dump_func: DumpFunc, value: Any  # noqa: ARG001, ANN401
 ) -> None:
-    """
-    Test load functions that no exception is raised with default argument
-    """
+    """Test load functions that no exception is raised with default argument."""
     # pylint: disable=unused-argument # dump_func, value
     _test__no_file__no_exception(load_func)
 
 
 @_parametrize__load_dump
 def test_load_pickle__no_file__exception(
-    load_func: LoadFunc, dump_func: DumpFunc, value: Any
+    load_func: LoadFunc, dump_func: DumpFunc, value: Any  # noqa: ARG001, ANN401
 ) -> None:
-    """
-    Test load functions that exception is raised when the `raise_exception`
-    argument is `True`
-    """
+    """Test that load functions raise exceptions when the `raise_exception = True`."""
     # pylint: disable=unused-argument # dump_func, value
     _test__no_file__exception(load_func)
 
 
 @_parametrize__load_dump
-def test__regular(load_func: LoadFunc, dump_func: DumpFunc, value: Any) -> None:
-    """
-    Test regular dump and load sequence.
-    """
+def test__regular(
+    load_func: LoadFunc, dump_func: DumpFunc, value: Any  # noqa: ANN401
+) -> None:
+    """Test regular dump and load sequence."""
     temp_dir_name = tempfile.mkdtemp()
     try:
         filename = 'filename'
@@ -114,11 +107,9 @@ def test__regular(load_func: LoadFunc, dump_func: DumpFunc, value: Any) -> None:
 
 @_parametrize__load_dump
 def test__destination_exists__no_exception(
-    load_func: LoadFunc, dump_func: DumpFunc, value: Any
+    load_func: LoadFunc, dump_func: DumpFunc, value: Any  # noqa: ANN401
 ) -> None:
-    """
-    Test that exception is not raised if the `overwrite` argument is `True`.
-    """
+    """Test that exception is not raised if the `overwrite` argument is `True`."""
     temp_file, temp_filename = tempfile.mkstemp()
     os.close(temp_file)
 
@@ -135,12 +126,9 @@ def test__destination_exists__no_exception(
 
 @_parametrize__load_dump
 def test__destination_exists__exception(
-    load_func: LoadFunc, dump_func: DumpFunc, value: Any
+    load_func: LoadFunc, dump_func: DumpFunc, value: Any  # noqa: ARG001, ANN401
 ) -> None:
-    """
-    Test that `FileExistsError` is raised when destination file already
-    exists.
-    """
+    """Test that `FileExistsError` is raised when destination file already exists."""
     # pylint: disable=unused-argument # load_func
 
     temp_file, temp_filename = tempfile.mkstemp()

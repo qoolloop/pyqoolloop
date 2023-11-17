@@ -112,9 +112,7 @@ class EncryptorDecryptor:
     _fernet: _FernetType
     _primary_fernet: Fernet
 
-    def __init__(self, key: Union[bytes, Sequence[bytes]]):
-        # noqa: D205,D400
-
+    def __init__(self, key: Union[bytes, Sequence[bytes]]) -> None:
         def _check_key(key: bytes) -> None:
             decoded_key = base64.urlsafe_b64decode(key)
             assert len(decoded_key) == 32, (
@@ -155,7 +153,9 @@ class EncryptorDecryptor:
         return encrypted
 
     @staticmethod
-    def _write_file(encrypted: bytes, filename: str, overwrite: bool = False) -> None:
+    def _write_file(
+        encrypted: bytes, filename: str, *, overwrite: bool = False
+    ) -> None:
         """
         Write encrypted data to file.
 
@@ -186,7 +186,7 @@ class EncryptorDecryptor:
         return result
 
     def encrypt_to_file(
-        self, value: object, filename: str, overwrite: bool = False
+        self, value: object, filename: str, *, overwrite: bool = False
     ) -> None:
         """
         Encrypt various types of data and save to file.
@@ -236,6 +236,7 @@ class EncryptorDecryptor:
         self,
         fernet: _FernetType,
         filename: str,
+        *,
         use_default: bool = False,
         default: object = None,
     ) -> object:
@@ -252,7 +253,7 @@ class EncryptorDecryptor:
         return decrypted
 
     def decrypt_from_file(
-        self, filename: str, use_default: bool = False, default: object = None
+        self, filename: str, *, use_default: bool = False, default: object = None
     ) -> object:
         """
         Decrypt contents of file saved by :func:`encrypt_to_file()`.

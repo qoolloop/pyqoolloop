@@ -13,7 +13,6 @@ from typing import (
     Union,
 )
 
-
 T = TypeVar('T')  # pylint: disable=invalid-name
 
 

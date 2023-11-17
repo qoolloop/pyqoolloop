@@ -18,7 +18,7 @@ from typing import (
 )
 
 
-def _write_mode(overwrite: bool = False) -> str:
+def _write_mode(*, overwrite: bool = False) -> str:
     mode = 'w' if overwrite else 'x'
     return mode
 
@@ -52,7 +52,7 @@ def open_write_text(
 
     full_path = _join_path(file_path)
 
-    return open(
+    return open(  # noqa: SIM115
         full_path, mode, encoding='utf-8'
     )  # pylint: disable=consider-using-with
 
@@ -78,7 +78,9 @@ def open_write_binary(
 
     full_path = _join_path(file_path)
 
-    return open(full_path, mode + 'b')  # pylint: disable=consider-using-with
+    return open(  # noqa: SIM115
+        full_path, mode + 'b'
+    )  # pylint: disable=consider-using-with
 
 
 def open_read_text(
@@ -97,7 +99,9 @@ def open_read_text(
     """
     full_path = _join_path(file_path)
 
-    return open(full_path, 'r', encoding='utf-8')  # pylint: disable=consider-using-with
+    return open(  # noqa: SIM115
+        full_path, encoding='utf-8'
+    )  # pylint: disable=consider-using-with
 
 
 def open_read_binary(
@@ -115,12 +119,12 @@ def open_read_binary(
     """
     full_path = _join_path(file_path)
 
-    return open(full_path, 'rb')  # pylint: disable=consider-using-with
+    return open(full_path, 'rb')  # pylint: disable=consider-using-with  # noqa: SIM115
 
 
 def load_pickle(
     file_path: Union[str, Iterable[str]], *, raise_exception: bool = False
-) -> Any:
+) -> Any:  # noqa: ANN401
     """
     Load from pickle file.
 
@@ -137,7 +141,7 @@ def load_pickle(
     """
     try:
         with open_read_binary(file_path) as read_file:
-            value = pickle.load(read_file)
+            value = pickle.load(read_file)  # noqa: S301
 
         return value
 

@@ -24,9 +24,7 @@ FUNCTION_RGX = '(([a-z_][a-z0-9_]{2,30}$)|([a-z_][a-z0-9_]*__[a-zA-Z0-9_]*$))'
     ),
 )
 def test__function_rgx(pattern: str) -> None:
-    """
-    Test for `function-rgx` and `method-rgx`.
-    """
+    """Test for `function-rgx` and `method-rgx`."""
     assert re.match(FUNCTION_RGX, pattern)
 
 
@@ -39,7 +37,5 @@ def test__function_rgx(pattern: str) -> None:
     ),
 )
 def test__function_rgx__bad(pattern: str) -> None:
-    """
-    Test for `function-rgx` and `method-rgx`.
-    """
+    """Test for `function-rgx` and `method-rgx`."""
     assert not re.match(FUNCTION_RGX, pattern)
