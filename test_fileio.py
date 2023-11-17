@@ -1,6 +1,7 @@
 """
 Test for `io` module.
 """
+
 import os
 import tempfile
 from typing import (

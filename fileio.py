@@ -4,6 +4,7 @@ Module for file manipulation.
 .. note::
   Note that reading pickle files from an unknown source can be a security risk.
 """
+
 # FUTURE: Deprecate in favor of `pathlib`, but what to do with `overwrite` argument?
 import os
 import pickle

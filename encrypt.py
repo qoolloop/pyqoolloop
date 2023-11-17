@@ -1,4 +1,5 @@
 """Convenience functions for encrypting/decrypting via json."""
+
 import base64
 from typing import (
     Iterable,

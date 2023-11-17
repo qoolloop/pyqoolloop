@@ -1,6 +1,7 @@
 """
 Tests for `encrypt` module.
 """
+
 import math
 import os
 import sys
