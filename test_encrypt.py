@@ -84,7 +84,6 @@ def test__encrypt_to_file__overwrite() -> None:
         # UnicodeDecodeError: 'utf-8' codec can't decode byte 0xd0 in position 1:
         # invalid continuation byte
         (0.3, b';\xd0bi$\x9bR(\x82I\xd5\xe4\x81VL\xe3\xfds\xa4\xfaIHr\x9c'),
-        # (0.4, os.urandom(24)),
         (1.1, 'password'),
         (1.2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
         (2.1, 0),
@@ -148,10 +147,8 @@ def test__encrypt_to_file__overwrite() -> None:
         (9.5, {'complex set', 1, 3.5, False, None, (1, 2)}),
     ),
 )
-def test__encrypt_decrypt(_index: float, value: object) -> None:
-    """
-    Test that `decrypt()` is possible after `encrypt()`.
-    """
+def test__encrypt_decrypt(_index: float, value: object) -> None:  # noqa: PT019
+    """Test that `decrypt()` is possible after `encrypt()`."""
     logger.info("value: %r", value)
 
     encryptor = _make_temporary_encryptor()
@@ -175,11 +172,8 @@ def test__encrypt_decrypt(_index: float, value: object) -> None:
         (1.2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
     ),
 )
-def test__encrypt_decrypt_from_file(_index: float, value: str) -> None:
-    """
-    Test that `decrypt_from_file()` can read a file stored by
-    `encrypt_to_file()`.
-    """
+def test__encrypt_decrypt_from_file(_index: float, value: str) -> None:  # noqa: PT019
+    """Test that `decrypt_from_file()` can read a file stored by `encrypt_to_file()`."""
     encryptor = _make_temporary_encryptor()
 
     with tempfile.TemporaryDirectory() as directory:
@@ -202,10 +196,7 @@ def test__encrypt_decrypt_from_file(_index: float, value: str) -> None:
     ),
 )
 def test__encrypt_decrypt_from_file__no_change(index: float, value: str) -> None:
-    """
-    Test that `decrypt_from_file()` can read a file stored in the past by
-    `encrypt_to_file()`.
-    """
+    """Test that `decrypt_from_file()` can read a file stored in the past."""
     save = False
 
     key_filename = testregression.make_filename(
@@ -247,12 +238,9 @@ def test__encrypt_decrypt_from_file__no_change(index: float, value: str) -> None
     ),
 )
 def test__encrypt_decrypt_from_file__no_change__auto_rotate(
-    _index: float, value: str
+    _index: float, value: str  # noqa: PT019
 ) -> None:
-    """
-    Test that `decrypt_from_file()` can read from files that are generated
-    with all its keys.
-    """
+    """Test that `decrypt_from_file()` can read from files with different keys."""
     primary_key = encrypt.EncryptorDecryptor.generate_key()
 
     primary_encryptor = encrypt.EncryptorDecryptor(primary_key)
@@ -286,10 +274,8 @@ def test__encrypt_decrypt_from_file__no_change__auto_rotate(
         (1.2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
     ),
 )
-def test__security(_index: float, value: str) -> None:
-    """
-    Test that files generated with one key cannot be decrypted with another.
-    """
+def test__security(_index: float, value: str) -> None:  # noqa: PT019
+    """Test that files generated with one key cannot be decrypted with another."""
     primary_key = encrypt.EncryptorDecryptor.generate_key()
 
     primary_encryptor = encrypt.EncryptorDecryptor(primary_key)
@@ -317,10 +303,8 @@ def test__security(_index: float, value: str) -> None:
         (1.2, 'mixed1234!@#$%^&*()_+{}|:"<>?-=[]\\;\',./'),
     ),
 )
-def test__rotate_file(_index: float, value: str) -> None:
-    """
-    Test that the primary key is used for encryption after `rotate_file()`.
-    """
+def test__rotate_file(_index: float, value: str) -> None:  # noqa: PT019
+    """Test that the primary key is used for encryption after `rotate_file()`."""
     primary_key = encrypt.EncryptorDecryptor.generate_key()
 
     primary_encryptor = encrypt.EncryptorDecryptor(primary_key)
@@ -356,10 +340,7 @@ def test__rotate_file(_index: float, value: str) -> None:
 
 
 def test__decrypt_from_file__no_file_exception() -> None:
-    """
-    Test that `decrypt_from_file()` raises `FileNotFoundError`, when
-    file doesn't exist.
-    """
+    """Test that `decrypt_from_file()` raises `FileNotFoundError`, when no file."""
     encryptor = _make_temporary_encryptor()
 
     with pytest.raises(FileNotFoundError):
@@ -376,10 +357,7 @@ def test__decrypt_from_file__no_file_exception() -> None:
     ),
 )
 def test__decrypt_from_file__no_file__default(default: object) -> None:
-    """
-    Test that `decrypt_from_file()` returns default value, when file doesn't
-    exist.
-    """
+    """Test that `decrypt_from_file()` returns default value, when no file."""
     encryptor = _make_temporary_encryptor()
 
     value = encryptor.decrypt_from_file("any file", use_default=True, default=default)
