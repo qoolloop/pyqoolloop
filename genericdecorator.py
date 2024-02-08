@@ -271,7 +271,8 @@ class GenericDecorator:
                     method: staticmethod,  # type: ignore[type-arg]
                 ) -> None:
                     super().__init__(
-                        method,  # type: ignore[pylance]  # `staticmethod` is descriptor
+                        # `staticmethod` is descriptor
+                        method,  # type: ignore[pylance, unused-ignore]
                         decorator_self.wrapper_for_staticmethod,
                     )
 
@@ -285,7 +286,8 @@ class GenericDecorator:
                     method: classmethod,  # type: ignore[type-arg]
                 ) -> None:
                     super().__init__(
-                        method,  # type: ignore[pylance]  # `classmethod` is descriptor
+                        # `classmethod` is descriptor
+                        method,  # type: ignore[pylance, unused-ignore]
                         decorator_self.wrapper_for_classmethod,
                     )
 
@@ -293,7 +295,8 @@ class GenericDecorator:
                 # not `ismethod()` because not bound
                 if inspect.isfunction(value):
                     descriptor_method = DescriptorForInstanceMethod(
-                        value  # type: ignore[pylance]  # `FunctionType` is descriptor
+                        # `FunctionType` is descriptor
+                        value  # type: ignore[pylance, unused-ignore]
                     )
                     setattr(target_class, name, descriptor_method)
 
@@ -334,7 +337,7 @@ class GenericDecorator:
             )
 
         if callable(target):
-            return factory_for_target  # type: ignore[pylance]
+            return factory_for_target  # type: ignore[pylance, unused-ignore]
 
         if isinstance(target, staticmethod):
             # https://stackoverflow.com/a/5345526/2400328
