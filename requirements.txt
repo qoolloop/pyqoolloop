@@ -6,9 +6,8 @@ msgpack-types
 
 # dev
 black==23.11.0
-mypy==1.0.1
+mypy==1.8
 pytest
-pytest-black
 pytest-cov
 pytest-mypy
 pytest-ruff

@@ -181,9 +181,15 @@ class GenericDecorator:
             return wrapper_for_function(target, *args, **kwargs)
 
         self.wrapper_for_function = wrapper_for_function
-        self.wrapper_for_instancemethod = wrapper_for_instancemethod or default_wrapper
-        self.wrapper_for_staticmethod = wrapper_for_staticmethod or default_wrapper
-        self.wrapper_for_classmethod = wrapper_for_classmethod or default_wrapper
+        self.wrapper_for_instancemethod: TargetMethodWrapper[
+            TargetReturnT, TargetClassT
+        ] = (wrapper_for_instancemethod or default_wrapper)
+        self.wrapper_for_staticmethod: TargetMethodWrapper[
+            TargetReturnT, TargetClassT
+        ] = (wrapper_for_staticmethod or default_wrapper)
+        self.wrapper_for_classmethod: TargetMethodWrapper[
+            TargetReturnT, TargetClassT
+        ] = (wrapper_for_classmethod or default_wrapper)
 
     @overload
     def __call__(
@@ -220,7 +226,7 @@ class GenericDecorator:
 
                 def __get__(  # type: ignore[empty-body]  # mypy 1.0.1 problem
                     self, instance: TargetClassT, owner: Type[TargetClassT]
-                ) -> TargetFunctionWrapper[TargetReturnT]: ...
+                ) -> TargetFunctionWrapper[Any]: ...  # TargetReturnT
 
             class DescriptorForAllMethods:
                 """Descriptor super class."""
@@ -228,21 +234,21 @@ class GenericDecorator:
                 def __init__(
                     self,
                     method: Descriptor,
-                    wrapper: TargetMethodWrapper[TargetReturnT, TargetClassT],
+                    wrapper: TargetMethodWrapper[Any, TargetClassT],  # TargetReturnT
                 ) -> None:
                     self.method = method
                     self.wrapper = wrapper
 
                 def __get__(
                     self, instance: TargetClassT, owner: Type[TargetClassT]
-                ) -> TargetFunctionWrapper[TargetReturnT]:
-                    def call_wrapper(*args: Any, **kwargs: Any) -> TargetReturnT:
+                ) -> TargetFunctionWrapper[Any]:  # TargetReturnT
+                    def call_wrapper(
+                        *args: Any, **kwargs: Any
+                    ) -> Any:  # TargetReturnT  # noqa: ANN401
                         return self.wrapper(function, instance, owner, *args, **kwargs)
 
                     # TargetFunction[TargetReturnT]
-                    function: Callable[..., TargetReturnT] = self.method.__get__(
-                        instance, owner
-                    )
+                    function = self.method.__get__(instance, owner)
                     return call_wrapper
 
             class DescriptorForInstanceMethod(DescriptorForAllMethods):
@@ -264,7 +270,11 @@ class GenericDecorator:
                     # FUTURE:  Adding [TargetReturnT] doesn't run yet.
                     method: staticmethod,  # type: ignore[type-arg]
                 ) -> None:
-                    super().__init__(method, decorator_self.wrapper_for_staticmethod)
+                    super().__init__(
+                        # `staticmethod` is descriptor
+                        method,  # type: ignore[pylance, unused-ignore]  # v2023.12.1
+                        decorator_self.wrapper_for_staticmethod,
+                    )
 
             class DescriptorForClassmethod(DescriptorForAllMethods):
                 # pylint: disable=too-few-public-methods
@@ -275,12 +285,19 @@ class GenericDecorator:
                     # FUTURE:  Adding [TargetReturnT] doesn't run yet.
                     method: classmethod,  # type: ignore[type-arg]
                 ) -> None:
-                    super().__init__(method, decorator_self.wrapper_for_classmethod)
+                    super().__init__(
+                        # `classmethod` is descriptor
+                        method,  # type: ignore[pylance, unused-ignore] # v2023.12.1
+                        decorator_self.wrapper_for_classmethod,
+                    )
 
             for name, value in target_class.__dict__.items():
                 # not `ismethod()` because not bound
                 if inspect.isfunction(value):
-                    descriptor_method = DescriptorForInstanceMethod(value)
+                    descriptor_method = DescriptorForInstanceMethod(
+                        # `FunctionType` is descriptor
+                        value  # type: ignore[pylance, unused-ignore] # v2023.12.1,
+                    )
                     setattr(target_class, name, descriptor_method)
 
                 elif isinstance(value, staticmethod):
@@ -294,7 +311,7 @@ class GenericDecorator:
 
             return target_class
 
-        @wraps(cast(Callable[..., TargetReturnT], target))
+        @wraps(target)  # type: ignore[arg-type]  # mypy: 1.8
         def factory_for_target(
             *args: Any, **kwargs: Any
         ) -> Any:  # TargetReturnT:  # noqa: ANN401
@@ -312,12 +329,15 @@ class GenericDecorator:
 
         decorator_self = self
 
-        if isinstance(target, type):  # pylint: disable=no-else-return
+        if isinstance(target, type):
             # Type[TargetClassT]
-            return _make_class_decorator(target)
+
+            return _make_class_decorator(
+                cast(type[object], target)  # type: ignore[redundant-cast] # mypy: 1.8
+            )
 
         if callable(target):
-            return factory_for_target
+            return factory_for_target  # type: ignore[pylance, unused-ignore] # v2023.12.1
 
         if isinstance(target, staticmethod):
             # https://stackoverflow.com/a/5345526/2400328

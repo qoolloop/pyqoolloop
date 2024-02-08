@@ -95,7 +95,7 @@ mark-parentheses = false
 force-sort-within-sections = true
 
 [tool.pytest.ini_options]
-addopts = "--mypy --ruff --black --doctest-modules --strict-markers"
+addopts = "--mypy --ruff --doctest-modules --strict-markers"
 markers = [
     "unreliable: mark a test that doesn't always pass"
 ]

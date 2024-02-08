@@ -33,7 +33,6 @@ from .genericdecorator import (
     GenericDecorator,
     TargetClassT,
     TargetFunctionT,
-    TargetFunctionWrapper,
     TargetReturnT,
     TargetT,
 )
@@ -312,7 +311,7 @@ def synchronized_on_function(
 
 @generic_decorator
 def synchronized_on_function(
-    __target: Optional[Callable[..., TargetReturnT]] = None,
+    __target: Optional[TargetFunctionT] = None,
     # Optional[TargetFunctionT]
     *,
     lock_field: str = '__lock',
@@ -360,7 +359,7 @@ def synchronized_on_function(
         assert not dont_synchronize
         return partial(_call_function, __target)
 
-    call_function: TargetFunctionWrapper[TargetReturnT] = (
+    call_function = (
         _call_function if not dont_synchronize else _through_function
     )
 
@@ -426,7 +425,7 @@ def synchronized_on_instance(
 
     def _call(
         target: Any,  # TargetFunctionT,  # noqa: ANN401
-        lock_holder: TargetClassT,
+        lock_holder: object,  # TargetClassT,
         *args: Any,
         **kwargs: Any,
     ) -> Any:  # TargetReturnT:  # noqa: ANN401
@@ -478,13 +477,13 @@ def synchronized_on_instance(
 
 
 def _get_signature_values(
-    target: Callable[..., TargetReturnT],  # TargetFunctionT
+    target: Callable[..., Any],  # TargetFunctionT
     args: Iterable[Any],
     kwargs: Dict[str, Any],
     exclude_kw: Iterable[str] = (),
 ) -> OrderedDict[str, Any]:
     def _bind_arguments(
-        target: Callable[..., TargetReturnT],  # TargetFunctionT,
+        target: Callable[..., Any],  # TargetFunctionT,
         args: Iterable[Any],
         kwargs: Dict[str, Any],
     ) -> OrderedDict[str, Any]:
@@ -678,6 +677,8 @@ def extension(
 
     .. note:: The decorated class can have regular methods as well as
       `@classmethod` and `@staticmethod`.
+
+    .. note:: Pylance treats class extensions as not accessed. (v2023.12.1)
     """
 
     def _decorator(extension_class: Type[TargetClassT]) -> Type[TargetClassT]:
