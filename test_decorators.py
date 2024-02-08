@@ -222,7 +222,7 @@ class PassArgsClass:
         """Define static method."""
         _pass_args_function(arg0, kwargs=kwargs)
 
-        PassArgsClass.static_func_call_count += 1
+        PassArgsClass.static_func_call_count += 1  # type: ignore[pylance, unused-ignore] # v2023.12.1
 
     @classmethod
     def class_func(
@@ -274,7 +274,7 @@ class PassArgsClassWithMandatoryKeyword:
         """Define static method."""
         _pass_args_function(arg0, kwargs=kwargs)
 
-        PassArgsClassWithMandatoryKeyword.static_func_call_count += 1
+        PassArgsClassWithMandatoryKeyword.static_func_call_count += 1  # type: ignore[pylance, unused-ignore] # v2023.12.1
 
     @classmethod
     def class_func(
@@ -889,9 +889,9 @@ def _test_synchronized(
     if not isinstance(function, Iterable):
         function = (function,)
 
-    threads = []
+    threads: list[_Thread] = []
     for each_function in function:
-        threads.extend([_Thread(each_function) for count in range(num_threads)])
+        threads.extend([_Thread(each_function) for _ in range(num_threads)])
 
     for each_thread in threads:
         each_thread.start()
@@ -1024,11 +1024,11 @@ def test__synchronized_on_instance__staticmethod() -> None:
 
             return "result"
 
-    result = _Class.method()
+    result = _Class.method()  # type: ignore[pylance, unused-ignore]  # Pylance cannot tell the signature (v2023.12.1)
     assert result == "result"
 
     instance = _Class()
-    result = instance.method()
+    result = instance.method()  # type: ignore[pylance, unused-ignore]  # Pylance cannot tell the signature (v2023.12.1)
     assert result == "result"
 
 
@@ -1046,11 +1046,11 @@ def test__synchronized_on_instance__classmethod() -> None:
 
             return "result"
 
-    result = _Class.method()
+    result = _Class.method()  # type: ignore[pylance, unused-ignore]  # Pylance cannot tell the signature (v2023.12.1)
     assert result == "result"
 
     instance = _Class()
-    result = instance.method()
+    result = instance.method()  # type: ignore[pylance, unused-ignore]  # Pylance cannot tell the signature (v2023.12.1)
     assert result == "result"
 
 
@@ -1068,7 +1068,11 @@ def test__synchronized_on_instance__class() -> None:
     variables = _create_variables()
 
     instance = _Class()
-    _test_synchronized(variables, instance.method, (variables,))
+    _test_synchronized(
+        variables,
+        instance.method,  # type: ignore[pylance, unused-ignore]  # Pylance cannot tell the signature (v2023.12.1)
+        (variables,),
+    )
 
 
 def test__synchronized_on_instance__class__no_parentheses() -> None:
@@ -1085,7 +1089,11 @@ def test__synchronized_on_instance__class__no_parentheses() -> None:
     variables = _create_variables()
 
     instance = _Class()
-    _test_synchronized(variables, instance.method, (variables,))
+    _test_synchronized(
+        variables,
+        instance.method,  # type: ignore[pylance, unused-ignore]  # Pylance cannot tell the signature (v2023.12.1)
+        (variables,),
+    )
 
 
 # common cache ###
@@ -1548,7 +1556,7 @@ def test__extend_with_method() -> None:
             pass
 
     @extend_with_method(_ClassA)
-    def new_method(
+    def new_method(  # type: ignore[pylance, unused-ignore]  # Pylance cannot tell it's called (v2023.12.1)
         self: _ClassA, value: int
     ) -> None:  # pylint: disable=unused-variable
         self.new_value = value
@@ -1593,7 +1601,7 @@ def test__extend_with_class_method() -> None:
         new_value: int
 
     @extend_with_class_method(_ClassA)
-    def new_class_method(
+    def new_class_method(  # type: ignore[pylance, unused-ignore]  # Pylance cannot tell it's called (v2023.12.1)
         cls: Type[_ClassA], value: int
     ) -> None:  # pylint: disable=unused-variable
         cls.new_value = value
@@ -1616,6 +1624,7 @@ class NewStaticMethodClass(Protocol):
     @staticmethod
     def new_static_method(value: int) -> int:
         """Return its argument."""
+        ...
 
 
 def _test_new_static_method(
@@ -1635,7 +1644,7 @@ def test__extend_with_static_method() -> None:
         ...
 
     @extend_with_static_method(_ClassA)
-    def new_static_method(value: int) -> int:  # pylint: disable=unused-variable
+    def new_static_method(value: int) -> int:  # type: ignore[pylance, unused-ignore]  # Pylance cannot tell it's called (v2023.12.1)
         return value
 
     # Doesn't work for mypy 0.800
@@ -1658,7 +1667,7 @@ def test__extension() -> None:
             pass
 
     @extension(_ClassA)
-    class _Extension:
+    class _Extension:  # type: ignore[pylance, unused-ignore]  # not accessed
         def new_method(self, value: int) -> None:
             self.new_value = value
 

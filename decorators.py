@@ -677,6 +677,8 @@ def extension(
 
     .. note:: The decorated class can have regular methods as well as
       `@classmethod` and `@staticmethod`.
+
+    .. note:: Pylance treats class extensions as not accessed. (v2023.12.1)
     """
 
     def _decorator(extension_class: Type[TargetClassT]) -> Type[TargetClassT]:
