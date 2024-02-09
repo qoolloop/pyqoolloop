@@ -68,7 +68,7 @@ class RegistryFactory(Generic[_TargetClassT]):
         if isinstance(argument, type):
             target = argument
             name = None
-            return _wrapper(target)
+            return _wrapper(target) # type: ignore[pylance, unused-ignore]  # v2024.2.1
 
         name = argument
         return _wrapper
