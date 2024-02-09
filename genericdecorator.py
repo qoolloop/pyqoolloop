@@ -36,7 +36,7 @@ TargetFunctionT = TypeVar(
 # Would need to use Callable[..., TargetReturnT] directly.
 
 TargetClassT = TypeVar('TargetClassT', bound=object)
-"""Type for decorated class"""
+"""Type for decorated class. It's type is `type[TargetClassT]`."""
 
 TargetClassT_contra = TypeVar('TargetClassT_contra', bound=object, contravariant=True)
 """Contravariant type for decorated class"""
@@ -272,7 +272,7 @@ class GenericDecorator:
                 ) -> None:
                     super().__init__(
                         # `staticmethod` is descriptor
-                        method,  # type: ignore[pylance, unused-ignore]  # v2023.12.1
+                        method,  # type: ignore[pylance, unused-ignore]  # v2024.2.1
                         decorator_self.wrapper_for_staticmethod,
                     )
 
@@ -287,7 +287,7 @@ class GenericDecorator:
                 ) -> None:
                     super().__init__(
                         # `classmethod` is descriptor
-                        method,  # type: ignore[pylance, unused-ignore] # v2023.12.1
+                        method,  # type: ignore[pylance, unused-ignore] # v2024.2.1
                         decorator_self.wrapper_for_classmethod,
                     )
 
@@ -296,7 +296,7 @@ class GenericDecorator:
                 if inspect.isfunction(value):
                     descriptor_method = DescriptorForInstanceMethod(
                         # `FunctionType` is descriptor
-                        value  # type: ignore[pylance, unused-ignore] # v2023.12.1,
+                        value  # type: ignore[pylance, unused-ignore] # v2024.2.1
                     )
                     setattr(target_class, name, descriptor_method)
 
@@ -337,7 +337,7 @@ class GenericDecorator:
             )
 
         if callable(target):
-            return factory_for_target  # type: ignore[pylance, unused-ignore] # v2023.12.1
+            return factory_for_target  # type: ignore[pylance, unused-ignore] # v2024.2.1
 
         if isinstance(target, staticmethod):
             # https://stackoverflow.com/a/5345526/2400328
