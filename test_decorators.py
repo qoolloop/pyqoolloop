@@ -1096,7 +1096,8 @@ def test__synchronized_on_instance__class__no_parentheses() -> None:
     )
 
 
-# common cache ###
+# cache ###
+
 
 _parametrize__cache_test = pytest.mark.parametrize(
     'decorator, kwargs', ((cache, {'expire_time_secs': 10}),)
@@ -1345,11 +1346,8 @@ def test__cache__synchronize(decorator: DecoratorType, kwargs: dict[str, Any]) -
         _test_synchronized(variables, each, expected_count=1)
 
 
-# cache ###
-
-
-def test__cache__no_args__expire() -> None:
-    """Test `@cache` with no arguments expires the cache."""
+def test__cache__expire() -> None:
+    """Test `@cache` expires the cache."""
     # pylint: disable=missing-function-docstring
 
     @cache(expire_time_secs=0)
