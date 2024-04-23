@@ -116,8 +116,7 @@ class EncryptorDecryptor:
         def _check_key(key: bytes) -> None:
             decoded_key = base64.urlsafe_b64decode(key)
             assert len(decoded_key) == 32, (
-                f"Key length: {len(decoded_key)}\n"
-                f"{decoded_key}"  # type:ignore[str-bytes-safe]
+                f"Key length: {len(decoded_key)}\n{decoded_key}"  # type:ignore[str-bytes-safe]
             )
 
         if isinstance(key, bytes):

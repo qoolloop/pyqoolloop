@@ -238,7 +238,8 @@ def test__encrypt_decrypt_from_file__no_change(index: float, value: str) -> None
     ),
 )
 def test__encrypt_decrypt_from_file__no_change__auto_rotate(
-    _index: float, value: str  # noqa: PT019
+    _index: float,  # noqa: PT019
+    value: str,
 ) -> None:
     """Test that `decrypt_from_file()` can read from files with different keys."""
     primary_key = encrypt.EncryptorDecryptor.generate_key()

@@ -64,7 +64,9 @@ def _test__no_file__exception(load_func: LoadFunc) -> None:
 
 @_parametrize__load_dump
 def test__load__no_file__no_exception(
-    load_func: LoadFunc, dump_func: DumpFunc, value: Any  # noqa: ARG001, ANN401
+    load_func: LoadFunc,
+    dump_func: DumpFunc,  # noqa: ARG001
+    value: Any,  # noqa: ARG001, ANN401
 ) -> None:
     """Test load functions that no exception is raised with default argument."""
     # pylint: disable=unused-argument # dump_func, value
@@ -73,7 +75,9 @@ def test__load__no_file__no_exception(
 
 @_parametrize__load_dump
 def test_load_pickle__no_file__exception(
-    load_func: LoadFunc, dump_func: DumpFunc, value: Any  # noqa: ARG001, ANN401
+    load_func: LoadFunc,
+    dump_func: DumpFunc,  # noqa: ARG001
+    value: Any,  # noqa: ARG001, ANN401
 ) -> None:
     """Test that load functions raise exceptions when the `raise_exception = True`."""
     # pylint: disable=unused-argument # dump_func, value
@@ -82,7 +86,9 @@ def test_load_pickle__no_file__exception(
 
 @_parametrize__load_dump
 def test__regular(
-    load_func: LoadFunc, dump_func: DumpFunc, value: Any  # noqa: ANN401
+    load_func: LoadFunc,
+    dump_func: DumpFunc,
+    value: Any,  # noqa: ANN401
 ) -> None:
     """Test regular dump and load sequence."""
     temp_dir_name = tempfile.mkdtemp()
@@ -107,7 +113,9 @@ def test__regular(
 
 @_parametrize__load_dump
 def test__destination_exists__no_exception(
-    load_func: LoadFunc, dump_func: DumpFunc, value: Any  # noqa: ANN401
+    load_func: LoadFunc,
+    dump_func: DumpFunc,
+    value: Any,  # noqa: ANN401
 ) -> None:
     """Test that exception is not raised if the `overwrite` argument is `True`."""
     temp_file, temp_filename = tempfile.mkstemp()
@@ -126,7 +134,9 @@ def test__destination_exists__no_exception(
 
 @_parametrize__load_dump
 def test__destination_exists__exception(
-    load_func: LoadFunc, dump_func: DumpFunc, value: Any  # noqa: ARG001, ANN401
+    load_func: LoadFunc,  # noqa: ARG001
+    dump_func: DumpFunc,
+    value: Any,  # noqa: ANN401
 ) -> None:
     """Test that `FileExistsError` is raised when destination file already exists."""
     # pylint: disable=unused-argument # load_func
