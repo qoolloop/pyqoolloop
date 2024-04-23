@@ -1,22 +1,14 @@
-[tool.black]
-# Using black instead of ruff for now until start using gettext.
-# https://github.com/astral-sh/ruff/issues/7525
-# Currently strings not shown to the user are quoted with single quotation marks.
-line-length = 88
-skip-string-normalization = true
-target-version = ['py310']
-preview = true
-
-
 [tool.mypy]
 strict = true
 show_error_codes = true
 
 
 [tool.ruff]
+# Currently strings not shown to the user are quoted with single quotation marks.
 line-length = 88
 
 [tool.ruff.format]
+quote-style = "preserve"
 
 [tool.ruff.lint]
 select = [
@@ -95,7 +87,7 @@ mark-parentheses = false
 force-sort-within-sections = true
 
 [tool.pytest.ini_options]
-addopts = "--mypy --ruff --doctest-modules --strict-markers"
+addopts = "--mypy --ruff --ruff-format --doctest-modules --strict-markers"
 markers = [
     "unreliable: mark a test that doesn't always pass"
 ]

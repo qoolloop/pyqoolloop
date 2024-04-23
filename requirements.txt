@@ -5,14 +5,13 @@ msgpack
 msgpack-types
 
 # dev
-black==23.11.0
 mypy==1.8
 pytest
 pytest-cov
 pytest-mypy
 pytest-ruff
 pytest-xdist
-ruff==0.1.5
+ruff==0.4.1
 
 # documentation
 sphinx
