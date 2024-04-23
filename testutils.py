@@ -63,9 +63,7 @@ def equals_method(one: _HasEquals, another: object) -> bool:
 def equal_set(
     one_set: Collection[object],
     another_set: Collection[object],
-    equals: Callable[
-        [object, object], bool
-    ] = eq_operator,  # pylint: disable=redefined-outer-name
+    equals: Callable[[object, object], bool] = eq_operator,  # pylint: disable=redefined-outer-name
 ) -> bool:  # FUTURE: reimplement using `set()`
     """
     Check for equality between two iterables ignoring order.

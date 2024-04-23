@@ -1,5 +1,6 @@
 # pylint: disable=too-many-lines
 """Tests for `decorators` module."""
+
 import inspect
 import logging
 import threading
@@ -74,7 +75,10 @@ class PassArgsFunction(Protocol):
     """A callable that takes 3 arguments."""
 
     def __call__(
-        self, arg0: Any = 0, arg1: Any = 1, arg2: Any = 2  # noqa: ANN401
+        self,
+        arg0: Any = 0,  # noqa: ANN401
+        arg1: Any = 1,  # noqa: ANN401
+        arg2: Any = 2,  # noqa: ANN401
     ) -> None:
         """Take 3 arguments."""
 
@@ -196,7 +200,9 @@ class PassArgsClass:
     class_func_call_count = 0
 
     def __init__(
-        self, arg0: Any = 0, kwargs: Optional[Dict[str, Any]] = None  # noqa: ANN401
+        self,
+        arg0: Any = 0,  # noqa: ANN401
+        kwargs: Optional[Dict[str, Any]] = None,
     ) -> None:
         _pass_args_function(arg0, kwargs=kwargs)
 
@@ -208,7 +214,9 @@ class PassArgsClass:
     # but they can be obtained with inspect.getmembers()
 
     def func(
-        self, arg0: Any = 0, kwargs: Optional[Dict[str, Any]] = None  # noqa: ANN401
+        self,
+        arg0: Any = 0,  # noqa: ANN401
+        kwargs: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Define instance method."""
         _pass_args_function(arg0, kwargs=kwargs)
@@ -217,7 +225,8 @@ class PassArgsClass:
 
     @staticmethod
     def static_func(
-        arg0: Any = 0, kwargs: Optional[Dict[str, Any]] = None  # noqa: ANN401
+        arg0: Any = 0,  # noqa: ANN401
+        kwargs: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Define static method."""
         _pass_args_function(arg0, kwargs=kwargs)
@@ -226,7 +235,9 @@ class PassArgsClass:
 
     @classmethod
     def class_func(
-        cls, arg0: Any = 0, kwargs: Optional[Dict[str, Any]] = None  # noqa: ANN401
+        cls,
+        arg0: Any = 0,  # noqa: ANN401
+        kwargs: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Define class method."""
         _pass_args_function(arg0, kwargs=kwargs)
@@ -252,7 +263,10 @@ class PassArgsClassWithMandatoryKeyword:
     class_func_call_count = 0
 
     def __init__(
-        self, arg0: Any = 0, *, kwargs: Dict[str, Any]  # noqa: ANN401
+        self,
+        arg0: Any = 0,  # noqa: ANN401
+        *,
+        kwargs: Dict[str, Any],
     ) -> None:
         _pass_args_function(arg0, kwargs=kwargs)
 
@@ -278,7 +292,10 @@ class PassArgsClassWithMandatoryKeyword:
 
     @classmethod
     def class_func(
-        cls, arg0: Any = 0, *, kwargs: Dict[str, Any]  # noqa: ANN401
+        cls,
+        arg0: Any = 0,  # noqa: ANN401
+        *,
+        kwargs: Dict[str, Any],
     ) -> None:
         """Define class method."""
         _pass_args_function(arg0, kwargs=kwargs)
@@ -539,7 +556,7 @@ def test__deprecated__raise_exception_for_deprecated_false() -> None:
 
 def test__deprecated__name() -> None:
     """Test that the name of the function decorated with `@retry` is correct."""
-    _logger = logging.Logger('name')
+    _logger = logging.Logger('name')  # noqa: LOG001
 
     @deprecated(_logger)
     def target() -> None:

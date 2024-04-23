@@ -19,8 +19,7 @@ def test__RegistryFactory() -> None:
     registry = RegistryFactory[_SuperClass]()
 
     @registry.register("class")
-    class _Class(_SuperClass):
-        ...
+    class _Class(_SuperClass): ...
 
     @registry.register()
     class _AnotherClass(_SuperClass):

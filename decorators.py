@@ -49,7 +49,9 @@ def _through_method(
 
 
 def _through_function(
-    target: Callable[..., TargetReturnT], *args: Any, **kwargs: Any  # TargetFunctionT,
+    target: Callable[..., TargetReturnT],
+    *args: Any,
+    **kwargs: Any,  # TargetFunctionT,
 ) -> TargetReturnT:
     return target(*args, **kwargs)
 
@@ -359,9 +361,7 @@ def synchronized_on_function(
         assert not dont_synchronize
         return partial(_call_function, __target)
 
-    call_function = (
-        _call_function if not dont_synchronize else _through_function
-    )
+    call_function = _call_function if not dont_synchronize else _through_function
 
     # FUTURE: A little inefficient when dont_synchronize=True
     decorator = GenericDecorator(
@@ -440,7 +440,9 @@ def synchronized_on_instance(
         return result
 
     def _call_when_decorating_method(
-        target: Any, *args: Any, **kwargs: Any  # TargetFunctionT,  # noqa: ANN401
+        target: Any,  # noqa: ANN401
+        *args: Any,
+        **kwargs: Any,  # TargetFunctionT,
     ) -> Any:  # TargetReturnT:  # noqa: ANN401
         lock_holder = args[0]  # `self`
         return _call(target, lock_holder, *args, **kwargs)

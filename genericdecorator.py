@@ -183,13 +183,13 @@ class GenericDecorator:
         self.wrapper_for_function = wrapper_for_function
         self.wrapper_for_instancemethod: TargetMethodWrapper[
             TargetReturnT, TargetClassT
-        ] = (wrapper_for_instancemethod or default_wrapper)
+        ] = wrapper_for_instancemethod or default_wrapper
         self.wrapper_for_staticmethod: TargetMethodWrapper[
             TargetReturnT, TargetClassT
-        ] = (wrapper_for_staticmethod or default_wrapper)
+        ] = wrapper_for_staticmethod or default_wrapper
         self.wrapper_for_classmethod: TargetMethodWrapper[
             TargetReturnT, TargetClassT
-        ] = (wrapper_for_classmethod or default_wrapper)
+        ] = wrapper_for_classmethod or default_wrapper
 
     @overload
     def __call__(
@@ -318,7 +318,9 @@ class GenericDecorator:
             return cast(  # cast from another TargetReturnT
                 Any,  # TargetReturnT,
                 decorator_self.wrapper_for_function(
-                    cast(Any, target), *args, **kwargs  # cast to another TargetReturnT
+                    cast(Any, target),
+                    *args,
+                    **kwargs,  # cast to another TargetReturnT
                 ),
             )
 
