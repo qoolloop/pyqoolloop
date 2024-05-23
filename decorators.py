@@ -105,12 +105,16 @@ def log_calls(logger: logging.Logger, *, log_result: bool = True) -> GenericDeco
         *args: Any,
         **kwargs: Any,
     ) -> TargetReturnT:
-        logger.info(f"{target.__name__} args: {args!r} {kwargs!r}")
+        stack_level = 3
+
+        logger.info(
+            f"{target.__name__} args: {args!r} {kwargs!r}", stacklevel=stack_level
+        )
 
         result = target(*args, **kwargs)
 
         if log_result:
-            logger.info(f"{target.__name__} result: {result!r}")
+            logger.info(f"{target.__name__} result: {result!r}", stacklevel=stack_level)
 
         return result
 
@@ -136,15 +140,20 @@ def log_calls_on_exception(
         *args: Any,
         **kwargs: Any,
     ) -> TargetReturnT:
+        stack_level = 3
+
         try:
             result = target(*args, **kwargs)
 
         except BaseException:
             if log_exception:
-                logger.exception("Exception")
+                logger.exception("Exception", stacklevel=stack_level)
 
             else:
-                logger.info(f"{target.__name__} args: {args!r} {kwargs!r}")
+                logger.info(
+                    f"{target.__name__} args: {args!r} {kwargs!r}",
+                    stacklevel=stack_level,
+                )
 
             raise
 
