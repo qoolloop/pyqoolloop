@@ -2,6 +2,7 @@
 """Tests for `decorators` module."""
 
 import inspect
+from io import StringIO
 import logging
 import threading
 import time
@@ -15,6 +16,7 @@ from typing import (
     Type,
     Union,
     cast,
+    override,
 )
 
 import pytest
@@ -28,6 +30,8 @@ from .decorators import (
     extend_with_method,
     extend_with_static_method,
     extension,
+    log_calls,
+    log_calls_on_exception,
     pass_args,
     retry,
     synchronized_on_function,
@@ -40,7 +44,9 @@ logger = logging.getLogger(__name__)
 # Common ###
 
 
-class _Counter:
+class Counter:
+    """Counts how many times a method is called."""
+
     counter = 0
 
     def inc(self) -> int:
@@ -49,7 +55,7 @@ class _Counter:
         return self.counter
 
 
-_counter = _Counter()
+counter = Counter()
 
 
 DecoratorType = Callable[..., Callable[..., Any]]
@@ -349,6 +355,125 @@ def test__pass_args_to_class(pass_args_class: Type[DifferentFunctions]) -> None:
 
     instance.class_func("")
     assert instance.class_func_call_count == 4
+
+
+# log_calls ###
+
+
+@pytest.mark.skip
+def test__log_calls__types() -> None:
+    """Just want to see whether types are respected in the IDE."""
+
+    @log_calls(logger)
+    def _function(_argument: int) -> bool:
+        return True
+
+    # FUTURE: To make a test, we probably need Python 3.12. https://docs.python.org/3/reference/compound_stmts.html#type-parameter-lists
+    _bool = _function("")
+
+
+class LogCapture(logging.Logger):
+    """
+    A logger that captures log records in a `str`.
+
+    :param name: Name of logger to get.
+    :param format: Format for the log. Same as what can be specified for
+      `logging.Formatter`.
+
+    ..note:: Subclassing `logging.Logger`, because I'm lazy. Should define `Protocol`.
+    """
+
+    def __init__(self, name: str, *, fmt: str | None = None) -> None:
+        self._logger = logging.getLogger(name)
+
+        self._string_io = StringIO()
+        handler = logging.StreamHandler(self._string_io)
+
+        if fmt is None:
+            fmt = (
+                "%(name)s:%(module)s=%(filename)s(%(pathname)s)"
+                ">%(funcName)s|%(message)s"
+            )
+
+        formatter = logging.Formatter(fmt=fmt)
+        handler.setFormatter(formatter)
+
+        logger.addHandler(handler)
+
+    @override
+    def setLevel(self, level: int | str) -> None:
+        self._logger.setLevel(level)
+
+    def get_log(self) -> str:
+        """Get what was logged."""
+        value = self._string_io.getvalue()
+
+        self._string_io.close()
+
+        return value
+
+    @override
+    def info(  # type: ignore[override]
+        self, msg: str, *arg: Any, stacklevel: int = 1, **kwargs: Any
+    ) -> None:
+        self._logger.info(msg, *arg, stacklevel=stacklevel + 1, **kwargs)
+
+    @override
+    def error(  # type: ignore[override]
+        self, msg: str, *arg: Any, stacklevel: int = 1, **kwargs: Any
+    ) -> None:
+        self._logger.error(msg, *arg, stacklevel=stacklevel + 1, **kwargs)
+
+
+def test__log_calls__what() -> None:
+    """Test that `@log_calls` logs data as the caller."""
+    _logger = LogCapture(__name__)
+    _logger.setLevel(logging.INFO)
+
+    @log_calls(_logger)
+    def _function_to_log(_arg1: int) -> bool:
+        return True
+
+    _function_to_log(1234)
+
+    log_string = _logger.get_log()
+
+    assert "pyqoolloop.test_decorators:" in log_string
+    assert "test_decorators=" in log_string
+    assert "=test_decorators.py" in log_string
+    assert "test_decorators.py)" in log_string
+    assert ">test__log_calls" in log_string
+    assert "_function_to_log" in log_string
+    assert "1234" in log_string
+    assert "True" in log_string
+
+
+def test__log_calls_with_exception__what() -> None:
+    """Test that `@log_calls` logs data as the caller."""
+    _logger = LogCapture(__name__)
+    _logger.setLevel(logging.INFO)
+
+    @log_calls_on_exception(_logger)
+    def _function_to_log(_arg1: int) -> bool:
+        raise RuntimeError
+
+    try:
+        _function_to_log(1234)
+
+    except RuntimeError:
+        pass
+    else:
+        pytest.fail("Assertion not raised.")
+
+    log_string = _logger.get_log()
+
+    assert "pyqoolloop.test_decorators:" in log_string
+    assert "test_decorators=" in log_string
+    assert "=test_decorators.py" in log_string
+    assert "test_decorators.py)" in log_string
+    assert ">test__log_calls" in log_string
+    assert "_function_to_log" in log_string
+    assert "RuntimeError" in log_string
 
 
 # deprecated ###
@@ -1128,20 +1253,20 @@ def test__cache__no_args(decorator: DecoratorType, kwargs: dict[str, Any]) -> No
 
     @decorator(**kwargs)
     def _function() -> int:
-        return _counter.inc()
+        return counter.inc()
 
     @decorator(**kwargs)
     class _Class:
         def a_method(self) -> int:  # pylint: disable=no-self-use
-            return _counter.inc()
+            return counter.inc()
 
         @staticmethod
         def a_staticmethod() -> int:
-            return _counter.inc()
+            return counter.inc()
 
         @classmethod
         def a_classmethod(cls) -> int:
-            return _counter.inc()
+            return counter.inc()
 
     instance = _Class()
 
@@ -1167,20 +1292,20 @@ def test__cache__args(decorator: DecoratorType, kwargs: dict[str, Any]) -> None:
 
     @decorator(**kwargs)
     def _function(arg1: int, arg2: int) -> int:
-        return arg1 + arg2 + _counter.inc()
+        return arg1 + arg2 + counter.inc()
 
     @decorator(**kwargs)
     class _Class:
         def a_method(self, arg1: int, arg2: int) -> int:  # pylint: disable=no-self-use
-            return arg1 + arg2 + _counter.inc()
+            return arg1 + arg2 + counter.inc()
 
         @staticmethod
         def a_staticmethod(arg1: int, arg2: int) -> int:
-            return arg1 + arg2 + _counter.inc()
+            return arg1 + arg2 + counter.inc()
 
         @classmethod
         def a_classmethod(cls, arg1: int, arg2: int) -> int:
-            return arg1 + arg2 + _counter.inc()
+            return arg1 + arg2 + counter.inc()
 
     instance = _Class()
 
@@ -1213,7 +1338,7 @@ def test__cache__kwargs(decorator: DecoratorType, kwargs: dict[str, Any]) -> Non
         arg1: int = 0,
         arg2: int = 3,  # pylint: disable=unused-argument
     ) -> int:
-        return arg1 + arg2 + _counter.inc()
+        return arg1 + arg2 + counter.inc()
 
     @decorator(**kwargs)
     class _Class:
@@ -1223,7 +1348,7 @@ def test__cache__kwargs(decorator: DecoratorType, kwargs: dict[str, Any]) -> Non
             arg1: int = 0,
             arg2: int = 3,
         ) -> int:
-            return arg1 + arg2 + _counter.inc()
+            return arg1 + arg2 + counter.inc()
 
         @staticmethod
         def a_staticmethod(
@@ -1231,7 +1356,7 @@ def test__cache__kwargs(decorator: DecoratorType, kwargs: dict[str, Any]) -> Non
             arg1: int = 0,
             arg2: int = 3,  # pylint: disable=unused-argument
         ) -> int:
-            return arg1 + arg2 + _counter.inc()
+            return arg1 + arg2 + counter.inc()
 
         @classmethod
         def a_classmethod(
@@ -1240,7 +1365,7 @@ def test__cache__kwargs(decorator: DecoratorType, kwargs: dict[str, Any]) -> Non
             arg1: int = 0,
             arg2: int = 3,
         ) -> int:
-            return arg1 + arg2 + _counter.inc()
+            return arg1 + arg2 + counter.inc()
 
     instance = _Class()
 
@@ -1275,7 +1400,7 @@ def test__cache__default_kwargs(
         arg1: int = 0,
         arg2: int = 3,  # pylint: disable=unused-argument
     ) -> int:
-        return arg1 + arg2 + _counter.inc()
+        return arg1 + arg2 + counter.inc()
 
     @decorator(**kwargs)
     class _Class:
@@ -1285,7 +1410,7 @@ def test__cache__default_kwargs(
             arg1: int = 0,
             arg2: int = 3,
         ) -> int:
-            return arg1 + arg2 + _counter.inc()
+            return arg1 + arg2 + counter.inc()
 
         @staticmethod
         def a_staticmethod(
@@ -1293,7 +1418,7 @@ def test__cache__default_kwargs(
             arg1: int = 0,
             arg2: int = 3,  # pylint: disable=unused-argument
         ) -> int:
-            return arg1 + arg2 + _counter.inc()
+            return arg1 + arg2 + counter.inc()
 
         @classmethod
         def a_classmethod(
@@ -1302,7 +1427,7 @@ def test__cache__default_kwargs(
             arg1: int = 0,
             arg2: int = 3,
         ) -> int:
-            return arg1 + arg2 + _counter.inc()
+            return arg1 + arg2 + counter.inc()
 
     instance = _Class()
 
@@ -1369,20 +1494,20 @@ def test__cache__expire() -> None:
 
     @cache(expire_time_secs=0)
     def _function() -> int:
-        return _counter.inc()
+        return counter.inc()
 
     @cache(expire_time_secs=0)
     class _Class:
         def a_method(self) -> int:  # pylint: disable=no-self-use
-            return _counter.inc()
+            return counter.inc()
 
         @staticmethod
         def a_staticmethod() -> int:
-            return _counter.inc()
+            return counter.inc()
 
         @classmethod
         def a_classmethod(cls) -> int:
-            return _counter.inc()
+            return counter.inc()
 
     instance = _Class()
 
@@ -1498,20 +1623,20 @@ def test__cache__max_entries__refresh() -> None:
 
     @cache(expire_time_secs=10, max_entries=max_entries)
     def _function(arg: int) -> int:
-        return arg + _counter.inc()
+        return arg + counter.inc()
 
     @cache(expire_time_secs=10, max_entries=max_entries)
     class _Class:
         def a_method(self, arg: int) -> int:  # pylint: disable=no-self-use
-            return arg + _counter.inc()
+            return arg + counter.inc()
 
         @staticmethod
         def a_staticmethod(arg: int) -> int:
-            return arg + _counter.inc()
+            return arg + counter.inc()
 
         @classmethod
         def a_classmethod(cls, arg: int) -> int:
-            return arg + _counter.inc()
+            return arg + counter.inc()
 
     instance = _Class()
 
