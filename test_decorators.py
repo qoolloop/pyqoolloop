@@ -16,6 +16,7 @@ from typing import (
     Type,
     Union,
     cast,
+    get_type_hints,
     override,
 )
 
@@ -360,7 +361,6 @@ def test__pass_args_to_class(pass_args_class: Type[DifferentFunctions]) -> None:
 # log_calls ###
 
 
-@pytest.mark.skip
 def test__log_calls__types() -> None:
     """Just want to see whether types are respected in the IDE."""
 
@@ -368,8 +368,8 @@ def test__log_calls__types() -> None:
     def _function(_argument: int) -> bool:
         return True
 
-    # FUTURE: To make a test, we probably need Python 3.12. https://docs.python.org/3/reference/compound_stmts.html#type-parameter-lists
-    _bool = _function("")
+    assert get_type_hints(_function) == {'_argument': int, 'return': bool}
+
 
 
 class LogCapture(logging.Logger):
