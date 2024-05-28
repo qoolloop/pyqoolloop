@@ -358,18 +358,29 @@ def test__pass_args_to_class(pass_args_class: Type[DifferentFunctions]) -> None:
     assert instance.class_func_call_count == 4
 
 
+def test__pass_args__types() -> None:
+    """Just want to see whether types of the target are respected."""
+
+    class _Class: ...
+
+    @pass_args
+    def _function(_argument0: str) -> _Class:
+        return _Class()
+
+    assert get_type_hints(_function) == {'_argument0': str, 'return': _Class}
+
+
 # log_calls ###
 
 
 def test__log_calls__types() -> None:
-    """Just want to see whether types are respected in the IDE."""
+    """Just want to see whether types of the target are respected."""
 
     @log_calls(logger)
     def _function(_argument: int) -> bool:
         return True
 
     assert get_type_hints(_function) == {'_argument': int, 'return': bool}
-
 
 
 class LogCapture(logging.Logger):
