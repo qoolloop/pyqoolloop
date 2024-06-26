@@ -6,6 +6,7 @@ from io import StringIO
 import logging
 import threading
 import time
+from types import NoneType
 from typing import (
     Any,
     Callable,
@@ -358,7 +359,7 @@ def test__pass_args_to_class(pass_args_class: Type[DifferentFunctions]) -> None:
     assert instance.class_func_call_count == 4
 
 
-def test__pass_args__types() -> None:
+def test__pass_args__function_types() -> None:
     """Just want to see whether types of the target are respected."""
 
     class _Class: ...
@@ -370,17 +371,60 @@ def test__pass_args__types() -> None:
     assert get_type_hints(_function) == {'_argument0': str, 'return': _Class}
 
 
+def test__pass_args__method_types() -> None:
+    """Just want to see whether types of the target are respected."""
+
+    class _Class:
+        @staticmethod
+        @pass_args
+        def static_method(_argument0: str) -> '_Class':
+            return _Class()
+
+        @classmethod
+        @pass_args
+        def class_method(cls, *, _arg0: '_Class') -> bool:
+            return False
+
+        @pass_args
+        def regular_method(self, _arg1: str, /) -> float:
+            return 0.0
+
+        @pass_args
+        def regular_method_no_return(self, _: None) -> None: ...
+
+    for each_class in [_Class]:
+        assert get_type_hints(each_class.static_method, localns=locals()) == {
+            '_argument0': str,
+            'return': _Class,
+        }
+        assert get_type_hints(each_class.class_method, localns=locals()) == {
+            '_arg0': _Class,
+            'return': bool,
+        }
+        assert get_type_hints(each_class.regular_method) == {
+            '_arg1': str,
+            'return': float,
+        }
+        assert get_type_hints(each_class.regular_method_no_return) == {
+            '_': NoneType,
+            'return': NoneType,
+        }
+
+
 # log_calls ###
 
 
-def test__log_calls__types() -> None:
+def test__log_calls__function_types() -> None:
     """Just want to see whether types of the target are respected."""
 
     @log_calls(logger)
     def _function(_argument: int) -> bool:
         return True
 
-    assert get_type_hints(_function) == {'_argument': int, 'return': bool}
+    assert get_type_hints(_function, localns=locals()) == {
+        '_argument': int,
+        'return': bool,
+    }
 
 
 class LogCapture(logging.Logger):
