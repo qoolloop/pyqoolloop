@@ -1,5 +1,6 @@
 """Defines classes related to the Factory pattern."""
 
+from types import NoneType
 from typing import (
     Any,
     Callable,
@@ -12,21 +13,21 @@ from typing import (
     overload,
 )
 
-from .decorators import class_decorator
+from .decorators import class_decorator, function_decorator
 
 _TargetClassT = TypeVar('_TargetClassT')
 
 
 class RegistryFactory(Generic[_TargetClassT]):
     """
-    A factory that creates instances of different classes.
+    A factory that creates instances of different classes based on strings assigned.
 
     The classes are registered using using `@registry.register`, where
     `registry` is an instance of `RegistryFactory`.
 
     The parameter `_TargetClassT` specifies the superclass of all classes to be
     registered.
-    #FUTURE: However, mypy cannot catch wrong classes being registered. yet.
+    #FUTURE: However, mypy 1.10.0 cannot catch wrong classes being registered. yet.
     """
 
     def __init__(self) -> None:
@@ -38,13 +39,13 @@ class RegistryFactory(Generic[_TargetClassT]):
     ) -> Callable[[Type[_TargetClassT]], Type[_TargetClassT]]: ...
 
     @overload
-    def register(self, argument: type) -> Type[_TargetClassT]: ...
+    def register(self, argument: Type[_TargetClassT]) -> Type[_TargetClassT]: ...
 
     @class_decorator
     def register(
         self, argument: Union[None, str, type] = None
     ) -> Union[
-        Type[_TargetClassT], Callable[[Type[_TargetClassT]], Type[_TargetClassT]]
+        Callable[[Type[_TargetClassT]], Type[_TargetClassT]], Type[_TargetClassT]
     ]:
         """
         Decorate class to register.
@@ -68,19 +69,10 @@ class RegistryFactory(Generic[_TargetClassT]):
         if isinstance(argument, type):
             target = argument
             name = None
-            return _wrapper(target)  # type: ignore[pylance, unused-ignore]  # v2024.2.1
+            return _wrapper(target)
 
         name = argument
         return _wrapper
-
-    def get_class(self, name: str) -> Type[_TargetClassT]:
-        """
-        Get a class registered to this registry.
-
-        :param name: Name for the class specified with `register()`.
-        """
-        target = self._registry[name]
-        return target
 
     def create(
         self, name: str, arguments: Optional[Dict[str, Any]] = None
@@ -96,5 +88,71 @@ class RegistryFactory(Generic[_TargetClassT]):
         if arguments is None:
             arguments = {}
 
-        target = self.get_class(name)
+        target = self._registry[name]
         return target(**arguments)
+
+
+_TargetProtocol = TypeVar('_TargetProtocol')
+
+
+class MethodRegistryFactory(Generic[_TargetProtocol]):
+    """
+    A factory that creates instances of callables to methods based on strings assigned.
+
+    The methods are registered using using `@registry.register`, where
+    `registry` is an instance of `MethodRegistryFactory`.
+
+    The parameter `_TargetProtocol` specifies the signature of methods to be
+    registered.
+    """
+
+    def __init__(self) -> None:
+        self._registry: Dict[str, _TargetProtocol] = {}
+
+    @overload
+    def register(  # type: ignore[overload-overlap]
+        self, argument: Optional[str] = None
+    ) -> Callable[[_TargetProtocol], _TargetProtocol]: ...
+
+    @overload
+    def register(self, argument: _TargetProtocol) -> _TargetProtocol: ...
+
+    @function_decorator
+    def register(
+        self, argument: Union[None, str, _TargetProtocol] = None
+    ) -> Union[Callable[[_TargetProtocol], _TargetProtocol], _TargetProtocol]:
+        """
+        Decorate method to register.
+
+        :param name: Name for the class that is to be specified for creation.
+          If omitted, the name of the class will be used.
+
+        Parentheses for this decorator can be omitted.
+        """
+
+        def _wrapper(target: _TargetProtocol) -> _TargetProtocol:
+            key_name = target.__name__ if name is None else name  # type: ignore[attr-defined]
+
+            assert (
+                key_name not in self._registry
+            ), f"Name ({key_name}) already registered."
+
+            self._registry[key_name] = target
+            return target
+
+        if isinstance(argument, (str, NoneType)):
+            name = argument
+            return _wrapper
+
+        target = argument
+        name = None
+        return _wrapper(target)
+
+    def create(self, name: str) -> _TargetProtocol:
+        """
+        Return callable registered to this registry.
+
+        :param name: Name for the class specified with `register()`.
+        :raises: `KeyError`: `name` doesn't exist.
+        """
+        return self._registry[name]

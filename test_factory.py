@@ -1,12 +1,14 @@
 """Test `factory.py`."""
 
+from collections.abc import Callable
 from typing import (
     Any,
+    TypeAlias,
 )
 
 import pytest
 
-from .factory import RegistryFactory
+from .factory import MethodRegistryFactory, RegistryFactory
 
 
 def test__RegistryFactory() -> None:
@@ -33,7 +35,8 @@ def test__RegistryFactory() -> None:
         def __init__(self, **kwargs: Any) -> None:
             super().__init__(kwargs['name'], kwargs['klass'])
 
-    @registry.register  # Want mypy to show an error here.
+    # Want mypy to show an error here, when warning is enabled.
+    @registry.register  # type: ignore[arg-type]
     class _WrongClass:
         def __init__(self, **kwargs: Any) -> None:
             self._kwargs = kwargs
@@ -52,10 +55,50 @@ def test__RegistryFactory() -> None:
 
 def test__RegistryFactory__KeyError() -> None:
     """Test that `RegistryFactory.create()` raises `KeyError`."""
-    registry = RegistryFactory[type]()
+    registry = RegistryFactory[object]()
 
     @registry.register("class")
     class _Class: ...
 
     with pytest.raises(KeyError):
         _ = registry.create('none-existent')
+
+
+def test__MethodRegistryFactory() -> None:
+    """Test `MethodRegistryFactory`."""
+
+    class _Class:
+        _MethodSignature: TypeAlias = Callable[['_Class', float], int]
+
+        registry = MethodRegistryFactory[_MethodSignature]()
+
+        @registry.register("method")
+        def method(self, value: float) -> int:
+            return int(value)
+
+        # Want mypy to show an error here, when warning is enabled.
+        @registry.register('wrong-signature')  # type: ignore[arg-type]
+        def wrong_method(self, **kwargs: Any) -> None:
+            self._kwargs = kwargs
+
+    method = _Class.registry.create('method')
+
+    instance = _Class()
+
+    assert method(instance, 2.0) == 2
+
+
+def test__MethodRegistryFactory__KeyError() -> None:
+    """Test that `MethodRegistryFactory.create()` raises `KeyError`."""
+
+    class _Class:
+        _MethodSignature: TypeAlias = Callable[['_Class', str], None]
+
+        registry = MethodRegistryFactory[_MethodSignature]()
+
+        @registry.register("method")
+        def method(self, _value: str) -> None:
+            return
+
+    with pytest.raises(KeyError):
+        _ = _Class.registry.create('none-existent')
