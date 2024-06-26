@@ -8,7 +8,7 @@ from typing import (
 
 import pytest
 
-from .factory import MethodRegistryFactory, RegistryFactory
+from .factory import FunctionRegistryFactory, RegistryFactory
 
 
 def test__RegistryFactory() -> None:
@@ -64,13 +64,32 @@ def test__RegistryFactory__KeyError() -> None:
         _ = registry.create('none-existent')
 
 
-def test__MethodRegistryFactory() -> None:
-    """Test `MethodRegistryFactory`."""
+def test__FunctionRegistryFactory__function() -> None:
+    """Test `FunctionRegistryFactory` with function."""
+    FunctionSignature: TypeAlias = Callable[[int], str]
+
+    registry = FunctionRegistryFactory[FunctionSignature]()
+
+    @registry.register("function")
+    def _method(value: int) -> str:
+        return str(value)
+
+    # Want mypy to show an error here, when warning is enabled.
+    @registry.register('wrong-signature')  # type: ignore[arg-type]
+    def wrong_method(**_kwargs: Any) -> None: ...
+
+    _method = registry.create('function')
+
+    assert _method(3) == '3'
+
+
+def test__FunctionRegistryFactory__method() -> None:
+    """Test `FunctionRegistryFactory` with method."""
 
     class _Class:
         _MethodSignature: TypeAlias = Callable[['_Class', float], int]
 
-        registry = MethodRegistryFactory[_MethodSignature]()
+        registry = FunctionRegistryFactory[_MethodSignature]()
 
         @registry.register("method")
         def method(self, value: float) -> int:
@@ -88,13 +107,13 @@ def test__MethodRegistryFactory() -> None:
     assert method(instance, 2.0) == 2
 
 
-def test__MethodRegistryFactory__KeyError() -> None:
-    """Test that `MethodRegistryFactory.create()` raises `KeyError`."""
+def test__FunctionRegistryFactory__KeyError() -> None:
+    """Test that `FunctionRegistryFactory.create()` raises `KeyError`."""
 
     class _Class:
         _MethodSignature: TypeAlias = Callable[['_Class', str], None]
 
-        registry = MethodRegistryFactory[_MethodSignature]()
+        registry = FunctionRegistryFactory[_MethodSignature]()
 
         @registry.register("method")
         def method(self, _value: str) -> None:

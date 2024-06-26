@@ -92,45 +92,45 @@ class RegistryFactory(Generic[_TargetClassT]):
         return target(**arguments)
 
 
-_TargetProtocol = TypeVar('_TargetProtocol')
+_TargetSignature = TypeVar('_TargetSignature')
 
 
-class MethodRegistryFactory(Generic[_TargetProtocol]):
+class FunctionRegistryFactory(Generic[_TargetSignature]):
     """
-    A factory that creates instances of callables to methods based on strings assigned.
+    A factory that creates instances of calls to functions based on strings assigned.
 
-    The methods are registered using using `@registry.register`, where
-    `registry` is an instance of `MethodRegistryFactory`.
+    The functions/methods are registered using using `@registry.register`, where
+    `registry` is an instance of `FunctionRegistryFactory`.
 
-    The parameter `_TargetProtocol` specifies the signature of methods to be
+    The parameter `_TargetSignature` specifies the signature of functions/methods to be
     registered.
     """
 
     def __init__(self) -> None:
-        self._registry: Dict[str, _TargetProtocol] = {}
+        self._registry: Dict[str, _TargetSignature] = {}
 
     @overload
     def register(  # type: ignore[overload-overlap]
         self, argument: Optional[str] = None
-    ) -> Callable[[_TargetProtocol], _TargetProtocol]: ...
+    ) -> Callable[[_TargetSignature], _TargetSignature]: ...
 
     @overload
-    def register(self, argument: _TargetProtocol) -> _TargetProtocol: ...
+    def register(self, argument: _TargetSignature) -> _TargetSignature: ...
 
     @function_decorator
     def register(
-        self, argument: Union[None, str, _TargetProtocol] = None
-    ) -> Union[Callable[[_TargetProtocol], _TargetProtocol], _TargetProtocol]:
+        self, argument: Union[None, str, _TargetSignature] = None
+    ) -> Union[Callable[[_TargetSignature], _TargetSignature], _TargetSignature]:
         """
-        Decorate method to register.
+        Decorate function/method to register.
 
-        :param name: Name for the class that is to be specified for creation.
-          If omitted, the name of the class will be used.
+        :param name: Name for the callable that is to be specified for creation.
+          If omitted, the name of the function/method will be used.
 
         Parentheses for this decorator can be omitted.
         """
 
-        def _wrapper(target: _TargetProtocol) -> _TargetProtocol:
+        def _wrapper(target: _TargetSignature) -> _TargetSignature:
             key_name = target.__name__ if name is None else name  # type: ignore[attr-defined]
 
             assert (
@@ -148,7 +148,7 @@ class MethodRegistryFactory(Generic[_TargetProtocol]):
         name = None
         return _wrapper(target)
 
-    def create(self, name: str) -> _TargetProtocol:
+    def create(self, name: str) -> _TargetSignature:
         """
         Return callable registered to this registry.
 
