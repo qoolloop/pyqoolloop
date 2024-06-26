@@ -57,5 +57,5 @@ def test__RegistryFactory__KeyError() -> None:
     @registry.register("class")
     class _Class: ...
 
-    with pytest.raises(TypeError):
+    with pytest.raises(KeyError):
         _ = registry.create('none-existent')
