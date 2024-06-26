@@ -28,7 +28,7 @@ sys.path.insert(0, os.path.abspath('../../..'))
 # -- Project information -----------------------------------------------------
 
 project = 'pyqoolloop'
-copyright = '2017-2023, Kan Torii (qoolloop)'
+copyright = '2017-2024, Kan Torii (qoolloop)'
 author = 'Kan Torii (qoolloop)'
 
 
@@ -69,4 +69,4 @@ intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
 }
 
-autoclass_content = 'both'
+autoclass_content = 'class'

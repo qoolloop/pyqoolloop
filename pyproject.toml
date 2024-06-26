@@ -12,7 +12,11 @@ quote-style = "preserve"
 
 [tool.ruff.lint]
 select = [
-    "A", "ANN", "ARG", "ASYNC", "B", "BLE", "C4", "C90", "CPY", "D", "DTZ", "E", "EM", "ERA", "F", "FBT", "FIX", "FLY", "FURB", "G", "I", "ICN", "INP", "ISC", "LOG", "N", "PERF", "PGH", "PIE", "PL", "PT", "PTH", "PYI", "RET", "RSE", "RUF", "S", "SIM", "SLF", "SLOT", "T10", "T20", "TID", "TD", "TRIO", "TRY", "UP", "W", "YTT",
+    "A", "ANN", "ARG", "ASYNC", "B", "BLE", "C4", "C90", "CPY", "D", "DTZ", "E", "EM",
+    "ERA", "F", "FBT", "FIX", "FLY", "FURB", "G", "I", "ICN", "INP", "ISC", "LOG", "N",
+    "PERF", "PGH", "PIE", "PL", "PT", "PTH", "PYI", "RET", "RSE", "RUF", "S", "SIM",
+    "SLF", "SLOT", "T10", "T20", "TID", "TD", "TRIO", "TRY", "UP", "W", "YTT",
+    "Q004",   # Unnecessary escape on inner quote character
     "COM818"  # Trailing comma on bare tuple prohibited
 ]
 ignore = [
@@ -35,8 +39,8 @@ ignore = [
     "NPY",  # NumPy-specific rules
     "PD",  # pandas-vet
 
-    # Not included in black
-    "COM",  # flake8-commas
+    # Handled by mypy
+    "TCH",
 
     # Not now
     "TD002",  # Missing author in TODO
