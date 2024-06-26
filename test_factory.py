@@ -4,6 +4,8 @@ from typing import (
     Any,
 )
 
+import pytest
+
 from .factory import RegistryFactory
 
 
@@ -46,3 +48,14 @@ def test__RegistryFactory() -> None:
         assert isinstance(instance, klass)
         assert instance.name == name
         assert instance.klass == klass
+
+
+def test__RegistryFactory__KeyError() -> None:
+    """Test that `RegistryFactory.create()` raises `KeyError`."""
+    registry = RegistryFactory[type]()
+
+    @registry.register("class")
+    class _Class: ...
+
+    with pytest.raises(TypeError):
+        _ = registry.create('none-existent')

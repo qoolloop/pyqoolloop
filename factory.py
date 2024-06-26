@@ -91,6 +91,7 @@ class RegistryFactory(Generic[_TargetClassT]):
         :param name: Name for the class specified with `register()`.
         :param arguments: Key/value pairs to be passed to the initializer as
           arguments. `None` for no arguments.
+        :raises: `KeyError`: `name` doesn't exist.
         """
         if arguments is None:
             arguments = {}
