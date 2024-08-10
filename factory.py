@@ -110,7 +110,7 @@ class FunctionRegistryFactory(Generic[_TargetSignature]):
         self._registry: Dict[str, _TargetSignature] = {}
 
     @overload
-    def register(  # type: ignore[overload-overlap]
+    def register(
         self, argument: Optional[str] = None
     ) -> Callable[[_TargetSignature], _TargetSignature]: ...
 

@@ -14,7 +14,6 @@ from typing import (
     Iterable,
     Optional,
     Tuple,
-    Type,
     Union,
     cast,
     get_type_hints,
@@ -318,7 +317,7 @@ class PassArgsClassWithMandatoryKeyword:
         PassArgsClassWithMandatoryKeyword,
     ),
 )
-def test__pass_args_to_class(pass_args_class: Type[DifferentFunctions]) -> None:
+def test__pass_args_to_class(pass_args_class: type[DifferentFunctions]) -> None:
     """Test passing arguments to methods in class decorated by `@pass_args`."""
     instance = pass_args_class()
 
@@ -367,6 +366,9 @@ def test__pass_args__function_types() -> None:
     @pass_args
     def _function(_argument0: str) -> _Class:
         return _Class()
+
+    def _check_signature() -> _Class:
+        return _function('str')
 
     assert get_type_hints(_function) == {'_argument0': str, 'return': _Class}
 
@@ -420,6 +422,10 @@ def test__log_calls__function_types() -> None:
     @log_calls(logger)
     def _function(_argument: int) -> bool:
         return True
+
+    def _dont_return_any() -> bool:
+        # mypy would show 'no-any-return if `GenericDecorator.__call__()` returns `Any`
+        return _function(1)
 
     assert get_type_hints(_function, localns=locals()) == {
         '_argument': int,
@@ -765,7 +771,7 @@ class UnhandledException(Exception):
     ),
 )
 def test__retry__with_exceptions(
-    attempts: int, exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]]
+    attempts: int, exceptions: Union[type[Exception], Tuple[type[Exception], ...]]
 ) -> None:
     """Test `@retry` on function that raises expected exception."""
     result = {'count': 0}
@@ -798,7 +804,7 @@ def test__retry__with_exceptions(
     ),
 )
 def test__retry__with_unhandled_exceptions(
-    attempts: int, exceptions: Union[Type[Exception], Tuple[Type[Exception]]]
+    attempts: int, exceptions: Union[type[Exception], Tuple[type[Exception]]]
 ) -> None:
     """Test `@retry` on function that raises an unlisted exception."""
     result = {'count': 0}
@@ -831,7 +837,7 @@ def test__retry__with_unhandled_exceptions(
     ),
 )
 def test__retry__with_no_exceptions(
-    attempts: int, exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]]
+    attempts: int, exceptions: Union[type[Exception], Tuple[type[Exception], ...]]
 ) -> None:
     """Test `@retry` with function that doesn't raise exceptions."""
     result = {'count': 0}
@@ -937,7 +943,7 @@ def test__retry__without_extra_argument(attempts_value: int) -> None:
     ),
 )
 def test__retry(
-    attempts: int, exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]]
+    attempts: int, exceptions: Union[type[Exception], Tuple[type[Exception], ...]]
 ) -> None:
     """Test `@retry`."""
     # pylint: disable=missing-function-docstring
@@ -1119,6 +1125,10 @@ def test__synchronized_on_function__no_parentheses() -> None:
         # point to this target function anymore after decoration
         return _inc_dec(variables)
 
+    def _check_signature() -> str:
+        # mypy raises `no-any-return` if `@synchronized_on_function` returns `Any`
+        return _function()
+
     _test_synchronized(variables, _function)
 
 
@@ -1140,12 +1150,12 @@ def test__synchronized_on_function__lock_field() -> None:
     variables = _create_variables()
 
     @synchronized_on_function(lock_field='lock')
-    def _function() -> str:
+    def _function(_x: int) -> str:
         # Cannot access lock on function, because the name `function` doesn't
         # point to this target function anymore after decoration
         return _inc_dec(variables)
 
-    _test_synchronized(variables, _function)
+    _test_synchronized(variables, _function, (1,))
 
 
 @pytest.mark.unreliable
@@ -1181,6 +1191,10 @@ def test__synchronized_on_instance__method() -> None:
             lock = threading.RLock()  # RLock() is a function
             assert isinstance(self.lock, type(lock))  # type:ignore[attr-defined]
             return _inc_dec(variables)
+
+        def _check_signature(self) -> str:
+            # mypy raises `no-any-return` if `@synchronized_on_instance` returns `Any`
+            return self.method({})
 
     variables = _create_variables()
 
@@ -1728,7 +1742,7 @@ class NewMethodClass(Protocol):
         """Set its argument value to instance variable `new_value`."""
 
 
-def _test_new_method(class_a: Type[NewMethodClass], instance_a: NewMethodClass) -> None:
+def _test_new_method(class_a: type[NewMethodClass], instance_a: NewMethodClass) -> None:
     value = 1
     instance_a.new_method(value)
     assert value == instance_a.new_value
@@ -1759,7 +1773,7 @@ def test__extend_with_method() -> None:
     instance_a = _ClassA()
 
     _test_new_method(
-        cast(Type[NewMethodClass], _ClassA), cast(NewMethodClass, instance_a)
+        cast(type[NewMethodClass], _ClassA), cast(NewMethodClass, instance_a)
     )
 
 
@@ -1777,7 +1791,7 @@ class NewClassMethodClass(Protocol):
 
 
 def _test_new_class_method(
-    class_a: Type[NewClassMethodClass], instance_a: NewClassMethodClass
+    class_a: type[NewClassMethodClass], instance_a: NewClassMethodClass
 ) -> None:
     value = 1
     instance_a.new_class_method(value)
@@ -1797,14 +1811,14 @@ def test__extend_with_class_method() -> None:
 
     @extend_with_class_method(_ClassA)
     def new_class_method(  # type: ignore[pylance, unused-ignore]  # Pylance cannot tell it's called (v2024.2.1)
-        cls: Type[_ClassA], value: int
+        cls: type[_ClassA], value: int
     ) -> None:  # pylint: disable=unused-variable
         cls.new_value = value
 
     # Doesn't work for mypy 0.800
-    # _ClassA = cast(Type[NewStaticMethodClass], _ClassA)  # noqa: ERA001
+    # _ClassA = cast(type[NewStaticMethodClass], _ClassA)  # noqa: ERA001
 
-    CastedA = cast(Type[NewClassMethodClass], _ClassA)  # noqa: N806 # naming
+    CastedA = cast(type[NewClassMethodClass], _ClassA)  # noqa: N806 # naming
     casted_a = CastedA()
 
     _test_new_class_method(CastedA, casted_a)
@@ -1823,7 +1837,7 @@ class NewStaticMethodClass(Protocol):
 
 
 def _test_new_static_method(
-    class_a: Type[NewStaticMethodClass], instance_a: NewStaticMethodClass
+    class_a: type[NewStaticMethodClass], instance_a: NewStaticMethodClass
 ) -> None:
     value = 1
     assert value == instance_a.new_static_method(value)
@@ -1843,8 +1857,8 @@ def test__extend_with_static_method() -> None:
         return value
 
     # Doesn't work for mypy 0.800
-    # _ClassA = cast(Type[NewStaticMethodClass], _ClassA)  # noqa: ERA001
-    CastedA = cast(Type[NewStaticMethodClass], _ClassA)  # noqa: N806 # naming
+    # _ClassA = cast(type[NewStaticMethodClass], _ClassA)  # noqa: ERA001
+    CastedA = cast(type[NewStaticMethodClass], _ClassA)  # noqa: N806 # naming
     casted_a = CastedA()
 
     _test_new_static_method(CastedA, casted_a)
@@ -1875,23 +1889,23 @@ def test__extension() -> None:
             return value
 
     # Doesn't work for mypy 0.800
-    # _ClassA = cast(Type[NewStaticMethodClass], _ClassA)  # noqa: ERA001
+    # _ClassA = cast(type[NewStaticMethodClass], _ClassA)  # noqa: ERA001
 
     # Doesn't work for mypy 0.800
     # CastedA = cast(  #
-    #   Union[Type[NewClassMethodClass], Type[NewStaticMethodClass]],  # noqa: ERA001
+    #   Union[type[NewClassMethodClass], type[NewStaticMethodClass]],  # noqa: ERA001
     #   _ClassA  # noqa: ERA001
     # )  #
 
     instance_a = _ClassA()
 
     _test_new_method(
-        cast(Type[NewMethodClass], _ClassA), cast(NewMethodClass, instance_a)
+        cast(type[NewMethodClass], _ClassA), cast(NewMethodClass, instance_a)
     )
     _test_new_class_method(
-        cast(Type[NewClassMethodClass], _ClassA), cast(NewClassMethodClass, instance_a)
+        cast(type[NewClassMethodClass], _ClassA), cast(NewClassMethodClass, instance_a)
     )
     _test_new_static_method(
-        cast(Type[NewStaticMethodClass], _ClassA),
+        cast(type[NewStaticMethodClass], _ClassA),
         cast(NewStaticMethodClass, instance_a),
     )
