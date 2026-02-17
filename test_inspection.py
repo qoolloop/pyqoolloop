@@ -1,7 +1,5 @@
 """Tests for `introspect.py`."""
 
-from typing import Tuple
-
 from .inspection import (
     FunctionInfo,
     autoimport_modules,
@@ -30,7 +28,7 @@ def test__get_function_info__namedtuple() -> None:
 def test__get_function_info__depth() -> None:
     """Test for `get_function_info()` with depth argument."""
 
-    def _deep_function() -> Tuple[str, str, str]:
+    def _deep_function() -> tuple[str, str, str]:
         module_name, function_name, dir_name = get_function_info(2)
         return module_name, function_name, dir_name
 
@@ -57,10 +55,20 @@ def test__get_function_info__depth__namedtuple() -> None:
 def test__autoimport_modules() -> None:
     """Test for `autoimport_modules()`."""
     imported = autoimport_modules(__package__ + '.test_autoimport_modules')
-    assert imported['a_module'].A_CONSTANT == 1
-    assert imported['may_ignore'].MAYBE_IGNORED is False
-    assert imported['subdirectory'].SUBDIRECTORY_CONTENT is True
-    assert imported['subdirectory'].submodule.SOMETHING_IN_A_SUBMODULE == 'imported'
+    assert imported['pyqoolloop.test_autoimport_modules.a_module'].A_CONSTANT == 1
+    assert (
+        imported['pyqoolloop.test_autoimport_modules.may_ignore'].MAYBE_IGNORED is False
+    )
+    assert (
+        imported['pyqoolloop.test_autoimport_modules.subdirectory'].SUBDIRECTORY_CONTENT
+        is True
+    )
+    assert (
+        imported[
+            'pyqoolloop.test_autoimport_modules.subdirectory'
+        ].submodule.SOMETHING_IN_A_SUBMODULE
+        == 'imported'
+    )
 
 
 def test__autoimport_modules__ignore_pattern__file() -> None:
@@ -69,7 +77,7 @@ def test__autoimport_modules__ignore_pattern__file() -> None:
         __package__ + '.test_autoimport_modules',
         ignore_pattern='(test_.*)|(__.*)|(may_ignore\\.py)',
     )
-    assert imported['a_module'].A_CONSTANT == 1
+    assert imported['pyqoolloop.test_autoimport_modules.a_module'].A_CONSTANT == 1
     assert 'may_ignore' not in imported
 
 
@@ -79,5 +87,5 @@ def test__autoimport_modules__ignore_pattern__directory() -> None:
         __package__ + '.test_autoimport_modules',
         ignore_pattern='(test_.*)|(__.*)|(subdirectory)',
     )
-    assert imported['a_module'].A_CONSTANT == 1
+    assert imported['pyqoolloop.test_autoimport_modules.a_module'].A_CONSTANT == 1
     assert 'subdirectory' not in imported

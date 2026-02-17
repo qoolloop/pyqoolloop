@@ -1,10 +1,9 @@
 """Tests for the `testregression` module."""
 
+import contextlib
 import logging
-import os
 from typing import (
     Any,
-    Dict,
 )
 
 import pytest
@@ -12,6 +11,7 @@ import pytest
 from .testregression import (
     assert_no_change,
     make_filename,
+    make_filepath,
 )
 
 
@@ -33,20 +33,20 @@ def test__make_filename__index() -> None:
 
 _parametrize__assert_no_change = pytest.mark.parametrize(
     'value, kwargs',
-    (
+    [
         (1, {}),
         (2, {'index': 0}),
         (3, {'suffix': "suffix"}),
         (4, {'index': 0, 'suffix': "suffix"}),
-    ),
+    ],
 )
 
 
 @_parametrize__assert_no_change
-def test__assert_no_change(value: int, kwargs: Dict[str, Any]) -> None:
+def test__assert_no_change(value: int, kwargs: dict[str, Any]) -> None:
     """Test that `assert_no_change()` raises `AssertionError` with change in `value`."""
 
-    class _NonExistent:  # pylint: disable=too-few-public-methods
+    class _NonExistent:
         """Something that should not exist elsewhere."""
 
     save = False
@@ -61,7 +61,7 @@ def test__assert_no_change(value: int, kwargs: Dict[str, Any]) -> None:
 
 
 @_parametrize__assert_no_change
-def test__assert_no_change__no_save(value: int, kwargs: Dict[str, Any]) -> None:
+def test__assert_no_change__no_save(value: int, kwargs: dict[str, Any]) -> None:
     """
     Test that `assert_no_change()` raises `FileNotFoundError`.
 
@@ -72,7 +72,7 @@ def test__assert_no_change__no_save(value: int, kwargs: Dict[str, Any]) -> None:
 
 
 @_parametrize__assert_no_change
-def test__assert_no_change__save(value: int, kwargs: Dict[str, Any]) -> None:
+def test__assert_no_change__save(value: int, kwargs: dict[str, Any]) -> None:
     """
     Test that `assert_no_change()` raises `AssertionError`.
 
@@ -84,32 +84,28 @@ def test__assert_no_change__save(value: int, kwargs: Dict[str, Any]) -> None:
 
 @_parametrize__assert_no_change
 def test__assert_no_change__save__no_previous(
-    value: int, kwargs: Dict[str, Any]
+    value: int, kwargs: dict[str, Any]
 ) -> None:
     """
     Test that no exception occurs with no value being saved.
 
     When  the `save` if `True`for `assert_no_change()`.
     """
-    filename = make_filename(**kwargs)
-    try:
-        os.remove(filename)
-
-    except FileNotFoundError:
-        pass
+    filepath = make_filepath(**kwargs)
+    with contextlib.suppress(FileNotFoundError):
+        filepath.unlink()
 
     try:
         assert_no_change(value, save=True, error_on_save=False, **kwargs)
 
     finally:
-        os.remove(filename)
+        filepath.unlink()
 
     # enddef
 
 
 def test__assert_no_change__logger() -> None:
     """Test that logging is as expected for `assert_no_change()`."""
-    # pylint: disable=missing-function-docstring
 
     class _Logger(logging.Logger):
         called: bool = False
@@ -132,9 +128,9 @@ def test__assert_no_change__logger() -> None:
             assert self.message == ""
 
         def check_message_content(self) -> None:
-            assert (
-                "test__assert_no_change__logger" in self.message
-            ), "message not as expected: {self.message}"
+            assert "test__assert_no_change__logger" in self.message, (
+                "message not as expected: {self.message}"
+            )
             assert "test_testregression" in self.message
             assert str(value) in self.message
 
@@ -144,7 +140,7 @@ def test__assert_no_change__logger() -> None:
 
     value = 1
 
-    filename = make_filename()
+    filepath = make_filepath()
 
     try:
         _logger.reset_message()
@@ -190,6 +186,6 @@ def test__assert_no_change__logger() -> None:
         _logger.check_empty_message()
 
     finally:
-        os.remove(filename)
+        filepath.unlink()
 
     # enddef

@@ -1,14 +1,12 @@
 """Functions for testing for regression."""
 
+from collections.abc import Callable
 import logging
-import os
+from pathlib import Path
 import pickle
 from typing import (
     Any,
-    Callable,
-    Optional,
     TypeVar,
-    Union,
 )
 
 from . import inspection
@@ -21,8 +19,8 @@ _ParameterT = TypeVar('_ParameterT')
 
 def make_filename(
     *,
-    index: Union[None, float] = None,
-    suffix: Optional[str] = None,
+    index: None | float = None,
+    suffix: str | None = None,
     extension: str = '.p',
     depth: int = 1,
 ) -> str:
@@ -35,21 +33,21 @@ def make_filename(
         additional information to discriminate produced filename.
     :param suffix: Add this value to the base name of the filename.
     :param extension: Use this value as the extension of the filename.
-    :param depth: How much up the stack to look. -1 for the caller.
+    :param depth: How much up the stack to look. 1 for the caller.
 
-    :returns: The created filename.
+    :return: The created filename.
 
     .. note::
-      Do not assume that the returned filename will be of a particular format
-      other than the fact that `extension` will be used as the extension
-      and the directory will be respected.
+      Do not assume that the returned filename will be of a particular format other
+      than the fact that `extension` will be used as the extension and the directory
+      will be respected.
     """
     module_name, function_name, dir_name = inspection.get_function_info(depth=depth + 1)
 
     split_module = module_name.split('.')
 
-    filename = os.path.join(
-        dir_name, '_testregression', split_module[-1] + '.' + function_name
+    filename = str(
+        Path(dir_name) / '_testregression' / (split_module[-1] + '.' + function_name)
     )
 
     if index is not None:
@@ -64,21 +62,51 @@ def make_filename(
     return filename
 
 
+def make_filepath(
+    *,
+    index: None | float = None,
+    suffix: str | None = None,
+    extension: str = '.p',
+    depth: int = 1,
+) -> Path:
+    """
+    Make a filepath in a subdirectory to save values for regression test.
+
+    The subdirectory will be named `_testregression`.
+
+    :param index: If specified, this value will be used as
+        additional information to discriminate produced filename.
+    :param suffix: Add this value to the base name of the filename.
+    :param extension: Use this value as the extension of the filename.
+    :param depth: How much up the stack to look. 1 for the caller.
+
+    :return: The created filepath.
+
+    .. note::
+      Do not assume that the filename of the returned filepath will be of a particular
+      format other than the fact that `extension` will be used as the extension and the
+      directory will be respected.
+    """
+    return Path(
+        make_filename(index=index, suffix=suffix, extension=extension, depth=depth + 1)
+    )
+
+
 def _save_or_load(
     value: _ParameterT,
     *,
     save: bool,
-    index: Union[None, float] = None,
-    suffix: Optional[str] = None,
+    index: None | float = None,
+    suffix: str | None = None,
     depth: int = 1,
 ) -> Any:  # noqa: ANN401
-    class _CannotRead:  # pylint: disable=too-few-public-methods
+    class _CannotRead:
         """Something that should not exist elsewhere."""
 
-    filename = make_filename(index=index, suffix=suffix, depth=depth + 1)
+    filepath = make_filepath(index=index, suffix=suffix, depth=depth + 1)
 
     try:
-        with open(filename, 'rb') as read_file:
+        with Path.open(filepath, 'rb') as read_file:
             previous_value = pickle.load(read_file)  # noqa: S301
 
     except OSError:
@@ -90,7 +118,7 @@ def _save_or_load(
 
     if save:
         if previous_value != value:
-            with open(filename, 'wb') as write_file:
+            with Path.open(filepath, 'wb') as write_file:
                 pickle.dump(value, write_file)
 
         return value
@@ -102,15 +130,15 @@ def _equals(one: object, another: object) -> bool:
     return one == another
 
 
-def assert_no_change(  # noqa: PLR0913  # FUTURE: Until keyword arguments are handled separtely
+def assert_no_change(  # noqa: PLR0913  # FUTURE: Until keyword arguments are handled separately
     value: object,
     *,
     save: bool,
-    index: Union[None, float] = None,
-    suffix: Optional[str] = None,
+    index: None | float = None,
+    suffix: str | None = None,
     error_on_save: bool = True,
-    depth: int = 1,
     equals: Callable[[object, object], bool] = _equals,
+    _depth: int = 1,
     _logger: logging.Logger = _logger,
 ) -> None:
     """
@@ -124,12 +152,12 @@ def assert_no_change(  # noqa: PLR0913  # FUTURE: Until keyword arguments are ha
     :param suffix: Extra `str` to discriminate the values.
     :param error_on_save: If `True`, raises class:`AssertionError` if
         `save == True`. This can be used to avoid leaving `save` as True.
-    :param depth: (For internal use)  #TODO: rename with prefix `_`
     :param equals: Function to check that values are equal.
+    :param _depth: (For internal use)
     :param _logger: (For test) Logger to use.
 
-    :raises AssertionError: If `value` does not equal saved value
-    :raises FileNotFoundError: If `value` has not been saved before
+    :raise AssertionError: If `value` does not equal saved value
+    :raise FileNotFoundError: If `value` has not been saved before
 
     .. note::
       A folder named `_testregression` needs to exist in the same directory as
@@ -139,17 +167,17 @@ def assert_no_change(  # noqa: PLR0913  # FUTURE: Until keyword arguments are ha
     """
     # FUTURE: Automatically create subdirectory?
     if save:
-        module_name, function_name, _ = inspection.get_function_info(depth=depth + 1)
+        module_name, function_name, _ = inspection.get_function_info(depth=_depth + 1)
         _logger.error("`save` is `True` in %s (%s)", function_name, module_name)
         _logger.error("`value` is %r", value)
 
     previous_value = _save_or_load(
-        value, save=save, index=index, suffix=suffix, depth=depth + 1
+        value, save=save, index=index, suffix=suffix, depth=_depth + 1
     )
 
-    assert equals(
-        previous_value, value
-    ), f"{previous_value!r}\nDOES NOT EQUAL{value!r}\n"
+    assert equals(previous_value, value), (
+        f"{previous_value!r}\nDOES NOT EQUAL{value!r}\n"
+    )
 
     if error_on_save:
         assert not save

@@ -1,15 +1,11 @@
 """Defines classes related to the Factory pattern."""
 
+from collections.abc import Callable
 from types import NoneType
 from typing import (
     Any,
-    Callable,
-    Dict,
     Generic,
-    Optional,
-    Type,
     TypeVar,
-    Union,
     overload,
 )
 
@@ -31,22 +27,20 @@ class RegistryFactory(Generic[_TargetClassT]):
     """
 
     def __init__(self) -> None:
-        self._registry: Dict[str, Type[_TargetClassT]] = {}
+        self._registry: dict[str, type[_TargetClassT]] = {}
 
     @overload
     def register(
-        self, argument: Optional[str] = None
-    ) -> Callable[[Type[_TargetClassT]], Type[_TargetClassT]]: ...
+        self, argument: str | None = None
+    ) -> Callable[[type[_TargetClassT]], type[_TargetClassT]]: ...
 
     @overload
-    def register(self, argument: Type[_TargetClassT]) -> Type[_TargetClassT]: ...
+    def register(self, argument: type[_TargetClassT]) -> type[_TargetClassT]: ...
 
     @class_decorator
     def register(
-        self, argument: Union[None, str, type] = None
-    ) -> Union[
-        Callable[[Type[_TargetClassT]], Type[_TargetClassT]], Type[_TargetClassT]
-    ]:
+        self, argument: None | str | type = None
+    ) -> Callable[[type[_TargetClassT]], type[_TargetClassT]] | type[_TargetClassT]:
         """
         Decorate class to register.
 
@@ -56,12 +50,12 @@ class RegistryFactory(Generic[_TargetClassT]):
         Parentheses for this decorator can be omitted.
         """
 
-        def _wrapper(target: Type[_TargetClassT]) -> Type[_TargetClassT]:
+        def _wrapper(target: type[_TargetClassT]) -> type[_TargetClassT]:
             key_name = target.__name__ if name is None else name
 
-            assert (
-                key_name not in self._registry
-            ), f"Name ({key_name}) already registered."
+            assert key_name not in self._registry, (
+                f"Name ({key_name}) already registered."
+            )
 
             self._registry[key_name] = target
             return target
@@ -75,7 +69,7 @@ class RegistryFactory(Generic[_TargetClassT]):
         return _wrapper
 
     def create(
-        self, name: str, arguments: Optional[Dict[str, Any]] = None
+        self, name: str, arguments: dict[str, Any] | None = None
     ) -> _TargetClassT:
         """
         Create an instance of a class registered to this registry.
@@ -83,7 +77,7 @@ class RegistryFactory(Generic[_TargetClassT]):
         :param name: Name for the class specified with `register()`.
         :param arguments: Key/value pairs to be passed to the initializer as
           arguments. `None` for no arguments.
-        :raises: `KeyError`: `name` doesn't exist.
+        :raise: `KeyError`: `name` doesn't exist.
         """
         if arguments is None:
             arguments = {}
@@ -97,7 +91,7 @@ _TargetSignature = TypeVar('_TargetSignature')
 
 class FunctionRegistryFactory(Generic[_TargetSignature]):
     """
-    A factory that creates instances of calls to functions based on strings assigned.
+    A factory that retrieves functions based on strings assigned.
 
     The functions/methods are registered using using `@registry.register`, where
     `registry` is an instance of `FunctionRegistryFactory`.
@@ -107,11 +101,11 @@ class FunctionRegistryFactory(Generic[_TargetSignature]):
     """
 
     def __init__(self) -> None:
-        self._registry: Dict[str, _TargetSignature] = {}
+        self._registry: dict[str, _TargetSignature] = {}
 
     @overload
     def register(
-        self, argument: Optional[str] = None
+        self, argument: str | None = None
     ) -> Callable[[_TargetSignature], _TargetSignature]: ...
 
     @overload
@@ -119,8 +113,8 @@ class FunctionRegistryFactory(Generic[_TargetSignature]):
 
     @function_decorator
     def register(
-        self, argument: Union[None, str, _TargetSignature] = None
-    ) -> Union[Callable[[_TargetSignature], _TargetSignature], _TargetSignature]:
+        self, argument: None | str | _TargetSignature = None
+    ) -> Callable[[_TargetSignature], _TargetSignature] | _TargetSignature:
         """
         Decorate function/method to register.
 
@@ -133,9 +127,9 @@ class FunctionRegistryFactory(Generic[_TargetSignature]):
         def _wrapper(target: _TargetSignature) -> _TargetSignature:
             key_name = target.__name__ if name is None else name  # type: ignore[attr-defined]
 
-            assert (
-                key_name not in self._registry
-            ), f"Name ({key_name}) already registered."
+            assert key_name not in self._registry, (
+                f"Name ({key_name}) already registered."
+            )
 
             self._registry[key_name] = target
             return target
@@ -152,7 +146,7 @@ class FunctionRegistryFactory(Generic[_TargetSignature]):
         """
         Return callable registered to this registry.
 
-        :param name: Name for the class specified with `register()`.
-        :raises: `KeyError`: `name` doesn't exist.
+        :param name: Name for the callable specified with `register()`.
+        :raise: `KeyError`: `name` doesn't exist.
         """
         return self._registry[name]

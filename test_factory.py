@@ -13,7 +13,6 @@ from .factory import FunctionRegistryFactory, RegistryFactory
 
 def test__RegistryFactory() -> None:
     """Test `RegistryFactory`."""
-    # pylint: disable=too-few-public-methods
 
     class _SuperClass:
         def __init__(self, name: str, klass: type) -> None:
@@ -104,7 +103,8 @@ def test__FunctionRegistryFactory__method() -> None:
 
     instance = _Class()
 
-    assert method(instance, 2.0) == 2
+    value = 2.0
+    assert method(instance, value) == int(value)
 
 
 def test__FunctionRegistryFactory__KeyError() -> None:

@@ -42,8 +42,7 @@ def test__Guard__dataclass() -> None:
 def test__Guard__type() -> None:
     """Test that :class:`Guard` doesn't accept types (only instances)."""
 
-    class _Class:  # pylint: disable=too-few-public-methods
-        ...
+    class _Class: ...
 
     with pytest.raises(AssertionError):
         _ = Guard(_Class)

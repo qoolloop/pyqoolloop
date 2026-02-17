@@ -1,19 +1,15 @@
 """Module with useful functions for unit testing."""
 
+from collections.abc import Callable, Collection, Hashable, Iterable
 import inspect
 import logging
 from typing import (
     Any,
-    Callable,
-    Collection,
-    Dict,
-    Hashable,
-    Iterable,
-    Set,
-    Union,
 )
 
 from typing_extensions import Protocol
+
+from .decorators import deprecated
 
 _logger = logging.getLogger(__name__)
 
@@ -30,19 +26,19 @@ def eq_operator(one: object, another: object) -> bool:
     :param one: One value to compare
     :param another: Another value to compare
 
-    :returns: `True` if `one == another`.
+    :return: `True` if `one == another`.
     """
     return one == another
 
 
-class _HasEquals(Protocol):  # pylint: disable=too-few-public-methods
+class _HasEquals(Protocol):
     def equals(self, value: object) -> bool:
         """
         Comparison for equality.
 
-        :param another: Value to compare with `self`.
+        :param value: Value to compare with `self`.
 
-        :returns: `True` if `self` equals `value`.
+        :return: `True` if `self` equals `value`.
         """
 
 
@@ -55,7 +51,7 @@ def equals_method(one: _HasEquals, another: object) -> bool:
     :param one: Object with the `equals()` method.
     :param another: Value to compare with `one`.
 
-    :returns: `True` if `one.equals(another)`.
+    :return: `True` if `one.equals(another)`.
     """
     return one.equals(another)
 
@@ -63,7 +59,7 @@ def equals_method(one: _HasEquals, another: object) -> bool:
 def equal_set(
     one_set: Collection[object],
     another_set: Collection[object],
-    equals: Callable[[object, object], bool] = eq_operator,  # pylint: disable=redefined-outer-name
+    equals: Callable[[object, object], bool] = eq_operator,
 ) -> bool:  # FUTURE: reimplement using `set()`
     """
     Check for equality between two iterables ignoring order.
@@ -74,7 +70,7 @@ def equal_set(
     :param another_set: Another iterable to compare.
     :param equals: The function to compare elements in the sets.
 
-    :returns: `True` if the two iterables are equal.
+    :return: `True` if the two iterables are equal.
     """
     # Needs to be list to remove() from unhashable set
     another_set_copy = list(another_set)
@@ -103,23 +99,15 @@ def equal_set(
 def _included_set(
     one_set: Iterable[Any],
     another_set: Iterable[Any],
-    equals: Operator = eq_operator,  # pylint: disable=redefined-outer-name
+    equals: Operator = eq_operator,
 ) -> bool:
     def _iterable_in(each: Any, another_set: Iterable[Any]) -> bool:  # noqa: ANN401
-        for other in another_set:
-            if equals(each, other):
-                return True
-
-        return False
+        return any(equals(each, other) for other in another_set)
 
     def _set_in(each: Any, another_set: set[Any]) -> bool:  # noqa: ANN401
         return each in another_set
 
-    if equals == eq_operator:  # pylint: disable=comparison-with-callable
-        is_in = _set_in
-
-    else:
-        is_in = _iterable_in
+    is_in = _set_in if equals == eq_operator else _iterable_in
 
     another_set = set(another_set)
 
@@ -134,9 +122,9 @@ def _included_set(
 
 
 def _included_dict(
-    one: Dict[Any, Any],
-    another: Dict[Any, Any],
-    equals: Operator = eq_operator,  # pylint: disable=redefined-outer-name
+    one: dict[Any, Any],
+    another: dict[Any, Any],
+    equals: Operator = eq_operator,
 ) -> bool:
     for each_key, each_value in one.items():
         if each_key not in another:
@@ -160,7 +148,7 @@ def _included_dict(
 def included(
     one: Iterable[Any],
     another: Iterable[Any],
-    equals: Operator = eq_operator,  # pylint: disable=redefined-outer-name
+    equals: Operator = eq_operator,
 ) -> bool:
     """
     Check that all elements in one is included in the other.
@@ -169,7 +157,7 @@ def included(
     :param another: Iterable or `dict` that could include `one`.
     :param equals: Function to be used to compare values (not keys).
 
-    :returns: Returns `True`, when elements in `one` are included in
+    :return: Returns `True`, when elements in `one` are included in
         `another`.
 
     .. note::
@@ -182,39 +170,44 @@ def included(
     return _included_set(one, another, equals=equals)
 
 
-def current_function_name(pop_stack: int = 0) -> str:
+def current_function_name(*, depth: int = 0) -> str:
     """
     Get name of function on stack.
 
-    :param pop_stack: How deep in the stack to look. `0` for direct caller.
-      `1` for caller of caller.  #TODO: rename `depth`
+    :param depth: How deep in the stack to look. `0` for direct caller.
+      `1` for caller of caller.
 
-    :returns: Name of function on stack.
+    :return: Name of function on stack.
 
-    :raises AssertionError: `pop_stack` is too large.
+    :raise AssertionError: `depth` is too large.
     """
     # https://stackoverflow.com/a/13514318/2400328
     frame = inspect.currentframe()
     assert frame is not None
-    for _ in range(pop_stack + 1):
+    for _ in range(depth + 1):
         frame = frame.f_back
         assert frame is not None
 
     return frame.f_code.co_name
 
 
+@deprecated(_logger)
 def combine_lists(
-    *args: Union[object, Iterable[object]], raise_if_empty: bool = True
+    *args: object | list[object], raise_if_empty: bool = True
 ) -> list[object]:
     r"""
-    Create a list of entries created by taking one element from each of the arguments.
+    Create a list of entries by taking one element from each of the arguments.
 
     Can be used to create test parameters from combinations.
 
-    If one of the arguments is not an iterable, it will be treated as though
-    it was in a list.
+    If one of the arguments is not a `list`, it will be treated as though
+    it was in a `list`.
 
-    If both elements in the arguments are lists, the result will be a
+      >>> to_set( combine_lists([['a', 'b']], [['c', 'd'], ['e', 'f']]) ) == \
+      ...  to_set( [['a', 'b', 'c', 'd'], ['a', 'b', 'e', 'f']] )
+      True
+
+    If both elements in each argument are lists, the result will be a
     concatenation.
 
     If one of the elements is a list and the other is not, the non-list element
@@ -222,7 +215,8 @@ def combine_lists(
 
     If both elements are not lists, a list will be created with both elments.
 
-    If there is only one argument, that argument will be returned as is.
+    If there is only one argument, that argument will be returned as is, enclosed in a
+    `list` if it is not a `list`.
 
       >>> to_set( combine_lists(['a', 'b'], ['c', 'd']) ) == \
       ...  to_set( [['a', 'c'], ['a', 'd'], ['b', 'c'], ['b', 'd']] )
@@ -237,64 +231,128 @@ def combine_lists(
 
     :return: combined result.
 
-    :raises AssertionError: The result is empty and
+    :raise AssertionError: The result is empty and
       `raise_if_empty` was `True` or omitted.
+
+    .. note:: This function is being deprecated, because using a list of tuples is
+      recommended for `@pytest.mark.parametrize()`. This allows mypy to check the
+      type of each element in the tuples.
     """
     assert len(args) >= 1
 
-    if isinstance(args[0], list):
-        args0 = args[0]
-
-    else:
-        args0 = [args[0]]
+    args0: list[object] = args[0] if isinstance(args[0], list) else [args[0]]
 
     if len(args) == 1:
-        result = list(args0)
+        result = args0
 
     else:
-        one_list = args0
+        a_list = args0
         another_list = combine_lists(*args[1:], raise_if_empty=raise_if_empty)
 
         result = []
         for another in another_list:
-            if not isinstance(another, list):
-                another = [another]
+            list_another = another if isinstance(another, list) else [another]
 
-            for one in one_list:
-                if not isinstance(one, list):
-                    one = [one]
+            for one in a_list:
+                list_one: list[object] = (
+                    [one] if not isinstance(one, list) else list(one)
+                )
 
-                else:
-                    one = list(one)  # need to make copy not to modify original
+                list_one.extend(list_another)
 
-                one.extend(another)
-
-                result.append(one)
+                result.append(list_one)
             # endfor
         # endfor
 
-    if raise_if_empty:
-        for _ in result:  # `result` is `Iterable`
-            return result
-        # endfor
-
+    if raise_if_empty and (len(result) == 0):
         raise AssertionError("Empty result")
 
     return result
 
 
-def to_set(iterable: Iterable[Hashable]) -> Set[Hashable]:
+def combine_tuples(
+    *args: object | list[object], raise_if_empty: bool = True
+) -> list[tuple[object, ...]]:
+    r"""
+    Create a list of tuples by taking one element from each of the arguments.
+
+      >>> to_set( combine_tuples([('a', 'b')], [('c', 'd'), ('e', 'f')]) ) == \
+      ...  to_set( [('a', 'b', 'c', 'd'), ('a', 'b', 'e', 'f')] )
+      True
+
+    Can be used to create test parameters from combinations.
+
+    If one of the arguments is not a tuple, it will be treated as though
+    it was in a tuple.
+
+    If both elements in the arguments are tuples, the result will be a
+    concatenation.
+
+    If one of the elements is a tuple and the other is not, the non-tuple element
+    will be prefixed or appended to the tuple.
+
+    If both elements are not tuples, a tuple will be created with both elements.
+
+    If there is only one argument, that argument will be returned as is, enclosed in a
+    `list` if it is not a `list`.
+
+      >>> to_set( combine_tuples(['a', 'b'], ['c', 'd']) ) == \
+      ...  to_set( [('a', 'c'), ('a', 'd'), ('b', 'c'), ('b', 'd')] )
+      True
+      >>> to_set( combine_tuples(['a', 'b'], 'c') ) == \
+      ...  to_set( [('a', 'c'), ('b', 'c')] )
+      True
+
+    :param \*args: List of tuples to combine
+    :param raise_if_empty: If `True`, raise an exception if the result is
+      empty.
+
+    :return: combined result.
+
+    :raise AssertionError: The result is empty and
+      `raise_if_empty` was `True` or omitted.
+    """
+    assert len(args) >= 1
+
+    a_list: list[object] = args[0] if isinstance(args[0], list) else [args[0]]
+
+    if len(args) == 1:
+        result: list[tuple[object, ...]] = [
+            (one,) if not isinstance(one, tuple) else one for one in a_list
+        ]
+
+    else:
+        another_list = combine_tuples(*args[1:], raise_if_empty=raise_if_empty)
+
+        result = []
+        for another in another_list:
+            tuple_another = another if isinstance(another, tuple) else (another,)
+
+            for one in a_list:
+                tuple_one: tuple[object, ...] = (
+                    (one,) if not isinstance(one, tuple) else one
+                )
+
+                result.append(tuple_one + tuple_another)
+            # endfor
+        # endfor
+
+    if raise_if_empty and (len(result) == 0):
+        raise AssertionError("Empty result")
+
+    return result
+
+
+def to_set(iterable: Iterable[Hashable | Iterable[Hashable]]) -> set[Hashable]:
     """
     Convert iterable to set.
 
-    If elements of the iterable are also iterable (may not be hashable),
+    If elements of the iterable are also iterable (may not be hashable e.g. `list`),
     they will be converted to tuples.
 
     :param iterable: Iterable.
 
-    :returns: Resulting set.
-
-    .. note:: This is convenient for use with `@pytest.mark.parametrize`.
+    :return: Resulting set.
     """
     result = set()
     for each in iterable:

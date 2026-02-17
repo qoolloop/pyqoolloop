@@ -7,6 +7,7 @@ Declares convenient decorators.
 """
 
 from collections import OrderedDict
+from collections.abc import Callable, Iterable
 import copy
 import datetime
 from functools import partial, wraps
@@ -16,13 +17,6 @@ import threading
 import time
 from typing import (
     Any,
-    Callable,
-    Dict,
-    FrozenSet,
-    Iterable,
-    Optional,
-    Tuple,
-    Union,
     cast,
     overload,
 )
@@ -38,8 +32,8 @@ from .genericdecorator import (
 
 def _through_method(
     target: Callable[..., TargetReturnT],
-    instance: TargetClassT,  # pylint: disable=unused-argument  # noqa: ARG001
-    cls: type[TargetClassT],  # pylint: disable=unused-argument  # noqa: ARG001
+    instance: TargetClassT,  # noqa: ARG001
+    cls: type[TargetClassT],  # noqa: ARG001
     *args: Any,
     **kwargs: Any,
 ) -> TargetReturnT:
@@ -85,13 +79,17 @@ def generic_decorator(target: TargetFunctionT) -> TargetFunctionT:
 
 
 @generic_decorator
-def log_calls(logger: logging.Logger, *, log_result: bool = True) -> GenericDecorator:
+def log_calls(
+    logger: logging.Logger, *, level: int = logging.INFO, log_result: bool = True
+) -> GenericDecorator:
     """
     Log calls to the decorated function.
 
     Can also decorate classes to log calls to all its methods.
 
     :param logger: object to log to
+    :param level: the level for logging
+    :param log_result: whether to log the returned value of the decorated function
     """
 
     def log_function(
@@ -101,14 +99,21 @@ def log_calls(logger: logging.Logger, *, log_result: bool = True) -> GenericDeco
     ) -> TargetReturnT:
         stack_level = 3
 
-        logger.info(
-            f"{target.__name__} args: {args!r} {kwargs!r}", stacklevel=stack_level
+        logger.log(
+            level,
+            "%s args: %r %r",
+            target.__name__,
+            args,
+            kwargs,
+            stacklevel=stack_level,
         )
 
         result = target(*args, **kwargs)
 
         if log_result:
-            logger.info(f"{target.__name__} result: {result!r}", stacklevel=stack_level)
+            logger.log(
+                level, "%s result: %r", target.__name__, result, stacklevel=stack_level
+            )
 
         return result
 
@@ -144,8 +149,11 @@ def log_calls_on_exception(
                 logger.exception("Exception", stacklevel=stack_level)
 
             else:
-                logger.info(
-                    f"{target.__name__} args: {args!r} {kwargs!r}",
+                logger.error(  # noqa: TRY400
+                    "%s args: %r %r",
+                    target.__name__,
+                    args,
+                    kwargs,
                     stacklevel=stack_level,
                 )
 
@@ -189,7 +197,7 @@ def pass_args(
         composed_kwargs = copy.copy(kwargs)
 
         arg_names = inspect.signature(target).parameters
-        composed_kwargs.update(zip(arg_names, args))
+        composed_kwargs.update(zip(arg_names, args, strict=False))
 
         result = target(*args, kwargs=composed_kwargs, **kwargs)
         return result
@@ -199,16 +207,16 @@ def pass_args(
 
 
 # not constant
-raise_exception_for_deprecated = False  # pylint: disable=invalid-name
+raise_exception_for_deprecated = False
 
 
 @generic_decorator
 def deprecated(
     logger: logging.Logger,
-    message: Optional[str] = None,
-    raise_exception: Optional[bool] = None,
+    message: str | None = None,
+    *,
+    raise_exception: bool | None = None,
 ) -> GenericDecorator:
-    # FUTURE: Doesn't work with `@overrides`.
     """
     Deprecate a decorated function or class.
 
@@ -216,6 +224,9 @@ def deprecated(
     :param message: Additional message to log.
     :param raise_exception: `True`, to raise exception when function (of class)
       is called.
+
+    .. note:: This decorator doesn't work with `@overrides`, but this shouldn't be a
+      problem, because the parent method should be deprecated.
     """
 
     def log_function(
@@ -228,7 +239,7 @@ def deprecated(
             target.__name__,
             target.__module__,
             "\n" if message else "",
-            message if message else "",
+            message or "",
         )
 
         logger.warning(*message_tuple)
@@ -248,7 +259,7 @@ def deprecated(
 @function_decorator
 def retry(
     attempts: int,
-    exceptions: Union[type[Exception], Tuple[type[Exception], ...]],
+    exceptions: type[Exception] | tuple[type[Exception], ...],
     *,
     interval_secs: float = 0.0,
     extra_argument: bool = False,
@@ -289,7 +300,7 @@ def retry(
                 try:
                     return target(*args, **kwargs)
 
-                except exceptions:
+                except exceptions:  # noqa: PERF203
                     if iteration < actual_attempts - 1:
                         time.sleep(interval_secs)
 
@@ -309,16 +320,20 @@ def retry(
 
 @overload
 def synchronized_on_function(
-    __target: None = None, *, lock_field: str = '__lock', dont_synchronize: bool = False
-) -> Union[
-    Callable[[TargetFunctionT], TargetFunctionT],
+    target: None = None,
+    /,
+    *,
+    lock_field: str = '__lock',
+    dont_synchronize: bool = False,
+) -> Callable[[TargetFunctionT], TargetFunctionT]:
     # Callable[[type[TargetClassT]], type[TargetClassT]],  # Doesn't work mypy 1.11.1
-]: ...
+    ...
 
 
 @overload
 def synchronized_on_function(
-    __target: TargetFunctionT,
+    target: TargetFunctionT,
+    /,
     *,
     lock_field: str = '__lock',
     dont_synchronize: bool = False,
@@ -327,7 +342,8 @@ def synchronized_on_function(
 
 @overload
 def synchronized_on_function(
-    __target: type[TargetClassT],
+    target: type[TargetClassT],
+    /,
     *,
     lock_field: str = '__lock',
     dont_synchronize: bool = False,
@@ -336,11 +352,12 @@ def synchronized_on_function(
 
 @generic_decorator
 def synchronized_on_function(
-    __target: Optional[TargetT] = None,
+    target: TargetT | None = None,
+    /,
     *,
     lock_field: str = '__lock',
     dont_synchronize: bool = False,
-) -> Union[TargetT, Callable[[TargetT], TargetT]]:
+) -> TargetT | Callable[[TargetT], TargetT]:
     """
     Add synchronization lock to decorated function.
 
@@ -376,9 +393,9 @@ def synchronized_on_function(
 
         return result
 
-    if __target:
+    if target:
         assert not dont_synchronize
-        return partial(_call_function, __target)
+        return partial(_call_function, target)
 
     call_function = _call_function if not dont_synchronize else _through_function
 
@@ -388,23 +405,24 @@ def synchronized_on_function(
         wrapper_for_staticmethod=_through_method,
         wrapper_for_classmethod=_through_method,
     )
-    return decorator(__target)
+    return decorator(target)
 
 
 @overload
 def synchronized_on_instance(
-    __target: None = None,
+    target: None = None,
+    /,
     *,
     lock_field: str = '__lock',
-) -> Union[
-    Callable[[TargetFunctionT], TargetFunctionT],
+) -> Callable[[TargetFunctionT], TargetFunctionT]:
+    ...
     # Callable[[type[TargetClassT]], type[TargetClassT]],  # Doesn't work mypy 1.11.1
-]: ...
 
 
 @overload
 def synchronized_on_instance(
-    __target: TargetFunctionT,
+    target: TargetFunctionT,
+    /,
     *,
     lock_field: str = '__lock',
 ) -> TargetFunctionT: ...
@@ -412,7 +430,8 @@ def synchronized_on_instance(
 
 @overload
 def synchronized_on_instance(
-    __target: type[TargetClassT],
+    target: type[TargetClassT],
+    /,
     *,
     lock_field: str = '__lock',
 ) -> type[TargetClassT]: ...
@@ -420,10 +439,11 @@ def synchronized_on_instance(
 
 @generic_decorator
 def synchronized_on_instance(
-    __target: Optional[TargetT] = None,
+    target: TargetT | None = None,
+    /,
     *,
     lock_field: str = '__lock',
-) -> Union[TargetT, Callable[[TargetT], TargetT]]:
+) -> TargetT | Callable[[TargetT], TargetT]:
     """
     Add a synchronization lock for calls to the decorated instance method.
 
@@ -471,7 +491,7 @@ def synchronized_on_instance(
     def _call_when_decorating_class(
         target: Any,  # TargetFunctionT,  # noqa: ANN401
         instance: TargetClassT,
-        cls: type[TargetClassT],  # pylint: disable=unused-argument  # noqa: ARG001
+        cls: type[TargetClassT],  # noqa: ARG001
         *args: Any,
         **kwargs: Any,
     ) -> Any:  # TargetReturnT:  # noqa: ANN401
@@ -484,7 +504,7 @@ def synchronized_on_instance(
         wrapper_for_staticmethod=_through_method,
         wrapper_for_classmethod=_through_method,
     )
-    return decorator(__target)
+    return decorator(target)
 
 
 # FUTURE:
@@ -502,13 +522,13 @@ def synchronized_on_instance(
 def _get_signature_values(
     target: Callable[..., TargetReturnT],
     args: Iterable[Any],
-    kwargs: Dict[str, Any],
+    kwargs: dict[str, Any],
     exclude_kw: Iterable[str] = (),
 ) -> OrderedDict[str, Any]:
     def _bind_arguments(
         target: Callable[..., TargetReturnT],
         args: Iterable[Any],
-        kwargs: Dict[str, Any],
+        kwargs: dict[str, Any],
     ) -> OrderedDict[str, Any]:
         signature = inspect.signature(target)
         bind = signature.bind(*args, **kwargs)
@@ -527,10 +547,11 @@ def _get_signature_values(
 
 
 def cache(
-    __target: None = None,
+    _target: None = None,
+    /,
     *,
     expire_time_secs: float,
-    max_entries: Optional[int] = None,
+    max_entries: int | None = None,
     dont_synchronize: bool = False,
     exclude_kw: Iterable[str] = (),
 ) -> Callable[[TargetT], TargetT]:
@@ -540,7 +561,7 @@ def cache(
     Can also decorate classes to cache returned values for each method.
 
     :param expire_time_secs: Keep value for less than this period (seconds)
-    :param max_entries: Don't keep more than this number of entries
+    :param max_entries: Don't keep more than this number of entries.
       If a class is decorated, one cache is held for all methods in the class.
     :param dont_synchronize: `True`, if thread safety is not necessary
     :param exclude_kw: Iterable of argument names to exclude from arguments
@@ -553,7 +574,7 @@ def cache(
     """
     # holds tuples (<time>, <value>)
     cache_storage: OrderedDict[
-        FrozenSet[Tuple[str, Any]], Tuple[datetime.datetime, Any]
+        frozenset[tuple[str, Any]], tuple[datetime.datetime, Any]
     ] = OrderedDict()
 
     @synchronized_on_function(dont_synchronize=dont_synchronize)
@@ -590,24 +611,25 @@ def cache(
         return value
 
     decorator = GenericDecorator(_cached_function)
-    return decorator(__target)
+    return decorator(_target)
 
 
 @function_decorator
 def extend_with_method(
-    __extended_class: type[TargetClassT],
+    extended_class: type[TargetClassT],
+    /,
 ) -> Callable[[TargetFunctionT], TargetFunctionT]:
     """
     Add decorated function as an instance method to a class.
 
-    :param __extended_class: Class to add method to.
+    :param extended_class: Class to add method to.
 
     .. note:: The function needs to have `self` as the first argument.
     """
     # FUTURE: `override=False` Don't allow overrides
 
     def _decorator(target: TargetFunctionT) -> TargetFunctionT:
-        setattr(__extended_class, target.__name__, target)
+        setattr(extended_class, target.__name__, target)
         return target
 
     return _decorator
@@ -615,12 +637,13 @@ def extend_with_method(
 
 @function_decorator
 def extend_with_static_method(
-    __extended_class: type[TargetClassT],
+    extended_class: type[TargetClassT],
+    /,
 ) -> Callable[[TargetFunctionT], TargetFunctionT]:
     """
     Add decorated function as a static method to a class.
 
-    :param __extended_class: Class to add method to.
+    :param extended_class: Class to add method to.
 
     .. note:: (function) The decorated function does not need `self` or `cls`
       as arguments.
@@ -628,7 +651,7 @@ def extend_with_static_method(
     # FUTURE: `override=False`
 
     def _decorator(target: TargetFunctionT) -> TargetFunctionT:
-        setattr(__extended_class, target.__name__, staticmethod(target))
+        setattr(extended_class, target.__name__, staticmethod(target))
         return target
 
     return _decorator
@@ -636,12 +659,13 @@ def extend_with_static_method(
 
 @function_decorator
 def extend_with_class_method(
-    __extended_class: type[TargetClassT],
+    extended_class: type[TargetClassT],
+    /,
 ) -> Callable[[TargetFunctionT], TargetFunctionT]:
     """
     Add decorated function as a class method to a class.
 
-    :param __extended_class: Class to add method to.
+    :param extended_class: Class to add method to.
 
     .. note:: The decorated function needs to have `cls` as the first
       argument.
@@ -649,7 +673,7 @@ def extend_with_class_method(
     # FUTURE: `override=False`
 
     def _decorator(target: TargetFunctionT) -> TargetFunctionT:
-        setattr(__extended_class, target.__name__, classmethod(target))
+        setattr(extended_class, target.__name__, classmethod(target))
         return target
 
     return _decorator
@@ -657,14 +681,15 @@ def extend_with_class_method(
 
 @class_decorator
 def extension(
-    __extended_class: type[object],
+    extended_class: type[object],
+    /,
 ) -> Callable[[type[TargetClassT]], type[TargetClassT]]:
     # FUTURE: Allow adding superclasses in extension class, including the extended \
     # class
     """
     Add all the methods in the decorated class to another class.
 
-    :param __extended_class: Class to add methods to.
+    :param extended_class: Class to add methods to.
 
     .. note:: The decorated class can have regular methods as well as
       `@classmethod` and `@staticmethod`.
@@ -673,16 +698,16 @@ def extension(
     """
 
     def _decorator(extension_class: type[TargetClassT]) -> type[TargetClassT]:
-        assert isinstance(
-            extension_class, type
-        ), "@extension is only for decorating classes"
+        assert isinstance(extension_class, type), (
+            "@extension is only for decorating classes"
+        )
 
         for name, value in extension_class.__dict__.items():
             # not `ismethod()` because not bound
             if inspect.isfunction(value) or isinstance(
                 value, (classmethod, staticmethod)
             ):
-                setattr(__extended_class, name, value)
+                setattr(extended_class, name, value)
 
         return extension_class
 
